@@ -7,32 +7,50 @@ namespace QLS.Backend.Services;
 public class WasherService : IWasherService
 {
     private readonly HttpClient _httpClient;
+    
+    // Khởi tạo biến tĩnh lấy theo thời gian thực (Unix Timestamp - 10 chữ số).
+    private static string _currentMessageId = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(); 
 
     public WasherService(HttpClient httpClient)
     {
         _httpClient = httpClient;
     }
 
-    public async Task<WasherStatusDto> GetWasherStatusAsync(string deviceId)
+    // Tách riêng hàm gửi Request để dễ dàng gọi lại (Retry)
+    private async Task<HttpResponseMessage> SendRequestAsync(string deviceId)
     {
         var url = $"https://kic-laundry.lgthinq.com/status/{deviceId}";
-
         var request = new HttpRequestMessage(HttpMethod.Get, url);
+        
         // Header dùng để bypass auth từ frontend cung cấp
         request.Headers.Add("x-thinq-app-ver", "0.1");
         request.Headers.Add("x-thinq-client-type", "USER");
         request.Headers.Add("x-api-key", "vV6bStCpqr5Hqxbcr8Kmp9XkFh4VdlVp568YxBp5");
         request.Headers.Add("x-country-code", "VN");
         request.Headers.Add("x-client-id", "12345");
-        request.Headers.Add("x-message-id", "9816091412");
+        request.Headers.Add("x-message-id", _currentMessageId);
         request.Headers.Add("x-service-code", "CHN000035");
         request.Headers.Add("x-service-phase", "OP");
 
-        var response = await _httpClient.SendAsync(request);
+        return await _httpClient.SendAsync(request);
+    }
+
+    public async Task<WasherStatusDto> GetWasherStatusAsync(string deviceId)
+    {
+        var response = await SendRequestAsync(deviceId);
         
         if (!response.IsSuccessStatusCode)
         {
-            throw new Exception($"Lỗi HTTP từ máy chủ LG: (Status {response.StatusCode})");
+            // Nếu bị lỗi, tiến hành làm mới Message ID chuẩn UNIX Time (10 chữ số thời gian)
+            _currentMessageId = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+            
+            // Thử gọi lại API 1 lần nữa với Message ID mới
+            response = await SendRequestAsync(deviceId);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Lỗi HTTP từ máy chủ LG ngay cả sau khi thử lại: (Status {response.StatusCode})");
+            }
         }
 
         var jsonStr = await response.Content.ReadAsStringAsync();

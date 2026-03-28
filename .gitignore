@@ -1,0 +1,19 @@
+# -------------------------
+# .NET / C# (Backend)
+# -------------------------
+[Bb]in/
+[Oo]bj/
+
+# Cấu hình IDE / Visual Studio
+.vs/
+.vscode/
+*.user
+*.userenv
+*.suo
+*.db
+*.sqlite3
+
+# Môi trường & Hệ điều hành
+.env
+.DS_Store
+Thumbs.db
