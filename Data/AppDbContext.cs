@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using QLS.Backend.Models;
 
 namespace QLS.Backend.Data;
 
@@ -8,6 +9,7 @@ public class AppDbContext : DbContext
     {
     }
 
-    // Thêm các DbSet của bạn ở đây, ví dụ:
-    // public DbSet<Washer> Washers { get; set; }
+    // Thêm các DbSet của bạn ở đây:
+    public DbSet<Store> Stores { get; set; }
+    public DbSet<Machine> Machines { get; set; }
 }
