@@ -1,6 +1,6 @@
 @QLS.Backend_HostAddress = http://localhost:5078
 
-GET {{QLS.Backend_HostAddress}}/weatherforecast/
+GET {{QLS.Backend_HostAddress}}/api/Washer/status/c7863f0d53ac48bfb04d4b1367e664b7
 Accept: application/json
 
 ###
