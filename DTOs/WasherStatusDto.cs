@@ -12,4 +12,5 @@ public class WasherStatusDto
     public int RemainTime { get; set; }
     public string TimeString { get; set; } = "--";
     public bool Online { get; set; }
+    public int DeviceType { get; set; }
 }

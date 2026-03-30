@@ -1,19 +1,24 @@
 using System.Text.Json;
 using QLS.Backend.DTOs;
 using QLS.Backend.Interfaces;
+using QLS.Backend.Data;
+using QLS.Backend.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace QLS.Backend.Services;
 
 public class WasherService : IWasherService
 {
     private readonly HttpClient _httpClient;
+    private readonly AppDbContext _context;
     
     // Khởi tạo biến tĩnh lấy theo thời gian thực (Unix Timestamp - 10 chữ số).
     private static string _currentMessageId = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(); 
 
-    public WasherService(HttpClient httpClient)
+    public WasherService(HttpClient httpClient, AppDbContext context)
     {
         _httpClient = httpClient;
+        _context = context;
     }
 
     // Tách riêng hàm gửi Request để dễ dàng gọi lại (Retry)
@@ -63,7 +68,14 @@ public class WasherService : IWasherService
             if (resultArr.GetArrayLength() == 0)
                 throw new Exception("Mảng result trống.");
 
+            // Lấy danh sách MachineId đã tồn tại trong Store này để kiểm tra nhanh trong bộ nhớ
+            var existingMachineIds = await _context.Machines
+                .Where(m => m.StoreId == storeId)
+                .Select(m => m.MachineId)
+                .ToHashSetAsync();
+
             var statusList = new List<WasherStatusDto>();
+            var newMachines = new List<Machine>();
 
             foreach (var element in resultArr.EnumerateArray())
             {
@@ -74,16 +86,54 @@ public class WasherService : IWasherService
                     ? aliasProp.GetString() : "Máy giặt/sấy";
 
                 if (!element.TryGetProperty("snapshot", out var snapshot)) continue;
-                if (!snapshot.TryGetProperty("washerDryer", out var washerData)) continue;
+                
+                // Thử lấy dữ liệu từ 'washerDryer' hoặc 'dryer' (tùy theo loại máy)
+                JsonElement washerData;
+                if (snapshot.TryGetProperty("washerDryer", out var wdData)) 
+                {
+                    washerData = wdData;
+                }
+                else if (snapshot.TryGetProperty("dryer", out var dData))
+                {
+                    washerData = dData;
+                }
+                else 
+                {
+                    continue; // Không tìm thấy dữ liệu trạng thái
+                }
 
-                var curState = washerData.TryGetProperty("CurState", out var stateProp) && stateProp.ValueKind == JsonValueKind.String 
-                    ? stateProp.GetString() : "UNKNOWN";
+                // Trích xuất trạng thái hiện tại (CurState cho máy giặt, process cho máy sấy)
+                string curState = "UNKNOWN";
+                if (washerData.TryGetProperty("CurState", out var stateProp) && stateProp.ValueKind == JsonValueKind.String)
+                {
+                    curState = stateProp.GetString() ?? "UNKNOWN";
+                }
+                else if (washerData.TryGetProperty("process", out var processProp) && processProp.ValueKind == JsonValueKind.String)
+                {
+                    curState = processProp.GetString() ?? "UNKNOWN";
+                }
                     
-                var course = washerData.TryGetProperty("Course", out var courseTextProp) && courseTextProp.ValueKind == JsonValueKind.String 
-                    ? courseTextProp.GetString() : "";
+                // Cố gắng lấy tên chương trình (thử cả viết hoa và viết thường)
+                string course = "";
+                if (washerData.TryGetProperty("Course", out var cTextProp) && cTextProp.ValueKind == JsonValueKind.String)
+                {
+                    course = cTextProp.GetString() ?? "";
+                }
+                else if (washerData.TryGetProperty("course", out var cLowerProp) && cLowerProp.ValueKind == JsonValueKind.String)
+                {
+                    course = cLowerProp.GetString() ?? "";
+                }
 
-                var courseNum = washerData.TryGetProperty("CourseNum", out var courseProp) && courseProp.ValueKind == JsonValueKind.String 
-                    ? courseProp.GetString() : "--";
+                // Cố gắng lấy mã chương trình (thử cả CourseNum và các biến thể)
+                string courseNum = "--";
+                if (washerData.TryGetProperty("CourseNum", out var cNumProp) && cNumProp.ValueKind == JsonValueKind.String)
+                {
+                    courseNum = cNumProp.GetString() ?? "--";
+                }
+                else if (washerData.TryGetProperty("courseNum", out var cNumLowerProp) && cNumLowerProp.ValueKind == JsonValueKind.String)
+                {
+                    courseNum = cNumLowerProp.GetString() ?? "--";
+                }
                     
                 var remainHour = washerData.TryGetProperty("RemainHour", out var rhProp) && rhProp.ValueKind == JsonValueKind.Number 
                     ? rhProp.GetInt32() : 0;
@@ -91,8 +141,16 @@ public class WasherService : IWasherService
                 var remainMin = washerData.TryGetProperty("RemainMin", out var rmProp) && rmProp.ValueKind == JsonValueKind.Number 
                     ? rmProp.GetInt32() : 0;
 
-                var remainTime = washerData.TryGetProperty("RemainTime", out var rtProp) && rtProp.ValueKind == JsonValueKind.Number 
-                    ? rtProp.GetInt32() : 0;
+                // Thử lấy RemainTime (viết hoa) hoặc remainTime (viết thường)
+                int remainTime = 0;
+                if (washerData.TryGetProperty("RemainTime", out var rtProp) && rtProp.ValueKind == JsonValueKind.Number)
+                {
+                    remainTime = rtProp.GetInt32();
+                }
+                else if (washerData.TryGetProperty("remainTime", out var rtLowerProp) && rtLowerProp.ValueKind == JsonValueKind.Number)
+                {
+                    remainTime = rtLowerProp.GetInt32();
+                }
 
                 string timeString = "";
                 // Nếu có remainTime (thường cho máy sấy), ưu tiên sử dụng nó nếu hour/min bằng 0
@@ -112,6 +170,26 @@ public class WasherService : IWasherService
                               (onlineProp.ValueKind == JsonValueKind.True || 
                                (onlineProp.ValueKind == JsonValueKind.String && onlineProp.GetString() == "true"));
 
+                // Trích xuất deviceType (211: Giặt, 212: Sấy)
+                var deviceTypeRaw = element.TryGetProperty("deviceType", out var typeProp) 
+                    ? (typeProp.ValueKind == JsonValueKind.Number ? typeProp.GetInt32().ToString() : typeProp.GetString() ?? "0")
+                    : "0";
+                
+                int deviceType = deviceTypeRaw == "211" ? 0 : (deviceTypeRaw == "212" ? 1 : 0);
+
+                // Tự động lưu máy vào database nếu chưa tồn tại
+                if (deviceId != "UNKNOWN_DEVICE" && !existingMachineIds.Contains(deviceId))
+                {
+                    newMachines.Add(new Machine
+                    {
+                        MachineId = deviceId!,
+                        StoreId = storeId,
+                        Type = deviceType.ToString(),
+                        Capacity = "UNKNOWN"
+                    });
+                    existingMachineIds.Add(deviceId!); // Tránh trùng lặp trong cùng một lô kết quả
+                }
+
                 statusList.Add(new WasherStatusDto
                 {
                     DeviceId = deviceId ?? "UNKNOWN_DEVICE",
@@ -123,8 +201,15 @@ public class WasherService : IWasherService
                     RemainMin = remainMin,
                     RemainTime = remainTime,
                     TimeString = timeString.Trim(),
-                    Online = online
+                    Online = online,
+                    DeviceType = deviceType
                 });
+            }
+
+            if (newMachines.Any())
+            {
+                _context.Machines.AddRange(newMachines);
+                await _context.SaveChangesAsync();
             }
 
             return statusList;
