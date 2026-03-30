@@ -12,6 +12,8 @@ public class MachineDetailService : IMachineDetailService
     private readonly HttpClient _httpClient;
     private readonly string _lgApiUrl = "https://kic-laundry.lgthinq.com/status/c7863f0d53ac48bfb04d4b1367e664b7";
 
+    string numericMessageId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString(); 
+
     public MachineDetailService(HttpClient httpClient)
     {
         _httpClient = httpClient;
@@ -29,7 +31,7 @@ public class MachineDetailService : IMachineDetailService
         request.Headers.Add("x-api-key", "vV6bStCpqr5Hqxbcr8Kmp9XkFh4VdlVp568YxBp5");
         request.Headers.Add("x-country-code", "VN");
         request.Headers.Add("x-client-id", "12345");
-        request.Headers.Add("x-message-id", Guid.NewGuid().ToString()); // Tạo ID ngẫu nhiên mỗi lần gọi
+        request.Headers.Add("x-message-id", numericMessageId); // Tạo ID ngẫu nhiên mỗi lần gọi
         request.Headers.Add("x-service-code", "CHN000035");
         request.Headers.Add("x-service-phase", "OP");
 

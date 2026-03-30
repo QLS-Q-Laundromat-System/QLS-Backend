@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Data; 
+using QLS.Backend.Extensions;
+using QLS.Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +11,8 @@ builder.Services.AddControllers();
 // Khai báo kết nối Database (Sử dụng PostgreSQL)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddApplicationServices();    
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
