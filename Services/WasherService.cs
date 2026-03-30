@@ -35,9 +35,9 @@ public class WasherService : IWasherService
         return await _httpClient.SendAsync(request);
     }
 
-    public async Task<WasherStatusDto> GetWasherStatusAsync(string deviceId)
+    public async Task<List<WasherStatusDto>> GetWasherStatusAsync(string storeId)
     {
-        var response = await SendRequestAsync(deviceId);
+        var response = await SendRequestAsync(storeId);
         
         if (!response.IsSuccessStatusCode)
         {
@@ -45,7 +45,7 @@ public class WasherService : IWasherService
             _currentMessageId = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
             
             // Thử gọi lại API 1 lần nữa với Message ID mới
-            response = await SendRequestAsync(deviceId);
+            response = await SendRequestAsync(storeId);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -63,36 +63,66 @@ public class WasherService : IWasherService
             if (resultArr.GetArrayLength() == 0)
                 throw new Exception("Mảng result trống.");
 
-            var snapshot = resultArr[0].GetProperty("snapshot");
-            
-            if (!snapshot.TryGetProperty("washerDryer", out var washerData))
-                throw new Exception("Không tìm thấy thuốc tính washerDryer.");
+            var statusList = new List<WasherStatusDto>();
 
-            var curState = washerData.TryGetProperty("CurState", out var stateProp) && stateProp.ValueKind == JsonValueKind.String 
-                ? stateProp.GetString() : "UNKNOWN";
-                
-            var courseNum = washerData.TryGetProperty("CourseNum", out var courseProp) && courseProp.ValueKind == JsonValueKind.String 
-                ? courseProp.GetString() : "--";
-                
-            var remainHour = washerData.TryGetProperty("RemainHour", out var rhProp) && rhProp.ValueKind == JsonValueKind.Number 
-                ? rhProp.GetInt32() : 0;
-                
-            var remainMin = washerData.TryGetProperty("RemainMin", out var rmProp) && rmProp.ValueKind == JsonValueKind.Number 
-                ? rmProp.GetInt32() : 0;
-
-            string timeString = "";
-            if (remainHour > 0) timeString += $"{remainHour}h ";
-            if (remainMin > 0) timeString += $"{remainMin}m";
-            if (remainHour == 0 && remainMin == 0) timeString = "--";
-
-            return new WasherStatusDto
+            foreach (var element in resultArr.EnumerateArray())
             {
-                CurState = curState ?? "UNKNOWN",
-                CourseNum = courseNum ?? "--",
-                RemainHour = remainHour,
-                RemainMin = remainMin,
-                TimeString = timeString.Trim()
-            };
+                var deviceId = element.TryGetProperty("deviceId", out var deviceIdProp) && deviceIdProp.ValueKind == JsonValueKind.String 
+                    ? deviceIdProp.GetString() : "UNKNOWN_DEVICE";
+
+                var alias = element.TryGetProperty("alias", out var aliasProp) && aliasProp.ValueKind == JsonValueKind.String 
+                    ? aliasProp.GetString() : "Máy giặt/sấy";
+
+                if (!element.TryGetProperty("snapshot", out var snapshot)) continue;
+                if (!snapshot.TryGetProperty("washerDryer", out var washerData)) continue;
+
+                var curState = washerData.TryGetProperty("CurState", out var stateProp) && stateProp.ValueKind == JsonValueKind.String 
+                    ? stateProp.GetString() : "UNKNOWN";
+                    
+                var course = washerData.TryGetProperty("Course", out var courseTextProp) && courseTextProp.ValueKind == JsonValueKind.String 
+                    ? courseTextProp.GetString() : "";
+
+                var courseNum = washerData.TryGetProperty("CourseNum", out var courseProp) && courseProp.ValueKind == JsonValueKind.String 
+                    ? courseProp.GetString() : "--";
+                    
+                var remainHour = washerData.TryGetProperty("RemainHour", out var rhProp) && rhProp.ValueKind == JsonValueKind.Number 
+                    ? rhProp.GetInt32() : 0;
+                    
+                var remainMin = washerData.TryGetProperty("RemainMin", out var rmProp) && rmProp.ValueKind == JsonValueKind.Number 
+                    ? rmProp.GetInt32() : 0;
+
+                var remainTime = washerData.TryGetProperty("RemainTime", out var rtProp) && rtProp.ValueKind == JsonValueKind.Number 
+                    ? rtProp.GetInt32() : 0;
+
+                string timeString = "";
+                // Nếu có remainTime (thường cho máy sấy), ưu tiên sử dụng nó nếu hour/min bằng 0
+                if (remainHour > 0 || remainMin > 0)
+                {
+                    if (remainHour > 0) timeString += $"{remainHour}h ";
+                    if (remainMin > 0) timeString += $"{remainMin}m";
+                }
+                else if (remainTime > 0)
+                {
+                    timeString = $"{remainTime}m";
+                }
+                
+                if (string.IsNullOrEmpty(timeString)) timeString = "--";
+
+                statusList.Add(new WasherStatusDto
+                {
+                    DeviceId = deviceId ?? "UNKNOWN_DEVICE",
+                    Alias = alias ?? "Máy giặt/sấy",
+                    CurState = curState ?? "UNKNOWN",
+                    Course = course ?? "",
+                    CourseNum = courseNum ?? "--",
+                    RemainHour = remainHour,
+                    RemainMin = remainMin,
+                    RemainTime = remainTime,
+                    TimeString = timeString.Trim()
+                });
+            }
+
+            return statusList;
         }
         catch (Exception ex)
         {

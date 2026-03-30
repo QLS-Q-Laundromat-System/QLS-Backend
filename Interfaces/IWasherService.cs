@@ -4,5 +4,5 @@ namespace QLS.Backend.Interfaces;
 
 public interface IWasherService
 {
-    Task<WasherStatusDto> GetWasherStatusAsync(string deviceId);
+    Task<List<WasherStatusDto>> GetWasherStatusAsync(string storeId);
 }

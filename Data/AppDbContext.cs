@@ -12,4 +12,5 @@ public class AppDbContext : DbContext
     // Thêm các DbSet của bạn ở đây:
     public DbSet<Store> Stores { get; set; }
     public DbSet<Machine> Machines { get; set; }
+
 }

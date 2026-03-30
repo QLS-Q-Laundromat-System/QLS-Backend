@@ -15,12 +15,12 @@ public class WasherController : ControllerBase
         _washerService = washerService;
     }
 
-    [HttpGet("status/{deviceId}")]
-    public async Task<ActionResult<WasherStatusDto>> GetStatus(string deviceId)
+    [HttpGet("status/{storeId}")]
+    public async Task<ActionResult<IEnumerable<WasherStatusDto>>> GetStatus(string storeId)
     {
         try
         {
-            var result = await _washerService.GetWasherStatusAsync(deviceId);
+            var result = await _washerService.GetWasherStatusAsync(storeId);
             return Ok(result);
         }
         catch (Exception ex)
