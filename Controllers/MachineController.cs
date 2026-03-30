@@ -24,10 +24,4 @@ public class MachineController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("{id}/activate")]
-    public async Task<IActionResult> ActivateMachine(string id, [FromBody] string userId)
-    {
-        // Tạm thời để đây, khi nào Sơn làm tới phần điều khiển mình sẽ viết tiếp
-        return Ok(new { message = $"Đã nhận lệnh kích hoạt máy {id}" });
-    }
 }
