@@ -18,37 +18,37 @@ var app = builder.Build();
 // =====================================================================
 // ĐOẠN CODE KIỂM TRA KẾT NỐI DATABASE NGAY KHI KHỞI ĐỘNG SERVER
 // =====================================================================
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        // Lấy AppDbContext ra từ môi trường
-        var context = services.GetRequiredService<AppDbContext>();
-        
-        // Thực hiện thử kết nối
-        if (context.Database.CanConnect())
-        {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("=========================================");
-            Console.WriteLine("✅ KẾT NỐI DATABASE THÀNH CÔNG!");
-            Console.WriteLine("=========================================");
-            Console.ResetColor();
-        }
-        else
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("❌ KHÔNG THỂ KẾT NỐI DATABASE. Vui lòng kiểm tra lại Connection String.");
-            Console.ResetColor();
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine($"❌ LỖI TRONG QUÁ TRÌNH KẾT NỐI DATABASE: {ex.Message}");
-        Console.ResetColor();
-    }
-}
+// using (var scope = app.Services.CreateScope())
+// {
+//     var services = scope.ServiceProvider;
+//     try
+//     {
+//         // Lấy AppDbContext ra từ môi trường
+//         var context = services.GetRequiredService<AppDbContext>();
+//         
+//         // Thực hiện thử kết nối
+//         if (context.Database.CanConnect())
+//         {
+//             Console.ForegroundColor = ConsoleColor.Green;
+//             Console.WriteLine("=========================================");
+//             Console.WriteLine("✅ KẾT NỐI DATABASE THÀNH CÔNG!");
+//             Console.WriteLine("=========================================");
+//             Console.ResetColor();
+//         }
+//         else
+//         {
+//             Console.ForegroundColor = ConsoleColor.Red;
+//             Console.WriteLine("❌ KHÔNG THỂ KẾT NỐI DATABASE. Vui lòng kiểm tra lại Connection String.");
+//             Console.ResetColor();
+//         }
+//     }
+//     catch (Exception ex)
+//     {
+//         Console.ForegroundColor = ConsoleColor.Red;
+//         Console.WriteLine($"❌ LỖI TRONG QUÁ TRÌNH KẾT NỐI DATABASE: {ex.Message}");
+//         Console.ResetColor();
+//     }
+// }
 // =====================================================================
 
 // Configure the HTTP request pipeline.
