@@ -1,0 +1,15 @@
+using Microsoft.EntityFrameworkCore;
+
+namespace QLS_Backend.Data // Lưu ý: Namespace này có thể khác tùy vào tên project thật của bạn
+{
+    public class AppDbContext : DbContext
+    {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        {
+        }
+
+        // Sau này bạn sẽ khai báo các bảng dữ liệu ở đây
+        // Ví dụ: public DbSet<Machine> Machines { get; set; }
+        // Ví dụ: public DbSet<Store> Stores { get; set; }
+    }
+}
