@@ -11,4 +11,5 @@ public class WasherStatusDto
     public int RemainMin { get; set; }
     public int RemainTime { get; set; }
     public string TimeString { get; set; } = "--";
+    public bool Online { get; set; }
 }

@@ -108,6 +108,10 @@ public class WasherService : IWasherService
                 
                 if (string.IsNullOrEmpty(timeString)) timeString = "--";
 
+                var online = snapshot.TryGetProperty("online", out var onlineProp) && 
+                              (onlineProp.ValueKind == JsonValueKind.True || 
+                               (onlineProp.ValueKind == JsonValueKind.String && onlineProp.GetString() == "true"));
+
                 statusList.Add(new WasherStatusDto
                 {
                     DeviceId = deviceId ?? "UNKNOWN_DEVICE",
@@ -118,7 +122,8 @@ public class WasherService : IWasherService
                     RemainHour = remainHour,
                     RemainMin = remainMin,
                     RemainTime = remainTime,
-                    TimeString = timeString.Trim()
+                    TimeString = timeString.Trim(),
+                    Online = online
                 });
             }
 
