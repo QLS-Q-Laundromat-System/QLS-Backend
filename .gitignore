@@ -1,0 +1,56 @@
+# .NET Core
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio Code
+.vscode/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# Environment files
+.env
+.env.*
+
+# Logs
+*.log
+
+# NuGet Packages
+*.nupkg
+# The packages folder is used for NuGet pre-2015/old project format and by MSBuild/Visual Studio
+# to store custom build tools and scripts.
+# Modern NuGet stores things in a user-global location.
+packages/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Mono auto generated files
+mono_crash.*
+
+# Windows image caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on VFAT chroots
+$RECYCLE.BIN/
+
+# Mac OS X
+.DS_Store
