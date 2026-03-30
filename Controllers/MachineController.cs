@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using QLS.Backend.Services;
 using QLS.Backend.DTOs;
+using QLS.Backend.Integrations.LG;
 
 namespace QLS.Backend.Controllers;
 
@@ -17,10 +18,10 @@ public class MachineController : ControllerBase
     }
 
     // API lấy trạng thái trực tiếp từ LG
-    [HttpGet("status")]
-    public async Task<IActionResult> GetLgStatus()
+    [HttpGet("status/{storeId}")]
+    public async Task<IActionResult> GetLgStatus(string storeId)
     {
-        var result = await _machineDetailService.GetLgMachineStatusAsync();
+        var result = await _machineDetailService.GetLgMachineStatusAsync(storeId);
         return Ok(result);
     }
 

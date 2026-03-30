@@ -1,69 +1,46 @@
-using System.Text.Json;
+using QLS.Backend.Data;
 using QLS.Backend.DTOs;
+using QLS.Backend.Integrations.LG;
+using QLS.Backend.Models;
+using Microsoft.EntityFrameworkCore;
+using QLS.Backend.Models.Enums;
 
 namespace QLS.Backend.Services;
 
-public interface IMachineDetailService {
-    Task<List<MachineDetailDto>> GetLgMachineStatusAsync();
-}
-
 public class MachineDetailService : IMachineDetailService
 {
-    private readonly HttpClient _httpClient;
-    private readonly string _lgApiUrl = "https://kic-laundry.lgthinq.com/status/c7863f0d53ac48bfb04d4b1367e664b7";
+    private readonly LgApiClient _lgClient;
+    private readonly AppDbContext _context;
 
-    string numericMessageId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString(); 
-
-    public MachineDetailService(HttpClient httpClient)
+    public MachineDetailService(LgApiClient lgClient, AppDbContext context)
     {
-        _httpClient = httpClient;
+        _lgClient = lgClient;
+        _context = context;
     }
 
-    public async Task<List<MachineDetailDto>> GetLgMachineStatusAsync()
+    public async Task<List<MachineDetailDto>> GetLgMachineStatusAsync(string storeId)
     {
-        var statusList = new List<MachineDetailDto>();
+        // 1. Gọi API lấy dữ liệu thô
+        var rawJson = await _lgClient.GetRawStatusAsync(storeId);
+        
+        // 2. Chế biến dữ liệu sang DTO
+        var statusList = LgMapper.MapToDto(rawJson);
 
-        var request = new HttpRequestMessage(HttpMethod.Get, _lgApiUrl);
+        // 3. Logic: Tự động cập nhật Database
+        var existingIds = await _context.Machines.Select(m => m.MachineId).ToHashSetAsync();
+        var newMachines = statusList
+            .Where(s => !existingIds.Contains(s.DeviceId))
+            .Select(s => new Machine {
+                MachineId = s.DeviceId,
+                StoreId = storeId,
+                Type = s.DeviceType == "0" ? MachineType.Giat : MachineType.Say,
+                Capacity = "LG_COMMERCIAL"
+            }).ToList();
 
-        // Thêm các Headers như Sơn yêu cầu
-        request.Headers.Add("x-thinq-app-ver", "0.1");
-        request.Headers.Add("x-thinq-client-type", "USER");
-        request.Headers.Add("x-api-key", "vV6bStCpqr5Hqxbcr8Kmp9XkFh4VdlVp568YxBp5");
-        request.Headers.Add("x-country-code", "VN");
-        request.Headers.Add("x-client-id", "12345");
-        request.Headers.Add("x-message-id", numericMessageId); // Tạo ID ngẫu nhiên mỗi lần gọi
-        request.Headers.Add("x-service-code", "CHN000035");
-        request.Headers.Add("x-service-phase", "OP");
-
-        try {
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-
-            var jsonString = await response.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(jsonString);
-            var root = doc.RootElement;
-
-            // Giả định cấu trúc JSON trả về có mảng thiết bị (Sơn cần điều chỉnh path này cho khớp JSON thật của LG)
-            if (root.TryGetProperty("data", out var dataElement)) {
-                foreach (var item in dataElement.EnumerateArray()) {
-                    statusList.Add(new MachineDetailDto {
-                        DeviceId = item.GetProperty("deviceId").GetString() ?? "UNKNOWN",
-                        Alias = item.GetProperty("alias").GetString() ?? "Máy giặt/sấy",
-                        CurState = item.GetProperty("curState").GetString() ?? "UNKNOWN",
-                        Course = item.GetProperty("course").GetString() ?? "",
-                        CourseNum = item.GetProperty("courseNum").GetString() ?? "--",
-                        RemainHour = item.TryGetProperty("remainHour", out var rh) ? rh.GetInt32() : 0,
-                        RemainMin = item.TryGetProperty("remainMin", out var rm) ? rm.GetInt32() : 0,
-                        RemainTime = item.TryGetProperty("remainTime", out var rt) ? rt.GetInt32() : 0,
-                        TimeString = item.GetProperty("timeString").GetString()?.Trim() ?? "",
-                        Online = item.GetProperty("online").GetBoolean(),
-                        DeviceType = item.GetProperty("deviceType").GetString() ?? ""
-                    });
-                }
-            }
-        }
-        catch (Exception ex) {
-            Console.WriteLine($"Lỗi gọi API LG: {ex.Message}");
+        if (newMachines.Any())
+        {
+            _context.Machines.AddRange(newMachines);
+            await _context.SaveChangesAsync();
         }
 
         return statusList;

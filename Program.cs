@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Data; 
 using QLS.Backend.Extensions;
 using QLS.Backend.Services;
+using QLS.Backend.Integrations.LG;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,8 @@ builder.Services.AddApplicationServices();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddHttpClient<LgApiClient>();
 
 var app = builder.Build();
 
