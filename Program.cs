@@ -10,8 +10,9 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -54,7 +55,15 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    // Enable middleware to serve generated Swagger as a JSON endpoint.
+    app.UseSwagger();
+    
+    // Enable middleware to serve swagger-ui
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "QLS Backend API v1");
+        c.RoutePrefix = string.Empty; // Hiển thị Swagger trực tiếp tại http://localhost:5078/
+    });
 }
 
 app.UseHttpsRedirection();

@@ -1,6 +1,6 @@
 namespace QLS.Backend.DTOs;
 
-public class WasherStatusDto
+public class MachineDetailDto
 {
     public string DeviceId { get; set; } = string.Empty;
     public string Alias { get; set; } = string.Empty;

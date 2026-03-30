@@ -3,23 +3,23 @@ using QLS.Backend.DTOs;
 
 namespace QLS.Backend.Services;
 
-public interface MachineStatusService {
-    Task<List<WasherStatusDto>> GetLgMachineStatusAsync();
+public interface IMachineDetailService {
+    Task<List<MachineDetailDto>> GetLgMachineStatusAsync();
 }
 
-public class MachineStatusService : MachineStatusService
+public class MachineDetailService : IMachineDetailService
 {
     private readonly HttpClient _httpClient;
     private readonly string _lgApiUrl = "https://kic-laundry.lgthinq.com/status/c7863f0d53ac48bfb04d4b1367e664b7";
 
-    public LgService(HttpClient httpClient)
+    public MachineDetailService(HttpClient httpClient)
     {
         _httpClient = httpClient;
     }
 
-    public async Task<List<WasherStatusDto>> GetLgMachineStatusAsync()
+    public async Task<List<MachineDetailDto>> GetLgMachineStatusAsync()
     {
-        var statusList = new List<WasherStatusDto>();
+        var statusList = new List<MachineDetailDto>();
 
         var request = new HttpRequestMessage(HttpMethod.Get, _lgApiUrl);
 
@@ -44,7 +44,7 @@ public class MachineStatusService : MachineStatusService
             // Giả định cấu trúc JSON trả về có mảng thiết bị (Sơn cần điều chỉnh path này cho khớp JSON thật của LG)
             if (root.TryGetProperty("data", out var dataElement)) {
                 foreach (var item in dataElement.EnumerateArray()) {
-                    statusList.Add(new WasherStatusDto {
+                    statusList.Add(new MachineDetailDto {
                         DeviceId = item.GetProperty("deviceId").GetString() ?? "UNKNOWN",
                         Alias = item.GetProperty("alias").GetString() ?? "Máy giặt/sấy",
                         CurState = item.GetProperty("curState").GetString() ?? "UNKNOWN",
