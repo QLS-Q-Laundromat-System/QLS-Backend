@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using QLS.Backend.Services;
+using QLS.Backend.Services; // IMachineDetailService lives here
 
 namespace QLS.Backend.Extensions;
 
