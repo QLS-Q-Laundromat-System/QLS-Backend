@@ -1,70 +1,75 @@
 using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Data;
-using QLS.Backend.Interfaces;
+using QLS.Backend.Extensions;
 using QLS.Backend.Services;
+using QLS.Backend.Integrations.LG;
 
 var builder = WebApplication.CreateBuilder(args);
-
 // Add services to the container.
-
 builder.Services.AddControllers();
 
-// Đăng ký cấu hình Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-// Đăng ký CSDL PostgreSQL
+// Khai báo kết nối Database (Sử dụng PostgreSQL)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Đăng ký HttpClient cho WasherService
-builder.Services.AddHttpClient<IWasherService, WasherService>();
+builder.Services.AddApplicationServices();
+builder.Services.AddCustomCors(builder.Configuration);
 
-// Thêm CORS cho phép Frontend gọi thoải mái
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddHttpClient<LgApiClient>();
 
 var app = builder.Build();
 
-// ----- KIỂM TRA KẾT NỐI DATABASE VÀO LÚC KHỞI ĐỘNG -----
+// =====================================================================
+// ĐOẠN CODE KIỂM TRA KẾT NỐI DATABASE NGAY KHI KHỞI ĐỘNG SERVER
+// =====================================================================
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var services = scope.ServiceProvider;
     try
     {
-        Console.WriteLine("Đang kiểm tra kết nối với PostgreSQL...");
-        bool canConnect = dbContext.Database.CanConnect();
-        if (canConnect)
+        // Lấy AppDbContext ra từ môi trường
+        var context = services.GetRequiredService<AppDbContext>();
+
+        // Thực hiện thử kết nối
+        if (context.Database.CanConnect())
         {
-            Console.WriteLine("✅ THÀNH CÔNG: Đã kết nối được Database PostgreSQL!");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("=========================================");
+            Console.WriteLine("✅ KẾT NỐI DATABASE THÀNH CÔNG!");
+            Console.WriteLine("=========================================");
+            Console.ResetColor();
         }
         else
         {
-            Console.WriteLine("❌ THẤT BẠI: Không thể kết nối Database PostgreSQL. Vui lòng kiểm tra lại Host, Port, Username, Password.");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("❌ KHÔNG THỂ KẾT NỐI DATABASE. Vui lòng kiểm tra lại Connection String.");
+            Console.ResetColor();
         }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"❌ LỖI KẾT NỐI: {ex.Message}");
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"❌ LỖI TRONG QUÁ TRÌNH KẾT NỐI DATABASE: {ex.Message}");
+        Console.ResetColor();
     }
 }
-// --------------------------------------------------------
+// =====================================================================
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    // Enable middleware to serve generated Swagger as a JSON endpoint.
     app.UseSwagger();
-    app.UseSwaggerUI(c => 
+
+    // Enable middleware to serve swagger-ui
+    app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "QLS Backend API v1");
-        c.RoutePrefix = string.Empty; // Hiển thị Swagger ngay tại trang chủ localhost:5078/
+        c.RoutePrefix = string.Empty; // Hiển thị Swagger trực tiếp tại http://localhost:5078/
     });
 }
 
@@ -72,6 +77,8 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAll");
 
 // app.UseHttpsRedirection(); // Đã tắt do chỉ test HTTP nội bộ
+
+app.UseCors("AllowReactApp");
 
 app.UseAuthorization();
 

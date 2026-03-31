@@ -1,19 +1,56 @@
-# -------------------------
-# .NET / C# (Backend)
-# -------------------------
+# .NET Core
 [Bb]in/
 [Oo]bj/
 
-# Cấu hình IDE / Visual Studio
-.vs/
+# Visual Studio Code
 .vscode/
-*.user
-*.userenv
-*.suo
-*.db
-*.sqlite3
 
-# Môi trường & Hệ điều hành
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# Environment files
 .env
-.DS_Store
+.env.*
+
+# Logs
+*.log
+
+# NuGet Packages
+*.nupkg
+# The packages folder is used for NuGet pre-2015/old project format and by MSBuild/Visual Studio
+# to store custom build tools and scripts.
+# Modern NuGet stores things in a user-global location.
+packages/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Mono auto generated files
+mono_crash.*
+
+# Windows image caches
 Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on VFAT chroots
+$RECYCLE.BIN/
+
+# Mac OS X
+.DS_Store
