@@ -29,6 +29,7 @@ public static class LgMapper
             int? remainHour = null;
             int? remainMin = null;
             int? remainTime = null;
+            string? process = null;
 
             if (mappedDeviceType == "0")
             {
@@ -44,6 +45,8 @@ public static class LgMapper
                          (wd.TryGetProperty("course", out var c2) ? (c2.GetString() ?? "") : "");
                 remainTime = wd.TryGetProperty("RemainTime", out var rt) ? (rt.ValueKind == JsonValueKind.Number ? rt.GetInt32() : 0) : 
                              (wd.TryGetProperty("remainTime", out var rt2) ? (rt2.ValueKind == JsonValueKind.Number ? rt2.GetInt32() : 0) : 0);
+                process = wd.TryGetProperty("Process", out var p) ? (p.GetString() ?? "") : 
+                          (wd.TryGetProperty("process", out var p2) ? (p2.GetString() ?? "") : "");
             }
 
             bool isOnline = true;
@@ -62,6 +65,7 @@ public static class LgMapper
                 RemainHour = remainHour,
                 RemainMin = remainMin,
                 RemainTime = remainTime,
+                Process = process,
                 Online = isOnline
             });
         }

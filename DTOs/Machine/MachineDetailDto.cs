@@ -25,6 +25,9 @@ public class MachineDetailDto
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? RemainTime { get; set; }
     
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Process { get; set; }
+    
     public bool Online { get; set; }
     public string DeviceType { get; set; } = string.Empty;
 }
