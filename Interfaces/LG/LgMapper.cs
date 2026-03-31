@@ -22,21 +22,47 @@ public static class LgMapper
             if (!snapshot.TryGetProperty("washerDryer", out var wd)) continue;
 
             // Xử lý Trạng thái & Thời gian
-            string state = typeRaw == "211" ? 
-                (wd.TryGetProperty("CurState", out var s) ? s.GetString()! : "INITIAL") :
-                (wd.TryGetProperty("process", out var p) ? p.GetString()! : "INITIAL");
+            string mappedDeviceType = typeRaw == "211" ? "0" : "1";
+            string? curState = null;
+            string? course = null;
+            string? courseNum = null;
+            int? remainHour = null;
+            int? remainMin = null;
+            int? remainTime = null;
 
-            int h = wd.TryGetProperty("RemainHour", out var rh) ? rh.GetInt32() : 0;
-            int m = wd.TryGetProperty("RemainMin", out var rm) ? rm.GetInt32() : 
-                    (wd.TryGetProperty("remainTime", out var rt) ? rt.GetInt32() : 0);
+            if (mappedDeviceType == "0")
+            {
+                curState = wd.TryGetProperty("CurState", out var s) ? (s.GetString() ?? "INITIAL") : "INITIAL";
+                remainHour = wd.TryGetProperty("RemainHour", out var rh) ? (rh.ValueKind == JsonValueKind.Number ? rh.GetInt32() : 0) : 0;
+                remainMin = wd.TryGetProperty("RemainMin", out var rm) ? (rm.ValueKind == JsonValueKind.Number ? rm.GetInt32() : 0) : 0;
+                courseNum = wd.TryGetProperty("CourseNum", out var c) ? (c.GetString() ?? "") : 
+                         (wd.TryGetProperty("courseNum", out var c2) ? (c2.GetString() ?? "") : "");
+            }
+            else
+            {
+                course = wd.TryGetProperty("Course", out var c) ? (c.GetString() ?? "") : 
+                         (wd.TryGetProperty("course", out var c2) ? (c2.GetString() ?? "") : "");
+                remainTime = wd.TryGetProperty("RemainTime", out var rt) ? (rt.ValueKind == JsonValueKind.Number ? rt.GetInt32() : 0) : 
+                             (wd.TryGetProperty("remainTime", out var rt2) ? (rt2.ValueKind == JsonValueKind.Number ? rt2.GetInt32() : 0) : 0);
+            }
+
+            bool isOnline = true;
+            if (element.TryGetProperty("online", out var onlineElement) && (onlineElement.ValueKind == JsonValueKind.True || onlineElement.ValueKind == JsonValueKind.False)) 
+                isOnline = onlineElement.GetBoolean();
+            else if (snapshot.TryGetProperty("online", out var snapshotOnline) && (snapshotOnline.ValueKind == JsonValueKind.True || snapshotOnline.ValueKind == JsonValueKind.False)) 
+                isOnline = snapshotOnline.GetBoolean();
 
             statusList.Add(new MachineDetailDto {
                 DeviceId = deviceId,
+                DeviceType = mappedDeviceType,
                 Alias = alias,
-                CurState = state,
-                TimeString = h > 0 ? $"{h}h {m}m" : $"{m}m",
-                Online = snapshot.GetProperty("online").GetBoolean(),
-                DeviceType = typeRaw == "211" ? "0" : "1"
+                CurState = curState,
+                Course = course,
+                CourseNum = courseNum,
+                RemainHour = remainHour,
+                RemainMin = remainMin,
+                RemainTime = remainTime,
+                Online = isOnline
             });
         }
         return statusList;
