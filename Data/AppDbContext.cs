@@ -11,6 +11,8 @@ namespace QLS.Backend.Data
 
         public DbSet<Machine> Machines { get; set; }
         public DbSet<Store> Stores { get; set; }
+        public DbSet<StoreSetting> StoreSettings { get; set; }
+        public DbSet<MachineSession> MachineSessions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

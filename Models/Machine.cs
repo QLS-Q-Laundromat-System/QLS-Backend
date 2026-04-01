@@ -20,4 +20,6 @@ public class Machine
 
     [MaxLength(50)]
     public string Capacity { get; set; } = string.Empty; // Ví dụ: 10kg, 15kg
+
+    public ICollection<MachineSession> Sessions { get; set; } = new List<MachineSession>();
 }
