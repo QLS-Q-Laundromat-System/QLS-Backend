@@ -21,11 +21,11 @@ namespace QLS.Backend.Services
 
         public async Task<DryerOptionResponseDto> GetDryerOptionsAsync(Guid branchId, string machineId, Guid userId)
         {
-            // 1. Lấy bộ Cài đặt của Chi nhánh
-            var setting = await _context.BranchSettings
-                .FirstOrDefaultAsync(s => s.BranchId == branchId);
+            // 1. Lấy bộ Cài đặt của Cửa hàng (Store)
+            var setting = await _context.StoreSettings
+                .FirstOrDefaultAsync(s => s.StoreId == branchId);
                 
-            if (setting == null) throw new Exception("Không tìm thấy cài đặt cho chi nhánh này!");
+            if (setting == null) throw new Exception("Không tìm thấy cài đặt cho cửa hàng này!");
 
             // 2. Tìm lịch sử sấy GẦN NHẤT của cái máy sấy này
             var latestSession = await _context.MachineSessions
@@ -80,11 +80,10 @@ namespace QLS.Backend.Services
             var session = new MachineSession
             {
                 Id        = Guid.NewGuid(),
-                BranchId  = branchId,
                 MachineId = machineId,
                 UserId    = userId,
                 StartTime = now,
-                EndTime   = now.AddSeconds(minutes * 60), // Sơn ơi minutes thì phải nhân 60 thành giây nhé
+                EndTime   = now.AddSeconds(minutes * 60),
                 Status    = 0 // 0 = Đang chạy (Running)
             };
 

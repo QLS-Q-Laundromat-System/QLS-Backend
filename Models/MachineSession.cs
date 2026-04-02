@@ -10,12 +10,6 @@ namespace QLS.Backend.Models
         public Guid Id { get; set; } 
 
         [Required]
-        public Guid BranchId { get; set; }
-
-        [ForeignKey("BranchId")]
-        public Branch? Branch { get; set; }
-
-        [Required]
         [MaxLength(50)]
         public string MachineId { get; set; } = string.Empty;
 

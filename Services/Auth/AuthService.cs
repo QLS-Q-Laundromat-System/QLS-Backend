@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using QLS.Backend.Data;
 using QLS.Backend.DTOs;
+using QLS.Backend.Models;
 using QLS.Backend.Interfaces.Auth;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -23,35 +24,44 @@ namespace QLS.Backend.Services
 
         public async Task<string?> LoginAsync(LoginRequest request)
         {
-            // Tìm user trong DB
-            var user = await _context.UserAdmins.FirstOrDefaultAsync(u => u.Email == request.Email);
+            // 1. Tìm Account trong DB thông qua Username
+            var account = await _context.Accounts
+                .FirstOrDefaultAsync(a => a.Username == request.Email);
 
-            // Kiểm tra mật khẩu
-            if (user == null || user.PasswordHash != request.Password)
+            if (account == null || !account.IsActive)
             {
-                return null; // Trả về null báo hiệu thất bại
+                return null;
             }
 
-            // Tạo Claims
+            // 2. Kiểm tra mật khẩu bằng BCrypt
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, account.PasswordHash))
+            {
+                return null;
+            }
+
+            // 3. Tìm thông tin profile (User) nếu có để lấy FullName/Email
+            var profile = await _context.Users.FindAsync(account.Id);
+
+            // 4. Tạo Claims
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role),
-                new Claim("FullName", user.FullName)
+                new Claim(ClaimTypes.NameIdentifier, account.Id.ToString()),
+                new Claim(ClaimTypes.Name, account.Username),
+                new Claim(ClaimTypes.Role, account.Role.ToString()),
+                new Claim("FullName", profile?.FullName ?? account.Username)
             };
 
-            if (user.OwnerId != null)
+            if (account.BrandId != null)
             {
-                claims.Add(new Claim("OwnerId", user.OwnerId.ToString()!));
+                claims.Add(new Claim("BrandId", account.BrandId.ToString()!));
             }
 
-            if (user.BranchId != null)
+            if (account.StoreId != null)
             {
-                claims.Add(new Claim("BranchId", user.BranchId.ToString()!));
+                claims.Add(new Claim("StoreId", account.StoreId.ToString()!));
             }
 
-            // Ký Token
+            // 5. Ký Token
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -59,7 +69,7 @@ namespace QLS.Backend.Services
                 issuer: _config["Jwt:Issuer"],
                 audience: _config["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddDays(Convert.ToDouble(_config["Jwt:ExpireDays"])),
+                expires: DateTime.UtcNow.AddDays(Convert.ToDouble(_config["Jwt:ExpireDays"])),
                 signingCredentials: creds
             );
 

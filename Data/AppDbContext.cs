@@ -9,47 +9,63 @@ namespace QLS.Backend.Data
         {
         }
 
+        public DbSet<Account> Accounts { get; set; }
         public DbSet<Machine> Machines { get; set; }
-        public DbSet<BranchSetting> BranchSettings { get; set; }
+        public DbSet<StoreSetting> StoreSettings { get; set; }
         public DbSet<MachineSession> MachineSessions { get; set; }
-        public DbSet<UserAdmin> UserAdmins { get; set; }
-        public DbSet<Owner> Owners { get; set; }
-        public DbSet<Branch> Branches { get; set; }
+        public DbSet<Brand> Brands { get; set; }
+        public DbSet<Store> Stores { get; set; }
         public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
             
-            // Cấu hình thêm các quan hệ bảng (Fluent API) ở đây nếu cần
-            modelBuilder.Entity<UserAdmin>()
-                .HasOne(u => u.Owner)
-                .WithMany(o => o.UserAdmins)
-                .HasForeignKey(u => u.OwnerId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<UserAdmin>()
-                .HasOne(u => u.Branch)
-                .WithMany(b => b.UserAdmins)
-                .HasForeignKey(u => u.BranchId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Branch>()
-                .HasOne(b => b.Owner)
-                .WithMany(o => o.Branches)
-                .HasForeignKey(b => b.OwnerId)
+            // --- Cấu hình quan hệ cho Brand ---
+            modelBuilder.Entity<Store>()
+                .HasOne(s => s.Brand)
+                .WithMany(b => b.Stores)
+                .HasForeignKey(s => s.BrandId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<BranchSetting>()
-                .HasOne(s => s.Branch)
-                .WithOne(b => b.BranchSetting)
-                .HasForeignKey<BranchSetting>(s => s.BranchId);
+            // --- Cấu hình quan hệ cho Account ---
+            modelBuilder.Entity<Account>()
+                .HasOne(a => a.Brand)
+                .WithMany(b => b.Accounts)
+                .HasForeignKey(a => a.BrandId)
+                .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Account>()
+                .HasOne(a => a.Store)
+                .WithMany()
+                .HasForeignKey(a => a.StoreId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // --- Cấu hình quan hệ cho Machine ---
+            modelBuilder.Entity<Machine>()
+                .HasOne<Store>()
+                .WithMany(s => s.Machines)
+                .HasForeignKey(m => m.BranchId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // --- Cấu hình quan hệ cho StoreSetting ---
+            modelBuilder.Entity<StoreSetting>()
+                .HasOne(s => s.Store)
+                .WithOne(st => st.StoreSetting)
+                .HasForeignKey<StoreSetting>(s => s.StoreId);
+
+            // --- Cấu hình quan hệ cho MachineSession ---
             modelBuilder.Entity<MachineSession>()
                 .HasOne(ms => ms.User)
                 .WithMany(u => u.MachineSessions)
                 .HasForeignKey(ms => ms.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<MachineSession>()
+                .HasOne(ms => ms.Machine)
+                .WithMany()
+                .HasForeignKey(ms => ms.MachineId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

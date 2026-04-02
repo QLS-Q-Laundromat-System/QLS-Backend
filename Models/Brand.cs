@@ -1,8 +1,9 @@
 using System;
+using System.Collections.Generic;
 
 namespace QLS.Backend.Models
 {
-    public class Owner
+    public class Brand
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public string Name { get; set; } = string.Empty;
@@ -10,8 +11,8 @@ namespace QLS.Backend.Models
         public string? ContactPhone { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public ICollection<Store> Stores { get; set; } = new List<Store>();
+        public ICollection<Account> Accounts { get; set; } = new List<Account>();
 
-        public ICollection<Branch> Branches { get; set; } = new List<Branch>();
-        public ICollection<UserAdmin> UserAdmins { get; set; } = new List<UserAdmin>();
     }
 }
