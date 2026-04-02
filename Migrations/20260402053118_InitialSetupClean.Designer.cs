@@ -12,8 +12,8 @@ using QLS.Backend.Data;
 namespace QLS.Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260402045501_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260402053118_InitialSetupClean")]
+    partial class InitialSetupClean
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -290,7 +290,7 @@ namespace QLS.Backend.Migrations
                         .IsRequired();
 
                     b.HasOne("QLS.Backend.Models.Machine", "Machine")
-                        .WithMany("Sessions")
+                        .WithMany()
                         .HasForeignKey("MachineId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -332,11 +332,6 @@ namespace QLS.Backend.Migrations
                     b.Navigation("Machines");
 
                     b.Navigation("UserAdmins");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.Machine", b =>
-                {
-                    b.Navigation("Sessions");
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.Owner", b =>
