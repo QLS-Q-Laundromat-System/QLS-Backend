@@ -7,7 +7,7 @@ namespace QLS.Backend.Models
     {
         public Guid Id { get; set; } = Guid.NewGuid();
 
-        public string Username { get; set; }
+        public required string Username { get; set; }
 
         public string PasswordHash { get; set; } = string.Empty;
         
