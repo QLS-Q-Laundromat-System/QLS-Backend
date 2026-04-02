@@ -10,16 +10,12 @@ namespace QLS.Backend.Data
         }
 
         public DbSet<Machine> Machines { get; set; }
-<<<<<<< Updated upstream
-        public DbSet<Store> Stores { get; set; }
-=======
         public DbSet<BranchSetting> BranchSettings { get; set; }
         public DbSet<MachineSession> MachineSessions { get; set; }
         public DbSet<UserAdmin> UserAdmins { get; set; }
         public DbSet<Owner> Owners { get; set; }
         public DbSet<Branch> Branches { get; set; }
         public DbSet<User> Users { get; set; }
->>>>>>> Stashed changes
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

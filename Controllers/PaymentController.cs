@@ -1,90 +1,25 @@
 using Microsoft.AspNetCore.Mvc;
 using QLS.Backend.DTOs.Zigbee;
+using QLS.Backend.Interfaces;
 using QLS.Backend.Services;
+using System;
+using System.Threading.Tasks;
 
-namespace QLS.Backend.Controllers;
-
-/// <summary>
-/// Controller xử lý các hành động sau khi thanh toán thành công.
-/// Hiện tại: bắn tín hiệu Zigbee để máy giặt nhận xu.
-/// </summary>
-[ApiController]
-[Route("api/[controller]")]
-public class PaymentController : ControllerBase
+namespace QLS.Backend.Controllers
 {
-    private readonly IZigbeeService _zigbeeService;
-
-    public PaymentController(IZigbeeService zigbeeService)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class PaymentController : ControllerBase
     {
-        _zigbeeService = zigbeeService;
-    }
+        private readonly IZigbeeService _zigbeeService;
+        private readonly IDryerService _dryerService;
 
-    /// <summary>
-    /// [POST] api/payment/trigger-washer
-    ///
-    /// Gọi API này sau khi thanh toán thành công để kích hoạt máy giặt.
-    /// Backend sẽ gửi tín hiệu MQTT → Zigbee2MQTT → ESP32 nhả xu đúng số bao.
-    ///
-    /// Body (JSON):
-    /// {
-    ///   "zigbeeDeviceTopic": "ESP32H2.Washer",   ← (Tùy chọn) tên thiết bị
-    ///   "bagCount": 3                            ← số lần nhả xu (1–10)
-    /// }
-    /// </summary>
-    [HttpPost("trigger-washer")]
-    public async Task<ActionResult<TriggerWasherResponseDto>> TriggerWasher(
-        [FromBody] TriggerWasherRequestDto request)
-    {
-        var topic = string.IsNullOrWhiteSpace(request.ZigbeeDeviceTopic) 
-                    ? "QLS.Washer" 
-                    : request.ZigbeeDeviceTopic;
-
-        if (request.BagCount < 1 || request.BagCount > 20)
-            return BadRequest(new TriggerWasherResponseDto
-            {
-                Success = false,
-                Message = "BagCount phải nằm trong khoảng 1 đến 20."
-            });
-
-        return await ExecuteTrigger(topic, request.BagCount);
-    }
-
-    /// <summary>
-    /// [GET] /pulse/3 
-    /// 
-    /// API SIÊU TỐC: Chỉ cần nhập số để bắn xu.
-    /// Ví dụ: http://localhost:5078/pulse/3 -> Máy sẽ bắn 3 xu ngay lập tức.
-    /// </summary>
-    [HttpGet("/pulse/{count}")]
-    public async Task<ActionResult<TriggerWasherResponseDto>> TriggerPulse(int count)
-    {
-        // Sử dụng topic mặc định là QLS.Washer theo code C của bạn
-        return await ExecuteTrigger("QLS.Washer", count);
-    }
-
-    /// <summary>
-    /// [GET] /trigger/{count} (Link cũ cho bạn nếu lỡ tay bấm)
-    /// </summary>
-    [HttpGet("/trigger/{count}")]
-    public async Task<ActionResult<TriggerWasherResponseDto>> TriggerSuperSimple(int count)
-    {
-        return await ExecuteTrigger("QLS.Washer", count);
-    }
-
-    private async Task<ActionResult<TriggerWasherResponseDto>> ExecuteTrigger(string topic, int count)
-    {
-        // LOG CHẨN ĐOÁN (Chắc chắn sẽ thấy trên terminal của bạn)
-        Console.WriteLine($"[DIAGNOSTIC] EXECUTING TRIGGER: topic={topic}, count={count}");
-
-        // Nếu topic để trống hoặc là chuỗi mẫu "string" của Swagger thì dùng mặc định
-        if (string.IsNullOrWhiteSpace(topic) || topic.Equals("string", StringComparison.OrdinalIgnoreCase))
+        public PaymentController(IZigbeeService zigbeeService, IDryerService dryerService)
         {
-            topic = "QLS.Washer";
+            _zigbeeService = zigbeeService;
+            _dryerService = dryerService;
         }
 
-<<<<<<< Updated upstream
-        try
-=======
         /// <summary>
         /// [GET] /pulse/{count}
         /// API test siêu tốc. Vừa nhả xu, vừa hỗ trợ lưu DB nếu truyền thêm param.
@@ -97,23 +32,11 @@ public class PaymentController : ControllerBase
             [FromQuery] string? machineId = null,
             [FromQuery] Guid? userId = null,
             [FromQuery] int? minutes = null)
->>>>>>> Stashed changes
         {
-            await _zigbeeService.TriggerAsync(topic, count);
+            Console.WriteLine($"[DIAGNOSTIC] EXECUTING TRIGGER: topic={topic}, count={count}");
 
-            return Ok(new TriggerWasherResponseDto
+            try
             {
-<<<<<<< Updated upstream
-                Success           = true,
-                Message           = $"Đã gửi lệnh nhả {count} xu tới máy '{topic}'.",
-                ZigbeeDeviceTopic = topic,
-                BagCount          = count
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new TriggerWasherResponseDto
-=======
                 // 1. LƯU DATABASE (Chỉ chạy khi FE truyền đủ thông tin)
                 if (branchId.HasValue && machineId != null && userId.HasValue && minutes.HasValue)
                 {
@@ -133,13 +56,15 @@ public class PaymentController : ControllerBase
                 });
             }
             catch (Exception ex)
->>>>>>> Stashed changes
             {
-                Success           = false,
-                Message           = "Lỗi khi gửi tín hiệu Zigbee: " + ex.Message,
-                ZigbeeDeviceTopic = topic,
-                BagCount          = count
-            });
+                return StatusCode(500, new TriggerWasherResponseDto
+                {
+                    Success = false,
+                    Message = "Lỗi hệ thống: " + ex.Message,
+                    ZigbeeDeviceTopic = topic,
+                    BagCount = count
+                });
+            }
         }
     }
 }
