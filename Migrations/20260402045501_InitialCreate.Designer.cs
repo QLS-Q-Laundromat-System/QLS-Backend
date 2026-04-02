@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using QLS.Backend.Data;
@@ -11,9 +12,11 @@ using QLS.Backend.Data;
 namespace QLS.Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260402045501_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -287,7 +290,7 @@ namespace QLS.Backend.Migrations
                         .IsRequired();
 
                     b.HasOne("QLS.Backend.Models.Machine", "Machine")
-                        .WithMany()
+                        .WithMany("Sessions")
                         .HasForeignKey("MachineId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -329,6 +332,11 @@ namespace QLS.Backend.Migrations
                     b.Navigation("Machines");
 
                     b.Navigation("UserAdmins");
+                });
+
+            modelBuilder.Entity("QLS.Backend.Models.Machine", b =>
+                {
+                    b.Navigation("Sessions");
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.Owner", b =>
