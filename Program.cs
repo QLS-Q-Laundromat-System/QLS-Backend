@@ -3,6 +3,9 @@ using QLS.Backend.Data;
 using QLS.Backend.Extensions;
 using QLS.Backend.Services;
 using QLS.Backend.Integrations.LG;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
@@ -15,6 +18,33 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddApplicationServices();    
 builder.Services.AddCustomCors(builder.Configuration);
 
+// --- BẮT ĐẦU CẤU HÌNH JWT ---
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ClockSkew = TimeSpan.Zero // Chặn độ trễ mặc định 5 phút của token
+    };
+});
+
+builder.Services.AddAuthorization();
+// --- KẾT THÚC CẤU HÌNH JWT ---
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -22,6 +52,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient<LgApiClient>();
 
 var app = builder.Build();
+
+// ... existing database connection check code ...
 
 // =====================================================================
 // ĐOẠN CODE KIỂM TRA KẾT NỐI DATABASE NGAY KHI KHỞI ĐỘNG SERVER
@@ -77,6 +109,7 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowReactApp");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
