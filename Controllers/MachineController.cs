@@ -18,10 +18,10 @@ public class MachineController : ControllerBase
     }
 
     // API lấy trạng thái trực tiếp từ LG
-    [HttpGet("status/{storeId}")]
-    public async Task<IActionResult> GetLgStatus(string storeId)
+    [HttpGet("status/{branchId}")]
+    public async Task<IActionResult> GetLgStatus(Guid branchId)
     {
-        var result = await _machineDetailService.GetLgMachineStatusAsync(storeId);
+        var result = await _machineDetailService.GetLgMachineStatusAsync(branchId);
         return Ok(result);
     }
 

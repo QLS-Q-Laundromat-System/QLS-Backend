@@ -82,12 +82,28 @@ public class PaymentController : ControllerBase
             topic = "QLS.Washer";
         }
 
+<<<<<<< Updated upstream
         try
+=======
+        /// <summary>
+        /// [GET] /pulse/{count}
+        /// API test siêu tốc. Vừa nhả xu, vừa hỗ trợ lưu DB nếu truyền thêm param.
+        /// </summary>
+        [HttpGet("/pulse/{count}")]
+        public async Task<ActionResult<TriggerWasherResponseDto>> TriggerPulse(
+            int count, 
+            [FromQuery] string topic = "QLS.Washer",
+            [FromQuery] Guid? branchId = null,
+            [FromQuery] string? machineId = null,
+            [FromQuery] Guid? userId = null,
+            [FromQuery] int? minutes = null)
+>>>>>>> Stashed changes
         {
             await _zigbeeService.TriggerAsync(topic, count);
 
             return Ok(new TriggerWasherResponseDto
             {
+<<<<<<< Updated upstream
                 Success           = true,
                 Message           = $"Đã gửi lệnh nhả {count} xu tới máy '{topic}'.",
                 ZigbeeDeviceTopic = topic,
@@ -97,6 +113,27 @@ public class PaymentController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new TriggerWasherResponseDto
+=======
+                // 1. LƯU DATABASE (Chỉ chạy khi FE truyền đủ thông tin)
+                if (branchId.HasValue && machineId != null && userId.HasValue && minutes.HasValue)
+                {
+                    await _dryerService.SaveSessionAsync(branchId.Value, machineId, userId.Value, minutes.Value);
+                    Console.WriteLine($"[DB] Đã lưu lịch sử sấy: User {userId}, {minutes} phút.");
+                }
+
+                // 2. KÍCH HOẠT ESP32 NHẢ XU
+                await _zigbeeService.TriggerAsync(topic, count);
+
+                return Ok(new TriggerWasherResponseDto
+                {
+                    Success = true,
+                    Message = $"Đã gửi lệnh nhả {count} xu tới máy '{topic}'.",
+                    ZigbeeDeviceTopic = topic,
+                    BagCount = count
+                });
+            }
+            catch (Exception ex)
+>>>>>>> Stashed changes
             {
                 Success           = false,
                 Message           = "Lỗi khi gửi tín hiệu Zigbee: " + ex.Message,

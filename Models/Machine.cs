@@ -10,10 +10,10 @@ public class Machine
     public string MachineId { get; set; } = string.Empty;
 
     [Required]
-    public string StoreId { get; set; } = string.Empty;
+    public Guid BranchId { get; set; }
 
-    [ForeignKey("StoreId")]
-    public Store? Store { get; set; }
+    [ForeignKey("BranchId")]
+    public Branch? Branch { get; set; }
 
     [Required]
     public MachineType Type { get; set; } = MachineType.Giat; // Giặt, Sấy

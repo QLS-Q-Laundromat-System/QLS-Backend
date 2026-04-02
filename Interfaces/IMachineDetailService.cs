@@ -4,5 +4,5 @@ namespace QLS.Backend.Services;
 
 public interface IMachineDetailService
 {
-    Task<List<MachineDetailDto>> GetLgMachineStatusAsync(string storeId);
+    Task<List<MachineDetailDto>> GetLgMachineStatusAsync(Guid branchId);
 }
