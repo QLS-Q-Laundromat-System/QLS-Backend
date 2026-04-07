@@ -80,9 +80,19 @@ namespace QLS.Backend.Data
                     IsActive = true
                 });
 
-                // 2. Brand Admin
+                // 2. Brand Admin + User Profile
+                var brandAdminId = Guid.NewGuid();
+                context.Users.Add(new User 
+                { 
+                    Id = brandAdminId, 
+                    FullName = "Chủ chuỗi QLS Premium", 
+                    Email = "owner@qls.com",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                });
                 context.Accounts.Add(new Account
                 {
+                    Id = brandAdminId,
                     Username = "owner@qls.com",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
                     Role = UserRole.AdminBranch,

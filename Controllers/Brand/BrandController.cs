@@ -38,5 +38,13 @@ namespace QLS.Backend.Controllers.Brand
                 data = newBrand
             });
         }
+
+        // 3. API Lấy danh sách các tài khoản Admin của các Chuỗi
+        [HttpGet("admins")]
+        public async Task<IActionResult> GetAllBrandAdmins()
+        {
+            var admins = await _brandService.GetAllBrandAdminsAsync();
+            return Ok(admins);
+        }
     }
 }

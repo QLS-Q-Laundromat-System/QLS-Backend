@@ -63,5 +63,25 @@ namespace QLS.Backend.Services.Brand
                 CreatedAt = newBrand.CreatedAt
             };
         }
+
+        public async Task<List<BrandAdminDto>> GetAllBrandAdminsAsync()
+        {
+            // Sử dụng Left Join để đảm bảo lấy được tài khoản ngay cả khi Profile (User) hoặc Brand bị thiếu
+            var admins = await _context.Accounts
+                .Where(acc => acc.Role == QLS.Backend.Models.Enums.UserRole.AdminBranch)
+                .Select(acc => new BrandAdminDto
+                {
+                    Id = acc.Id,
+                    FullName = _context.Users.Where(u => u.Id == acc.Id).Select(u => u.FullName).FirstOrDefault() ?? "Chưa đặt tên",
+                    Email = _context.Users.Where(u => u.Id == acc.Id).Select(u => u.Email).FirstOrDefault() ?? acc.Username,
+                    BrandId = acc.BrandId,
+                    BrandName = _context.Brands.Where(b => b.Id == acc.BrandId).Select(b => b.Name).FirstOrDefault() ?? "Không rõ chuỗi",
+                    IsActive = acc.IsActive,
+                    CreatedAt = acc.CreatedAt
+                })
+                .ToListAsync();
+
+            return admins;
+        }
     }
 }
