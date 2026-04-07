@@ -23,18 +23,14 @@ namespace QLS.Backend.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             // Chuyển toàn bộ logic xuống Service xử lý
-            var token = await _authService.LoginAsync(request);
+            var response = await _authService.LoginAsync(request);
 
-            if (token == null)
+            if (response == null)
             {
-                return Unauthorized(new { message = "Email hoặc mật khẩu không chính xác!" });
+                return Unauthorized(ApiResponse<object>.Error(401, "Email hoặc mật khẩu không chính xác!"));
             }
 
-            return Ok(new 
-            { 
-                message = "Đăng nhập thành công",
-                token = token 
-            });
+            return Ok(ApiResponse<LoginResponse>.Success(response, "Đăng nhập thành công"));
         }
 
         [HttpPost("register")]

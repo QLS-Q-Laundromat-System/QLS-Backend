@@ -74,9 +74,9 @@ namespace QLS.Backend.Data
                 // 1. SuperAdmin
                 context.Accounts.Add(new Account
                 {
-                    Username = "admin@qls.com",
+                    Username = "admin",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
-                    Role = UserRole.SuperAdmin,
+                    Role = UserRole.SystemAdmin,
                     IsActive = true
                 });
 
@@ -95,7 +95,7 @@ namespace QLS.Backend.Data
                     Id = brandAdminId,
                     Username = "owner@qls.com",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
-                    Role = UserRole.AdminBranch,
+                    Role = UserRole.BrandAdmin,
                     BrandId = defaultBrand.Id,
                     IsActive = true
                 });

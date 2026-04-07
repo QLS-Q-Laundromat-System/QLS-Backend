@@ -68,7 +68,7 @@ namespace QLS.Backend.Services.Brand
         {
             // Sử dụng Left Join để đảm bảo lấy được tài khoản ngay cả khi Profile (User) hoặc Brand bị thiếu
             var admins = await _context.Accounts
-                .Where(acc => acc.Role == QLS.Backend.Models.Enums.UserRole.AdminBranch)
+                .Where(acc => acc.Role == QLS.Backend.Models.Enums.UserRole.BrandAdmin)
                 .Select(acc => new BrandAdminDto
                 {
                     Id = acc.Id,

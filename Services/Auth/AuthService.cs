@@ -23,11 +23,11 @@ namespace QLS.Backend.Services
             _config = config;
         }
 
-        public async Task<string?> LoginAsync(LoginRequest request)
+        public async Task<LoginResponse?> LoginAsync(LoginRequest request)
         {
             // 1. Tìm Account trong DB thông qua Username
             var account = await _context.Accounts
-                .FirstOrDefaultAsync(a => a.Username == request.Email);
+                .FirstOrDefaultAsync(a => a.Username == request.Username);
 
             if (account == null || !account.IsActive)
             {
@@ -65,16 +65,37 @@ namespace QLS.Backend.Services
             // 5. Ký Token
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var expireMinutes = Convert.ToInt32(_config["Jwt:ExpireMinutes"] ?? "60"); // default 60m
 
             var token = new JwtSecurityToken(
                 issuer: _config["Jwt:Issuer"],
                 audience: _config["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddDays(Convert.ToDouble(_config["Jwt:ExpireDays"])),
+                expires: DateTime.UtcNow.AddMinutes(expireMinutes),
                 signingCredentials: creds
             );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+            // 6. Trả về DTO hoàn chỉnh
+            return new LoginResponse
+            {
+                Tokens = new TokenDto
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = "def5020054...", // Placeholder cho RefreshToken
+                    ExpiresIn = expireMinutes * 60
+                },
+                User = new UserDto
+                {
+                    Id = account.Id.ToString(),
+                    Username = account.Username,
+                    FullName = profile?.FullName ?? account.Username,
+                    Role = account.Role.ToString(),
+                    BrandId = account.BrandId?.ToString(),
+                    Avatar = "https://ui-avatars.com/api/?name=" + (profile?.FullName ?? account.Username) // Placeholder avatar
+                }
+            };
         }
 
         public async Task<bool> RegisterAsync(RegisterRequest request)
@@ -116,14 +137,14 @@ namespace QLS.Backend.Services
         public async Task<bool> CreateAdminAccountAsync(CreateAccountRequest request, UserRole creatorRole, Guid? creatorBrandId)
         {
             // 1. Kiểm tra quyên hạn (Hierarchy Check)
-            if (creatorRole == UserRole.SuperAdmin)
+            if (creatorRole == UserRole.SystemAdmin)
             {
-                // SuperAdmin chỉ được tạo AdminBranch
-                if (request.Role != UserRole.AdminBranch) return false;
+                // SystemAdmin chỉ được tạo BrandAdmin
+                if (request.Role != UserRole.BrandAdmin) return false;
             }
-            else if (creatorRole == UserRole.AdminBranch)
+            else if (creatorRole == UserRole.BrandAdmin)
             {
-                // AdminBranch chỉ được tạo Manager hoặc Staff trong chuỗi của mình
+                // BrandAdmin chỉ được tạo Manager hoặc Staff trong chuỗi của mình
                 if (request.Role != UserRole.Manager && request.Role != UserRole.Staff) return false;
                 
                 // Tự động gán BrandId của người tạo cho tài khoản mới
@@ -169,4 +190,4 @@ namespace QLS.Backend.Services
             return true;
         }
     }
-}
+}
