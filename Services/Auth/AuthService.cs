@@ -75,5 +75,41 @@ namespace QLS.Backend.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+        public async Task<bool> RegisterAsync(RegisterRequest request)
+        {
+            // Check if user exists
+            if (await _context.Accounts.AnyAsync(a => a.Username == request.Username))
+            {
+                return false;
+            }
+
+            var userId = Guid.NewGuid();
+
+            // Create Account
+            var account = new Account
+            {
+                Id = userId,
+                Username = request.Username,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                Role = Models.Enums.UserRole.Customer,
+                IsActive = true
+            };
+
+            // Create User Profile
+            var user = new User
+            {
+                Id = userId,
+                FullName = request.FullName,
+                Email = request.Email,
+                IsActive = true
+            };
+
+            _context.Accounts.Add(account);
+            _context.Users.Add(user);
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

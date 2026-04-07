@@ -34,5 +34,18 @@ namespace QLS.Backend.Controllers
                 token = token 
             });
         }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            var result = await _authService.RegisterAsync(request);
+
+            if (!result)
+            {
+                return BadRequest(new { message = "Tên đăng nhập đã tồn tại hoặc dữ liệu không hợp lệ." });
+            }
+
+            return Ok(new { message = "Đăng ký tài khoản thành công" });
+        }
     }
 }
