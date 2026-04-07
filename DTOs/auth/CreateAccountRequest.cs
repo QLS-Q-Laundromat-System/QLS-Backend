@@ -1,0 +1,26 @@
+using System.ComponentModel.DataAnnotations;
+using QLS.Backend.Models.Enums;
+
+namespace QLS.Backend.DTOs
+{
+    public class CreateAccountRequest
+    {
+        [Required(ErrorMessage = "Tên đăng nhập không được để trống")]
+        public string Username { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Mật khẩu không được để trống")]
+        [MinLength(6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Họ tên không được để trống")]
+        public string FullName { get; set; } = string.Empty;
+
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public UserRole Role { get; set; } = UserRole.Customer;
+
+        public Guid? BrandId { get; set; }
+        public Guid? StoreId { get; set; }
+    }
+}

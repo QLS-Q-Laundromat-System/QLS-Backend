@@ -12,11 +12,8 @@ public class Machine
     [Required]
     public Guid BranchId { get; set; }
 
-    [ForeignKey("BranchId")]
-    public Branch? Branch { get; set; }
-
     [Required]
-    public MachineType Type { get; set; } = MachineType.Giat; // Giặt, Sấy
+    public MachineType Type { get; set; } = MachineType.Washer; // Giặt, Sấy
 
     [MaxLength(50)]
     public string Capacity { get; set; } = string.Empty; // Ví dụ: 10kg, 15kg

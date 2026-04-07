@@ -2,6 +2,6 @@ namespace QLS.Backend.Models.Enums;
 
 public enum MachineType
 {
-    Giat = 0, // Giặt
-    Say = 1   // Sấy
+    Washer = 0, // Giặt
+    Dryer = 1   // Sấy
 }

@@ -1,19 +1,20 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QLS.Backend.Models
 {
-    public class BranchSetting
+    public class StoreSetting
     {
         [Key]
         public int Id { get; set; }
 
-        // Khóa ngoại liên kết với Chi nhánh
+        // Khóa ngoại liên kết với Cửa hàng
         [Required]
-        public Guid BranchId { get; set; }
+        public Guid StoreId { get; set; }
 
-        [ForeignKey("BranchId")]
-        public Branch? Branch { get; set; }
+        [ForeignKey("StoreId")]
+        public Store? Store { get; set; }
 
         // --- CÁC CẤU HÌNH CHO MÁY SẤY ---
 
@@ -28,8 +29,5 @@ namespace QLS.Backend.Models
 
         // 4. Thời gian "vàng" cho phép sấy tiếp tính từ lúc máy dừng (Mặc định: 10 phút)
         public int DryerGracePeriodMinutes { get; set; } = 10;
-        
-        // Sau này bạn có thêm máy giặt, máy ủi... thì cứ thêm cột vào đây
-        // public decimal WasherPrice { get; set; }
     }
 }

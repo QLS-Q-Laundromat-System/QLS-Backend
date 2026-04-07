@@ -33,7 +33,7 @@ public class MachineDetailService : IMachineDetailService
             .Select(s => new Machine {
                 MachineId = s.DeviceId,
                 BranchId = branchId,
-                Type = s.DeviceType == "0" ? MachineType.Giat : MachineType.Say,
+                Type = s.DeviceType == "0" ? MachineType.Washer : MachineType.Dryer,
                 Capacity = "LG_COMMERCIAL"
             }).ToList();
 

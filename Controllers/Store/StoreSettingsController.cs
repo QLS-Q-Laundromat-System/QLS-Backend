@@ -10,46 +10,46 @@ namespace QLS.Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class BranchSettingsController : ControllerBase
+    public class StoreSettingsController : ControllerBase
     {
         private readonly AppDbContext _context;
 
-        public BranchSettingsController(AppDbContext context)
+        public StoreSettingsController(AppDbContext context)
         {
             _context = context;
         }
 
         /// <summary>
-        /// [POST] api/branchsettings
-        /// Thêm mới hoặc Cập nhật cài đặt của một chi nhánh (Upsert)
+        /// [POST] api/StoreSettings
+        /// Thêm mới hoặc Cập nhật cài đặt của một cửa hàng (Upsert)
         /// </summary>
         [HttpPost]
-        public async Task<IActionResult> SaveSettings([FromBody] BranchSettingDto request)
+        public async Task<IActionResult> SaveSettings([FromBody] StoreSettingDto request)
         {
-            if (request.BranchId == Guid.Empty)
+            if (request.StoreId == Guid.Empty)
             {
-                return BadRequest(new { message = "BranchId không hợp lệ." });
+                return BadRequest(new { message = "StoreId không hợp lệ." });
             }
 
             try
             {
-                // 1. Tìm xem chi nhánh này đã có dòng cài đặt nào trong DB chưa
-                var existingSetting = await _context.BranchSettings
-                    .FirstOrDefaultAsync(s => s.BranchId == request.BranchId);
+                // 1. Tìm xem cửa hàng này đã có dòng cài đặt nào trong DB chưa
+                var existingSetting = await _context.StoreSettings
+                    .FirstOrDefaultAsync(s => s.StoreId == request.StoreId);
 
                 if (existingSetting == null)
                 {
                     // 2A. Nếu CHƯA CÓ -> Tạo mới (Insert)
-                    var newSetting = new BranchSetting
+                    var newSetting = new StoreSetting
                     {
-                        BranchId                = request.BranchId,
+                        StoreId                 = request.StoreId,
                         DryerStepMinutes        = request.DryerStepMinutes,
                         DryerStepPrice          = request.DryerStepPrice,
                         DryerMinInitialMinutes  = request.DryerMinInitialMinutes,
                         DryerGracePeriodMinutes = request.DryerGracePeriodMinutes
                     };
 
-                    _context.BranchSettings.Add(newSetting);
+                    _context.StoreSettings.Add(newSetting);
                     await _context.SaveChangesAsync();
 
                     return Ok(new { message = "Đã tạo mới cài đặt thành công!", data = newSetting });
@@ -62,7 +62,7 @@ namespace QLS.Backend.Controllers
                     existingSetting.DryerMinInitialMinutes  = request.DryerMinInitialMinutes;
                     existingSetting.DryerGracePeriodMinutes = request.DryerGracePeriodMinutes;
 
-                    _context.BranchSettings.Update(existingSetting);
+                    _context.StoreSettings.Update(existingSetting);
                     await _context.SaveChangesAsync();
 
                     return Ok(new { message = "Đã cập nhật cài đặt thành công!", data = existingSetting });
@@ -75,18 +75,18 @@ namespace QLS.Backend.Controllers
         }
 
         /// <summary>
-        /// [GET] api/branchsettings/{branchId}
-        /// Lấy cài đặt của một chi nhánh để React FE đổ vào Form chỉnh sửa
+        /// [GET] api/StoreSettings/{storeId}
+        /// Lấy cài đặt của một cửa hàng
         /// </summary>
-        [HttpGet("{branchId}")]
-        public async Task<IActionResult> GetSettings(Guid branchId)
+        [HttpGet("{storeId}")]
+        public async Task<IActionResult> GetSettings(Guid storeId)
         {
-            var setting = await _context.BranchSettings
-                .FirstOrDefaultAsync(s => s.BranchId == branchId);
+            var setting = await _context.StoreSettings
+                .FirstOrDefaultAsync(s => s.StoreId == storeId);
 
             if (setting == null)
             {
-                return NotFound(new { message = "Chưa có cài đặt nào cho chi nhánh này." });
+                return NotFound(new { message = "Chưa có cài đặt nào cho cửa hàng này." });
             }
 
             return Ok(setting);

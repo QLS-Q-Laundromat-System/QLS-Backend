@@ -2,10 +2,10 @@ using System;
 
 namespace QLS.Backend.DTOs.Store
 {
-    public class BranchSettingDto
+    public class StoreSettingDto
     {
         public int Id { get; set; }
-        public Guid BranchId { get; set; }
+        public Guid StoreId { get; set; }
 
         // --- MÁY SẤY ---
         public int DryerStepMinutes { get; set; }

@@ -12,7 +12,7 @@ using QLS.Backend.Data;
 namespace QLS.Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260402045501_InitialCreate")]
+    [Migration("20260402101303_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -25,18 +25,59 @@ namespace QLS.Backend.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("QLS.Backend.Models.Branch", b =>
+            modelBuilder.Entity("QLS.Backend.Models.Account", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Address")
+                    b.Property<Guid?>("BrandId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("StoreId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BrandId");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("Accounts");
+                });
+
+            modelBuilder.Entity("QLS.Backend.Models.Brand", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContactPhone")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -45,45 +86,9 @@ namespace QLS.Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("OwnerId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("OwnerId");
-
-                    b.ToTable("Branches");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.BranchSetting", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid>("BranchId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("DryerGracePeriodMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("DryerMinInitialMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("DryerStepMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("DryerStepPrice")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BranchId")
-                        .IsUnique();
-
-                    b.ToTable("BranchSettings");
+                    b.ToTable("Brands");
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.Machine", b =>
@@ -115,9 +120,6 @@ namespace QLS.Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("BranchId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("timestamp with time zone");
 
@@ -137,8 +139,6 @@ namespace QLS.Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BranchId");
-
                     b.HasIndex("MachineId");
 
                     b.HasIndex("UserId");
@@ -146,21 +146,21 @@ namespace QLS.Backend.Migrations
                     b.ToTable("MachineSessions");
                 });
 
-            modelBuilder.Entity("QLS.Backend.Models.Owner", b =>
+            modelBuilder.Entity("QLS.Backend.Models.Store", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("ContactPhone")
+                    b.Property<string>("Address")
+                        .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<Guid>("BrandId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -171,7 +171,40 @@ namespace QLS.Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Owners");
+                    b.HasIndex("BrandId");
+
+                    b.ToTable("Stores");
+                });
+
+            modelBuilder.Entity("QLS.Backend.Models.StoreSetting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DryerGracePeriodMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DryerMinInitialMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DryerStepMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("DryerStepPrice")
+                        .HasColumnType("numeric");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId")
+                        .IsUnique();
+
+                    b.ToTable("StoreSettings");
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.User", b =>
@@ -184,6 +217,7 @@ namespace QLS.Backend.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("FullName")
@@ -193,104 +227,41 @@ namespace QLS.Backend.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("WalletBalance")
-                        .HasColumnType("numeric");
-
                     b.HasKey("Id");
 
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("QLS.Backend.Models.UserAdmin", b =>
+            modelBuilder.Entity("QLS.Backend.Models.Account", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.HasOne("QLS.Backend.Models.Brand", "Brand")
+                        .WithMany("Accounts")
+                        .HasForeignKey("BrandId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Property<Guid?>("BranchId")
-                        .HasColumnType("uuid");
+                    b.HasOne("QLS.Backend.Models.Store", "Store")
+                        .WithMany()
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.Navigation("Brand");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid?>("OwnerId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BranchId");
-
-                    b.HasIndex("OwnerId");
-
-                    b.ToTable("UserAdmins");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.Branch", b =>
-                {
-                    b.HasOne("QLS.Backend.Models.Owner", "Owner")
-                        .WithMany("Branches")
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Owner");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.BranchSetting", b =>
-                {
-                    b.HasOne("QLS.Backend.Models.Branch", "Branch")
-                        .WithOne("BranchSetting")
-                        .HasForeignKey("QLS.Backend.Models.BranchSetting", "BranchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Branch");
+                    b.Navigation("Store");
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.Machine", b =>
                 {
-                    b.HasOne("QLS.Backend.Models.Branch", "Branch")
+                    b.HasOne("QLS.Backend.Models.Store", null)
                         .WithMany("Machines")
                         .HasForeignKey("BranchId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Branch");
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.MachineSession", b =>
                 {
-                    b.HasOne("QLS.Backend.Models.Branch", "Branch")
-                        .WithMany()
-                        .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("QLS.Backend.Models.Machine", "Machine")
-                        .WithMany("Sessions")
+                        .WithMany()
                         .HasForeignKey("MachineId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -301,49 +272,45 @@ namespace QLS.Backend.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Branch");
-
                     b.Navigation("Machine");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("QLS.Backend.Models.UserAdmin", b =>
+            modelBuilder.Entity("QLS.Backend.Models.Store", b =>
                 {
-                    b.HasOne("QLS.Backend.Models.Branch", "Branch")
-                        .WithMany("UserAdmins")
-                        .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                    b.HasOne("QLS.Backend.Models.Brand", "Brand")
+                        .WithMany("Stores")
+                        .HasForeignKey("BrandId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("QLS.Backend.Models.Owner", "Owner")
-                        .WithMany("UserAdmins")
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Branch");
-
-                    b.Navigation("Owner");
+                    b.Navigation("Brand");
                 });
 
-            modelBuilder.Entity("QLS.Backend.Models.Branch", b =>
+            modelBuilder.Entity("QLS.Backend.Models.StoreSetting", b =>
                 {
-                    b.Navigation("BranchSetting");
+                    b.HasOne("QLS.Backend.Models.Store", "Store")
+                        .WithOne("StoreSetting")
+                        .HasForeignKey("QLS.Backend.Models.StoreSetting", "StoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
+                    b.Navigation("Store");
+                });
+
+            modelBuilder.Entity("QLS.Backend.Models.Brand", b =>
+                {
+                    b.Navigation("Accounts");
+
+                    b.Navigation("Stores");
+                });
+
+            modelBuilder.Entity("QLS.Backend.Models.Store", b =>
+                {
                     b.Navigation("Machines");
 
-                    b.Navigation("UserAdmins");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.Machine", b =>
-                {
-                    b.Navigation("Sessions");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.Owner", b =>
-                {
-                    b.Navigation("Branches");
-
-                    b.Navigation("UserAdmins");
+                    b.Navigation("StoreSetting");
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.User", b =>
