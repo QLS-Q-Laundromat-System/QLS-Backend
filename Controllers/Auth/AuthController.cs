@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using QLS.Backend.DTOs;
 using QLS.Backend.Interfaces.Auth;
 using QLS.Backend.Services; // Thêm using thư mục Services
+using QLS.Backend.Models.Enums;
 
 namespace QLS.Backend.Controllers
 {
@@ -47,5 +49,31 @@ namespace QLS.Backend.Controllers
 
             return Ok(new { message = "Đăng ký tài khoản thành công" });
         }
+
+        [HttpPost("create-account")]
+        [Authorize] // Phân quyên phân cấp: Chỉ những ai có Token hợp lệ
+        public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request)
+        {
+            // 1. Trích xuất thông tin người tạo từ Token
+            var userRoleStr = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            var brandIdStr = User.FindFirst("BrandId")?.Value;
+
+            if (!Enum.TryParse(userRoleStr, out UserRole creatorRole))
+            {
+                return Unauthorized(new { message = "Không tìm thấy vai trò người dùng trong Token." });
+            }
+
+            Guid? creatorBrandId = string.IsNullOrEmpty(brandIdStr) ? null : Guid.Parse(brandIdStr);
+
+            // 2. Chuyển sang Service xử lý kèm theo bối cảnh người tạo
+            var result = await _authService.CreateAdminAccountAsync(request, creatorRole, creatorBrandId);
+
+            if (!result)
+            {
+                return BadRequest(new { message = "Tên đăng nhập đã tồn tại hoặc bạn không có quyên hạn tạo vai trò này." });
+            }
+
+            return Ok(new { message = $"Tạo tài khoản {request.Role} thành công" });
+        }
     }
-}
+}

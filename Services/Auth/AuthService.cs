@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using QLS.Backend.Data;
 using QLS.Backend.DTOs;
 using QLS.Backend.Models;
+using QLS.Backend.Models.Enums;
 using QLS.Backend.Interfaces.Auth;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -111,5 +112,61 @@ namespace QLS.Backend.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<bool> CreateAdminAccountAsync(CreateAccountRequest request, UserRole creatorRole, Guid? creatorBrandId)
+        {
+            // 1. Kiểm tra quyên hạn (Hierarchy Check)
+            if (creatorRole == UserRole.SuperAdmin)
+            {
+                // SuperAdmin chỉ được tạo AdminBranch
+                if (request.Role != UserRole.AdminBranch) return false;
+            }
+            else if (creatorRole == UserRole.AdminBranch)
+            {
+                // AdminBranch chỉ được tạo Manager hoặc Staff trong chuỗi của mình
+                if (request.Role != UserRole.Manager && request.Role != UserRole.Staff) return false;
+                
+                // Tự động gán BrandId của người tạo cho tài khoản mới
+                request.BrandId = creatorBrandId; 
+            }
+            else
+            {
+                // Các role khác không có quyên tạo tài khoản theo cách này
+                return false;
+            }
+
+            // 2. Kiểm tra tài khoản tồn tại
+            if (await _context.Accounts.AnyAsync(a => a.Username == request.Username))
+            {
+                return false;
+            }
+
+            var userId = Guid.NewGuid();
+
+            var account = new Account
+            {
+                Id = userId,
+                Username = request.Username,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                Role = request.Role,
+                BrandId = request.BrandId,
+                StoreId = request.StoreId,
+                IsActive = true
+            };
+
+            var user = new User
+            {
+                Id = userId,
+                FullName = request.FullName,
+                Email = request.Email,
+                IsActive = true
+            };
+
+            _context.Accounts.Add(account);
+            _context.Users.Add(user);
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
-}
+}
