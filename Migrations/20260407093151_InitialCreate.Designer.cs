@@ -12,7 +12,7 @@ using QLS.Backend.Data;
 namespace QLS.Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260402101303_InitialCreate")]
+    [Migration("20260407093151_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
