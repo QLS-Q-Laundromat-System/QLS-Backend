@@ -37,6 +37,22 @@ namespace QLS.Backend.Services.Brand
                 .ToListAsync();
         }
 
+        public async Task<BrandResponseDto?> GetBrandByIdAsync(Guid id)
+        {
+            var brand = await _context.Brands.FindAsync(id);
+            if (brand == null) return null;
+
+            return new BrandResponseDto
+            {
+                Id = brand.Id,
+                Name = brand.Name,
+                Email = brand.Email,
+                ContactPhone = brand.ContactPhone,
+                IsActive = brand.IsActive,
+                CreatedAt = brand.CreatedAt
+            };
+        }
+
         public async Task<BrandResponseDto> CreateBrandAsync(CreateBrandDto dto)
         {
             // Tạo entity mới từ DTO

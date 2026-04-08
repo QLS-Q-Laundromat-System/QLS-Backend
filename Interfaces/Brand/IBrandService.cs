@@ -7,6 +7,7 @@ namespace QLS.Backend.Interfaces.Brand
     public interface IBrandService
     {
         Task<List<BrandResponseDto>> GetAllBrandsAsync();
+        Task<BrandResponseDto?> GetBrandByIdAsync(Guid id);
         Task<BrandResponseDto> CreateBrandAsync(CreateBrandDto dto);
         Task<List<BrandAdminDto>> GetAllBrandAdminsAsync();
     }

@@ -29,6 +29,15 @@ namespace QLS.Backend.Controllers.Brand
             return Ok(ApiResponse<IEnumerable<BrandResponseDto>>.Success(brands, "Lấy danh sách thành công"));
         }
 
+        // 1.1 API Lấy chi tiết một Chủ chuỗi
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetBrandById(Guid id)
+        {
+            var brand = await _brandService.GetBrandByIdAsync(id);
+            if (brand == null) return NotFound(ApiResponse<object>.Error(404, "Không tìm thấy chủ chuỗi"));
+            return Ok(ApiResponse<BrandResponseDto>.Success(brand, "Lấy thông tin thành công"));
+        }
+
         // 2. API Tạo mới một Chủ chuỗi
         [HttpPost]
         public async Task<IActionResult> CreateBrand([FromBody] CreateBrandDto dto)
