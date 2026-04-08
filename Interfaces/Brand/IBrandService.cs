@@ -10,5 +10,6 @@ namespace QLS.Backend.Interfaces.Brand
         Task<BrandResponseDto?> GetBrandByIdAsync(Guid id);
         Task<BrandResponseDto> CreateBrandAsync(CreateBrandDto dto);
         Task<List<BrandAdminDto>> GetAllBrandAdminsAsync();
+        Task<bool> HasAccountAsync(Guid brandId);
     }
 }

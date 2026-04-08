@@ -99,5 +99,10 @@ namespace QLS.Backend.Services.Brand
 
             return admins;
         }
+    
+        public async Task<bool> HasAccountAsync(Guid brandId)
+        {
+            return await _context.Accounts.AnyAsync(acc => acc.BrandId == brandId);
+        }
     }
 }

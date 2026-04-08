@@ -38,6 +38,13 @@ namespace QLS.Backend.Controllers.Brand
             return Ok(ApiResponse<BrandResponseDto>.Success(brand, "Lấy thông tin thành công"));
         }
 
+        [HttpGet("{id}/has-account")]
+        public async Task<IActionResult> CheckHasAccount(Guid id)
+        {
+            var hasAccount = await _brandService.HasAccountAsync(id);
+            return Ok(ApiResponse<bool>.Success(hasAccount, hasAccount ? "Chuỗi đã có tài khoản" : "Chuỗi chưa có tài khoản"));
+        }
+
         // 2. API Tạo mới một Chủ chuỗi
         [HttpPost]
         public async Task<IActionResult> CreateBrand([FromBody] CreateBrandDto dto)
