@@ -11,7 +11,7 @@ namespace QLS.Backend.Models
 
         public string PasswordHash { get; set; } = string.Empty;
         
-        // Phân quyền: SuperAdmin, AdminBranch, Manager, Staff, Customer
+        // Phân quyền: SystemAdmin, AdminBranch, Manager, Staff, Customer
         public UserRole Role { get; set; } = UserRole.Customer; 
         
         public bool IsActive { get; set; } = true;

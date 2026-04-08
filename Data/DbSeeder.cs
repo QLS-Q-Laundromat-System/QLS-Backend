@@ -71,7 +71,7 @@ namespace QLS.Backend.Data
                 context.Users.Add(testUser);
 
                 // -- TẠO ACCOUNTS --
-                // 1. SuperAdmin
+                // 1. SystemAdmin
                 context.Accounts.Add(new Account
                 {
                     Username = "admin",
