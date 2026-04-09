@@ -31,6 +31,9 @@ namespace QLS.Backend.Services.Brand
                     Name = o.Name,
                     Email = o.Email,
                     ContactPhone = o.ContactPhone,
+                    Address = o.Address,
+                    Logo = o.Logo,
+                    StoreCount = _context.Stores.Count(s => s.BrandId == o.Id),
                     IsActive = o.IsActive,
                     CreatedAt = o.CreatedAt
                 })
@@ -43,12 +46,17 @@ namespace QLS.Backend.Services.Brand
             var brand = await _context.Brands.FindAsync(id);
             if (brand == null) return null;
 
+            var storeCount = await _context.Stores.CountAsync(s => s.BrandId == brand.Id);
+
             return new BrandResponseDto
             {
                 Id = brand.Id,
                 Name = brand.Name,
                 Email = brand.Email,
                 ContactPhone = brand.ContactPhone,
+                Address = brand.Address,
+                Logo = brand.Logo,
+                StoreCount = storeCount,
                 IsActive = brand.IsActive,
                 CreatedAt = brand.CreatedAt
             };
@@ -62,6 +70,8 @@ namespace QLS.Backend.Services.Brand
                 Name = dto.Name,
                 Email = dto.Email,
                 ContactPhone = dto.ContactPhone,
+                Address = dto.Address,
+                Logo = dto.Logo,
                 IsActive = true, // Mặc định tạo ra là hoạt động luôn
                 CreatedAt = DateTime.UtcNow
             };
@@ -76,8 +86,45 @@ namespace QLS.Backend.Services.Brand
                 Name = newBrand.Name,
                 Email = newBrand.Email,
                 ContactPhone = newBrand.ContactPhone,
+                Address = newBrand.Address,
+                Logo = newBrand.Logo,
+                StoreCount = 0,
                 IsActive = newBrand.IsActive,
                 CreatedAt = newBrand.CreatedAt
+            };
+        }
+
+        public async Task<BrandResponseDto> UpdateBrandAsync(Guid id, UpdateBrandDto dto)
+        {
+            var brand = await _context.Brands.FindAsync(id);
+            if (brand == null)
+            {
+                throw new KeyNotFoundException("Không tìm thấy chủ chuỗi.");
+            }
+
+            brand.Name = dto.Name;
+            brand.Email = dto.Email;
+            brand.ContactPhone = dto.ContactPhone;
+            brand.Address = dto.Address;
+            brand.Logo = dto.Logo;
+            brand.IsActive = dto.IsActive;
+
+            _context.Brands.Update(brand);
+            await _context.SaveChangesAsync();
+
+            var storeCount = await _context.Stores.CountAsync(s => s.BrandId == brand.Id);
+
+            return new BrandResponseDto
+            {
+                Id = brand.Id,
+                Name = brand.Name,
+                Email = brand.Email,
+                ContactPhone = brand.ContactPhone,
+                Address = brand.Address,
+                Logo = brand.Logo,
+                StoreCount = storeCount,
+                IsActive = brand.IsActive,
+                CreatedAt = brand.CreatedAt
             };
         }
 
@@ -115,6 +162,9 @@ namespace QLS.Backend.Services.Brand
                     Id = s.Id,
                     Name = s.Name,
                     Address = s.Address,
+                    Phone = s.Phone,
+                    Email = s.Email,
+                    StoreId = s.StoreId,
                     IsActive = s.IsActive,
                     CreatedAt = s.CreatedAt,
                     BrandId = s.BrandId

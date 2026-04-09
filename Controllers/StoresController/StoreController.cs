@@ -43,4 +43,27 @@ public class StoreController : ControllerBase
         var response = await _storeService.CreateStoreAsync(dto);
         return Ok(ApiResponse<StoreResponseDto>.Success(response, "Tạo cửa hàng thành công"));
     }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<StoreResponseDto>> GetStoreById(Guid id)
+    {
+        var store = await _storeService.GetStoreByIdAsync(id);
+        return Ok(ApiResponse<StoreResponseDto>.Success(store, "Lấy dữ liệu thành công"));
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "SystemAdmin,BrandAdmin")]
+    public async Task<IActionResult> UpdateStore(Guid id, [FromBody] UpdateStoreDto dto)
+    {
+        var response = await _storeService.UpdateStoreAsync(id, dto);
+        return Ok(ApiResponse<StoreResponseDto>.Success(response, "Cập nhật cửa hàng thành công"));
+    }
+
+    [HttpGet("{id}/accounts")]
+    [Authorize(Roles = "SystemAdmin,BrandAdmin,Manager")]
+    public async Task<IActionResult> GetAccountsByStore(Guid id)
+    {
+        var accounts = await _storeService.GetAccountsByStoreIdAsync(id);
+        return Ok(ApiResponse<IEnumerable<StoreAccountDto>>.Success(accounts, "Lấy danh sách tài khoản thành công"));
+    }
 }

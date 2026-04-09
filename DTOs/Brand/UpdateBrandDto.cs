@@ -3,8 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace QLS.Backend.DTOs.Brand
 {
-    // DTO dùng để hứng dữ liệu khi SuperAdmin tạo chủ chuỗi mới
-    public class CreateBrandDto
+    public class UpdateBrandDto
     {
         [Required(ErrorMessage = "Tên chuỗi không được để trống")]
         public string Name { get; set; } = string.Empty;
@@ -16,5 +15,7 @@ namespace QLS.Backend.DTOs.Brand
         public string? ContactPhone { get; set; }
         public string? Address { get; set; }
         public string? Logo { get; set; }
+
+        public bool IsActive { get; set; }
     }
 }

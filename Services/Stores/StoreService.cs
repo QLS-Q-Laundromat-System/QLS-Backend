@@ -23,6 +23,66 @@ namespace QLS.Backend.Services.Stores
             return await _context.Stores.ToListAsync();
         }
 
+        public async Task<StoreResponseDto> GetStoreByIdAsync(Guid id)
+        {
+            var s = await _context.Stores.FindAsync(id);
+            if (s == null)
+            {
+                throw new KeyNotFoundException("Không tìm thấy cửa hàng.");
+            }
+            return new StoreResponseDto
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Address = s.Address,
+                Phone = s.Phone,
+                Email = s.Email,
+                StoreId = s.StoreId,
+                BrandId = s.BrandId,
+                IsActive = s.IsActive,
+                CreatedAt = s.CreatedAt
+            };
+        }
+
+        public async Task<StoreResponseDto> UpdateStoreAsync(Guid id, UpdateStoreDto dto)
+        {
+            var store = await _context.Stores.FindAsync(id);
+            if (store == null)
+            {
+                throw new KeyNotFoundException("Không tìm thấy cửa hàng.");
+            }
+
+            // Check duplicate name within the same brand but not the same store
+            var nameExists = await _context.Stores.AnyAsync(s => s.BrandId == store.BrandId && s.Id != id && s.Name.ToLower() == dto.Name.ToLower());
+            if (nameExists)
+            {
+                throw new ArgumentException("Tên cửa hàng đã tồn tại trong chuỗi này.");
+            }
+
+            store.Name = dto.Name;
+            store.Address = dto.Address;
+            store.Phone = dto.Phone;
+            store.Email = dto.Email;
+            store.StoreId = dto.StoreId;
+            store.IsActive = dto.IsActive;
+
+            _context.Stores.Update(store);
+            await _context.SaveChangesAsync();
+
+            return new StoreResponseDto
+            {
+                Id = store.Id,
+                Name = store.Name,
+                Address = store.Address,
+                Phone = store.Phone,
+                Email = store.Email,
+                StoreId = store.StoreId,
+                BrandId = store.BrandId,
+                IsActive = store.IsActive,
+                CreatedAt = store.CreatedAt
+            };
+        }
+
         public async Task<int> GetStoreCountAsync()
         {
             return await _context.Stores.CountAsync();
@@ -54,6 +114,9 @@ namespace QLS.Backend.Services.Stores
             {
                 Name = dto.Name,
                 Address = dto.Address,
+                Phone = dto.Phone,
+                Email = dto.Email,
+                StoreId = dto.StoreId,
                 BrandId = dto.BrandId,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -68,10 +131,35 @@ namespace QLS.Backend.Services.Stores
                 Id = newStore.Id,
                 Name = newStore.Name,
                 Address = newStore.Address,
+                Phone = newStore.Phone,
+                Email = newStore.Email,
+                StoreId = newStore.StoreId,
                 BrandId = newStore.BrandId,
                 IsActive = newStore.IsActive,
                 CreatedAt = newStore.CreatedAt
             };
+        }
+
+        public async Task<List<StoreAccountDto>> GetAccountsByStoreIdAsync(Guid storeId)
+        {
+            var accounts = await _context.Accounts
+                .Where(acc => acc.StoreId == storeId && 
+                             (acc.Role == QLS.Backend.Models.Enums.UserRole.Manager || 
+                              acc.Role == QLS.Backend.Models.Enums.UserRole.Staff))
+                .Select(acc => new StoreAccountDto
+                {
+                    Id = acc.Id,
+                    Username = acc.Username,
+                    FullName = _context.Users.Where(u => u.Id == acc.Id).Select(u => u.FullName).FirstOrDefault() ?? acc.Username,
+                    Email = _context.Users.Where(u => u.Id == acc.Id).Select(u => u.Email).FirstOrDefault() ?? "",
+                    Role = acc.Role.ToString(),
+                    BrandId = acc.BrandId,
+                    IsActive = acc.IsActive,
+                    CreatedAt = acc.CreatedAt
+                })
+                .ToListAsync();
+
+            return accounts;
         }
     }
 }

@@ -58,6 +58,15 @@ namespace QLS.Backend.Controllers.Brand
             return Ok(ApiResponse<BrandResponseDto>.Success(newBrand, "Tạo chủ chuỗi thành công"));
         }
 
+        // 2.1 API Cập nhật một Chủ chuỗi
+        [HttpPut("{id}")]
+        [Authorize(Roles = "SystemAdmin")]
+        public async Task<IActionResult> UpdateBrand(Guid id, [FromBody] UpdateBrandDto dto)
+        {
+            var updatedBrand = await _brandService.UpdateBrandAsync(id, dto);
+            return Ok(ApiResponse<BrandResponseDto>.Success(updatedBrand, "Cập nhật chuỗi thành công"));
+        }
+
         // 3. API Lấy danh sách các tài khoản Admin của các Chuỗi
         [HttpGet("admins")]
         [Authorize(Roles = "SystemAdmin")]

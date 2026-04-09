@@ -8,8 +8,17 @@ namespace QLS.Backend.Data
     {
         public static async Task SeedAsync(AppDbContext context)
         {
+            // 0. Xóa database cũ trước
+            await context.Database.EnsureDeletedAsync();
+
+            // Sửa lỗi pooling của PostgreSQL sau khi drop database
+            Npgsql.NpgsqlConnection.ClearAllPools();
+            await Task.Delay(500);
+
             // 1. Tự động chạy Migration
             await context.Database.MigrateAsync();
+
+            Console.WriteLine("====== [SYSTEM] ĐÃ DROP DATABASE & CHẠY LẠI MIGRATIONS ======");
 
             // 2. Kiểm tra nếu chưa có Brand nào thì tạo bộ dữ liệu mẫu
             if (!await context.Brands.AnyAsync())
@@ -21,6 +30,8 @@ namespace QLS.Backend.Data
                     Name = "QLS Premium Laundry",
                     Email = "contact@qlslaundry.com",
                     ContactPhone = "0901234567",
+                    Address = "123 Le Loi, District 1, HCMC",
+                    Logo = "https://via.placeholder.com/150", 
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -32,6 +43,9 @@ namespace QLS.Backend.Data
                     Id = Guid.NewGuid(),
                     Name = "QLS Store - District 1",
                     Address = "123 Le Loi, District 1, HCMC",
+                    Phone = "0901234567",
+                    Email = "contact@qlslaundry.com",
+                    StoreId = "LG_STORE_001",
                     BrandId = defaultBrand.Id,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow

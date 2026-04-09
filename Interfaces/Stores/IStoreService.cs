@@ -8,7 +8,10 @@ namespace QLS.Backend.Interfaces.Stores
     public interface IStoreService
     {
         Task<IEnumerable<Store>> GetStoresAsync();
+        Task<StoreResponseDto> GetStoreByIdAsync(Guid id);
         Task<int> GetStoreCountAsync();
         Task<StoreResponseDto> CreateStoreAsync(CreateStoreDto dto);
+        Task<StoreResponseDto> UpdateStoreAsync(Guid id, UpdateStoreDto dto);
+        Task<List<StoreAccountDto>> GetAccountsByStoreIdAsync(Guid storeId);
     }
 }

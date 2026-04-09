@@ -10,6 +10,7 @@ namespace QLS.Backend.Interfaces.Brand
         Task<List<BrandResponseDto>> GetAllBrandsAsync();
         Task<BrandResponseDto?> GetBrandByIdAsync(Guid id);
         Task<BrandResponseDto> CreateBrandAsync(CreateBrandDto dto);
+        Task<BrandResponseDto> UpdateBrandAsync(Guid id, UpdateBrandDto dto);
         Task<List<BrandAdminDto>> GetAllBrandAdminsAsync();
         Task<bool> HasAccountAsync(Guid brandId);
         Task<List<StoreResponseDto>> GetStoresByBrandIdAsync(Guid brandId);
