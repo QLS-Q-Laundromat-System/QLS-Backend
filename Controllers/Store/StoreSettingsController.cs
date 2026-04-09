@@ -31,46 +31,39 @@ namespace QLS.Backend.Controllers
                 return BadRequest(new { message = "StoreId không hợp lệ." });
             }
 
-            try
+            // 1. Tìm xem cửa hàng này đã có dòng cài đặt nào trong DB chưa
+            var existingSetting = await _context.StoreSettings
+                .FirstOrDefaultAsync(s => s.StoreId == request.StoreId);
+
+            if (existingSetting == null)
             {
-                // 1. Tìm xem cửa hàng này đã có dòng cài đặt nào trong DB chưa
-                var existingSetting = await _context.StoreSettings
-                    .FirstOrDefaultAsync(s => s.StoreId == request.StoreId);
-
-                if (existingSetting == null)
+                // 2A. Nếu CHƯA CÓ -> Tạo mới (Insert)
+                var newSetting = new StoreSetting
                 {
-                    // 2A. Nếu CHƯA CÓ -> Tạo mới (Insert)
-                    var newSetting = new StoreSetting
-                    {
-                        StoreId                 = request.StoreId,
-                        DryerStepMinutes        = request.DryerStepMinutes,
-                        DryerStepPrice          = request.DryerStepPrice,
-                        DryerMinInitialMinutes  = request.DryerMinInitialMinutes,
-                        DryerGracePeriodMinutes = request.DryerGracePeriodMinutes
-                    };
+                    StoreId                 = request.StoreId,
+                    DryerStepMinutes        = request.DryerStepMinutes,
+                    DryerStepPrice          = request.DryerStepPrice,
+                    DryerMinInitialMinutes  = request.DryerMinInitialMinutes,
+                    DryerGracePeriodMinutes = request.DryerGracePeriodMinutes
+                };
 
-                    _context.StoreSettings.Add(newSetting);
-                    await _context.SaveChangesAsync();
+                _context.StoreSettings.Add(newSetting);
+                await _context.SaveChangesAsync();
 
-                    return Ok(new { message = "Đã tạo mới cài đặt thành công!", data = newSetting });
-                }
-                else
-                {
-                    // 2B. Nếu ĐÃ CÓ -> Cập nhật (Update)
-                    existingSetting.DryerStepMinutes        = request.DryerStepMinutes;
-                    existingSetting.DryerStepPrice          = request.DryerStepPrice;
-                    existingSetting.DryerMinInitialMinutes  = request.DryerMinInitialMinutes;
-                    existingSetting.DryerGracePeriodMinutes = request.DryerGracePeriodMinutes;
-
-                    _context.StoreSettings.Update(existingSetting);
-                    await _context.SaveChangesAsync();
-
-                    return Ok(new { message = "Đã cập nhật cài đặt thành công!", data = existingSetting });
-                }
+                return Ok(new { message = "Đã tạo mới cài đặt thành công!", data = newSetting });
             }
-            catch (System.Exception ex)
+            else
             {
-                return StatusCode(500, new { message = "Lỗi khi lưu cài đặt: " + ex.Message });
+                // 2B. Nếu ĐÃ CÓ -> Cập nhật (Update)
+                existingSetting.DryerStepMinutes        = request.DryerStepMinutes;
+                existingSetting.DryerStepPrice          = request.DryerStepPrice;
+                existingSetting.DryerMinInitialMinutes  = request.DryerMinInitialMinutes;
+                existingSetting.DryerGracePeriodMinutes = request.DryerGracePeriodMinutes;
+
+                _context.StoreSettings.Update(existingSetting);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Đã cập nhật cài đặt thành công!", data = existingSetting });
             }
         }
 

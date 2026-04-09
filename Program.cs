@@ -100,6 +100,8 @@ using (var scope = app.Services.CreateScope())
 // =====================================================================
 
 // Configure the HTTP request pipeline.
+app.UseMiddleware<QLS.Backend.Middlewares.GlobalExceptionMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     // Enable middleware to serve generated Swagger as a JSON endpoint.

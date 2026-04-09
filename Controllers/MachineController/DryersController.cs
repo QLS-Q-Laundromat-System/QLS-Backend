@@ -28,19 +28,11 @@ namespace QLS.Backend.Controllers
                 return BadRequest(new { message = "Thiếu thông tin người dùng (userId) hợp lệ." });
             }
 
-            try
-            {
-                // Gọi Service để xử lý logic "10 phút vàng"
-                var options = await _dryerService.GetDryerOptionsAsync(branchId, machineId, userId);
-                
-                // Trả về HTTP 200 OK cùng với dữ liệu
-                return Ok(options);
-            }
-            catch (System.Exception ex)
-            {
-                // Nếu có lỗi (ví dụ không tìm thấy cấu hình Branch), trả về lỗi 400
-                return BadRequest(new { message = ex.Message });
-            }
+            // Gọi Service để xử lý logic "10 phút vàng"
+            var options = await _dryerService.GetDryerOptionsAsync(branchId, machineId, userId);
+            
+            // Trả về HTTP 200 OK cùng với dữ liệu
+            return Ok(options);
         }
     }
 }

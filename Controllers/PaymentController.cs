@@ -35,36 +35,23 @@ namespace QLS.Backend.Controllers
         {
             Console.WriteLine($"[DIAGNOSTIC] EXECUTING TRIGGER: topic={topic}, count={count}");
 
-            try
+            // 1. LƯU DATABASE (Chỉ chạy khi FE truyền đủ thông tin)
+            if (branchId.HasValue && machineId != null && userId.HasValue && minutes.HasValue)
             {
-                // 1. LƯU DATABASE (Chỉ chạy khi FE truyền đủ thông tin)
-                if (branchId.HasValue && machineId != null && userId.HasValue && minutes.HasValue)
-                {
-                    await _dryerService.SaveSessionAsync(branchId.Value, machineId, userId.Value, minutes.Value);
-                    Console.WriteLine($"[DB] Đã lưu lịch sử sấy: User {userId}, {minutes} phút.");
-                }
-
-                // 2. KÍCH HOẠT ESP32 NHẢ XU
-                await _zigbeeService.TriggerAsync(topic, count);
-
-                return Ok(new TriggerWasherResponseDto
-                {
-                    Success = true,
-                    Message = $"Đã gửi lệnh nhả {count} xu tới máy '{topic}'.",
-                    ZigbeeDeviceTopic = topic,
-                    BagCount = count
-                });
+                await _dryerService.SaveSessionAsync(branchId.Value, machineId, userId.Value, minutes.Value);
+                Console.WriteLine($"[DB] Đã lưu lịch sử sấy: User {userId}, {minutes} phút.");
             }
-            catch (Exception ex)
+
+            // 2. KÍCH HOẠT ESP32 NHẢ XU
+            await _zigbeeService.TriggerAsync(topic, count);
+
+            return Ok(new TriggerWasherResponseDto
             {
-                return StatusCode(500, new TriggerWasherResponseDto
-                {
-                    Success = false,
-                    Message = "Lỗi hệ thống: " + ex.Message,
-                    ZigbeeDeviceTopic = topic,
-                    BagCount = count
-                });
-            }
+                Success = true,
+                Message = $"Đã gửi lệnh nhả {count} xu tới máy '{topic}'.",
+                ZigbeeDeviceTopic = topic,
+                BagCount = count
+            });
         }
     }
 }
