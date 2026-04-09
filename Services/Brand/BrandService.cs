@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Data;
 using QLS.Backend.DTOs.Brand;
+using QLS.Backend.DTOs.Store;
 using QLS.Backend.Models;
 using QLS.Backend.Interfaces.Brand;
 using System.Collections.Generic;
@@ -103,6 +104,22 @@ namespace QLS.Backend.Services.Brand
         public async Task<bool> HasAccountAsync(Guid brandId)
         {
             return await _context.Accounts.AnyAsync(acc => acc.BrandId == brandId);
+        }
+
+        public async Task<List<StoreResponseDto>> GetStoresByBrandIdAsync(Guid brandId)
+        {
+            return await _context.Stores
+                .Where(s => s.BrandId == brandId)
+                .Select(s => new StoreResponseDto
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Address = s.Address,
+                    IsActive = s.IsActive,
+                    CreatedAt = s.CreatedAt,
+                    BrandId = s.BrandId
+                })
+                .ToListAsync();
         }
     }
 }

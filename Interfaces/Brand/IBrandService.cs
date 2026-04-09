@@ -1,4 +1,5 @@
 using QLS.Backend.DTOs.Brand;
+using QLS.Backend.DTOs.Store;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -11,5 +12,6 @@ namespace QLS.Backend.Interfaces.Brand
         Task<BrandResponseDto> CreateBrandAsync(CreateBrandDto dto);
         Task<List<BrandAdminDto>> GetAllBrandAdminsAsync();
         Task<bool> HasAccountAsync(Guid brandId);
+        Task<List<StoreResponseDto>> GetStoresByBrandIdAsync(Guid brandId);
     }
 }

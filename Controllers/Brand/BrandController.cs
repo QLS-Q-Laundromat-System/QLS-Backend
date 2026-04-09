@@ -1,17 +1,18 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QLS.Backend.DTOs.Brand;
+using QLS.Backend.DTOs.Store;
 using QLS.Backend.Interfaces.Brand;
 using System.Threading.Tasks;
 using QLS.Backend.DTOs;
 using System.Collections.Generic;
+using System;
 
 namespace QLS.Backend.Controllers.Brand
 {
     [Route("api/[controller]")]
     [ApiController]
-    // BẮT BUỘC: Chỉ những người có Token hợp lệ VÀ có Role là "SystemAdmin" mới được vào
-    [Authorize(Roles = "SystemAdmin")] 
+    [Authorize] // Yêu cầu đăng nhập chung
     public class BrandController : ControllerBase
     {
         private readonly IBrandService _brandService;
@@ -23,6 +24,7 @@ namespace QLS.Backend.Controllers.Brand
 
         // 1. API Lấy danh sách toàn bộ Chủ chuỗi
         [HttpGet]
+        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> GetAllBrands()
         {
             var brands = await _brandService.GetAllBrandsAsync();
@@ -31,6 +33,7 @@ namespace QLS.Backend.Controllers.Brand
 
         // 1.1 API Lấy chi tiết một Chủ chuỗi
         [HttpGet("{id}")]
+        [Authorize(Roles = "SystemAdmin,BrandAdmin")]
         public async Task<IActionResult> GetBrandById(Guid id)
         {
             var brand = await _brandService.GetBrandByIdAsync(id);
@@ -39,6 +42,7 @@ namespace QLS.Backend.Controllers.Brand
         }
 
         [HttpGet("{id}/has-account")]
+        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> CheckHasAccount(Guid id)
         {
             var hasAccount = await _brandService.HasAccountAsync(id);
@@ -47,6 +51,7 @@ namespace QLS.Backend.Controllers.Brand
 
         // 2. API Tạo mới một Chủ chuỗi
         [HttpPost]
+        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> CreateBrand([FromBody] CreateBrandDto dto)
         {
             var newBrand = await _brandService.CreateBrandAsync(dto);
@@ -55,10 +60,20 @@ namespace QLS.Backend.Controllers.Brand
 
         // 3. API Lấy danh sách các tài khoản Admin của các Chuỗi
         [HttpGet("admins")]
+        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> GetAllBrandAdmins()
         {
             var admins = await _brandService.GetAllBrandAdminsAsync();
             return Ok(ApiResponse<IEnumerable<BrandAdminDto>>.Success(admins, "Lấy danh sách admin thành công"));
+        }
+
+        // 4. API Lấy danh sách các Store của một Chuỗi
+        [HttpGet("{id}/stores")]
+        [Authorize(Roles = "SystemAdmin,BrandAdmin")]
+        public async Task<IActionResult> GetStoresByBrand(Guid id)
+        {
+            var stores = await _brandService.GetStoresByBrandIdAsync(id);
+            return Ok(ApiResponse<IEnumerable<StoreResponseDto>>.Success(stores, "Lấy danh sách cửa hàng thành công"));
         }
     }
 }

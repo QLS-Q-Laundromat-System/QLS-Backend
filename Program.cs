@@ -10,6 +10,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddConfigSwagger();
 
 // Khai báo kết nối Database (Sử dụng PostgreSQL)
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -38,7 +39,6 @@ builder.Services.AddAuthorization();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 builder.Services.AddHttpClient<LgApiClient>();
 

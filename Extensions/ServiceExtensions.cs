@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using QLS.Backend.Services; // IMachineDetailService lives here
+using QLS.Backend.Services; 
+using Microsoft.OpenApi;// IMachineDetailService lives here
 
 namespace QLS.Backend.Extensions;
 
@@ -35,4 +36,32 @@ public static class ServiceExtensions
 
         return services;
     }
+
+   public static IServiceCollection AddConfigSwagger(this IServiceCollection services)
+{
+    services.AddSwaggerGen(options =>
+    {
+        options.SwaggerDoc("v1", new OpenApiInfo { Title = "QLS Backend", Version = "v1" });
+
+        // Dùng ApiKey: Bắt buộc gửi chính xác những gì người dùng nhập
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Description = "⚠️ QUAN TRỌNG: Bạn PHẢI gõ tay chữ 'Bearer ' (có khoảng trắng) rồi mới dán token vào.\nVí dụ: Bearer eyJhbGci...",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey, // Dùng lại ApiKey
+            Scheme = "Bearer"
+        });
+
+        options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecuritySchemeReference("Bearer"),
+                new List<string>()
+            }
+        });
+    });
+    
+    return services;
+}
 }
