@@ -66,10 +66,10 @@ namespace QLS.Backend.Data
                 // -- TẠO MÁY MẪU (MACHINES) --
                 var machines = new List<Machine>
                 {
-                    new Machine { MachineId = "W001", BranchId = defaultStore.Id, Type = MachineType.Washer, Capacity = "10kg" },
-                    new Machine { MachineId = "W002", BranchId = defaultStore.Id, Type = MachineType.Washer, Capacity = "10kg" },
-                    new Machine { MachineId = "D001", BranchId = defaultStore.Id, Type = MachineType.Dryer, Capacity = "15kg" },
-                    new Machine { MachineId = "D002", BranchId = defaultStore.Id, Type = MachineType.Dryer, Capacity = "15kg" }
+                    new Machine { MachineId = "W001", StoreId = defaultStore.Id, Type = MachineType.Washer, Capacity = "10kg" },
+                    new Machine { MachineId = "W002", StoreId = defaultStore.Id, Type = MachineType.Washer, Capacity = "10kg" },
+                    new Machine { MachineId = "D001", StoreId = defaultStore.Id, Type = MachineType.Dryer, Capacity = "15kg" },
+                    new Machine { MachineId = "D002", StoreId = defaultStore.Id, Type = MachineType.Dryer, Capacity = "15kg" }
                 };
                 context.Machines.AddRange(machines);
 

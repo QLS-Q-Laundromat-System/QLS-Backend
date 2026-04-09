@@ -10,7 +10,7 @@ public class Machine
     public string MachineId { get; set; } = string.Empty;
 
     [Required]
-    public Guid BranchId { get; set; }
+    public Guid StoreId { get; set; }
 
     [Required]
     public MachineType Type { get; set; } = MachineType.Washer; // Giặt, Sấy

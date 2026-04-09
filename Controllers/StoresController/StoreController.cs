@@ -66,4 +66,12 @@ public class StoreController : ControllerBase
         var accounts = await _storeService.GetAccountsByStoreIdAsync(id);
         return Ok(ApiResponse<IEnumerable<StoreAccountDto>>.Success(accounts, "Lấy danh sách tài khoản thành công"));
     }
+
+    [HttpGet("{id}/machines")]
+    [Authorize(Roles = "SystemAdmin,BrandAdmin,Manager,Staff")]
+    public async Task<IActionResult> GetMachinesByStore(Guid id)
+    {
+        var machines = await _storeService.GetMachinesByStoreIdAsync(id);
+        return Ok(ApiResponse<IEnumerable<Machine>>.Success(machines, "Lấy danh sách máy thành công"));
+    }
 }

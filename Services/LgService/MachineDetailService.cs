@@ -18,10 +18,10 @@ public class MachineDetailService : IMachineDetailService
         _context = context;
     }
 
-    public async Task<List<MachineDetailDto>> GetLgMachineStatusAsync(Guid branchId)
+    public async Task<List<MachineDetailDto>> GetLgMachineStatusAsync(Guid storeId)
     {
         // 1. Gọi API lấy dữ liệu thô (LgClient đang nhận string nên ta .ToString())
-        var rawJson = await _lgClient.GetRawStatusAsync(branchId.ToString());
+        var rawJson = await _lgClient.GetRawStatusAsync(storeId.ToString());
         
         // 2. Chế biến dữ liệu sang DTO
         var statusList = LgMapper.MapToDto(rawJson);
@@ -32,7 +32,7 @@ public class MachineDetailService : IMachineDetailService
             .Where(s => !existingIds.Contains(s.DeviceId))
             .Select(s => new Machine {
                 MachineId = s.DeviceId,
-                BranchId = branchId,
+                StoreId = storeId,
                 Type = s.DeviceType == "0" ? MachineType.Washer : MachineType.Dryer,
                 Capacity = "LG_COMMERCIAL"
             }).ToList();

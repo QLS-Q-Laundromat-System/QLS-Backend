@@ -45,7 +45,7 @@ namespace QLS.Backend.Data
             modelBuilder.Entity<Machine>()
                 .HasOne<Store>()
                 .WithMany(s => s.Machines)
-                .HasForeignKey(m => m.BranchId)
+                .HasForeignKey(m => m.StoreId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // --- Cấu hình quan hệ cho StoreSetting ---
