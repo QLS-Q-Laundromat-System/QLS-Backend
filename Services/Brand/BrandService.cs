@@ -121,5 +121,27 @@ namespace QLS.Backend.Services.Brand
                 })
                 .ToListAsync();
         }
+
+        public async Task<List<BrandAccountDto>> GetAccountsByBrandIdAsync(Guid brandId)
+        {
+            var accounts = await _context.Accounts
+                .Where(acc => acc.BrandId == brandId && 
+                             (acc.Role == QLS.Backend.Models.Enums.UserRole.Manager || 
+                              acc.Role == QLS.Backend.Models.Enums.UserRole.Staff))
+                .Select(acc => new BrandAccountDto
+                {
+                    Id = acc.Id,
+                    Username = acc.Username,
+                    FullName = _context.Users.Where(u => u.Id == acc.Id).Select(u => u.FullName).FirstOrDefault() ?? acc.Username,
+                    Email = _context.Users.Where(u => u.Id == acc.Id).Select(u => u.Email).FirstOrDefault() ?? "",
+                    Role = acc.Role.ToString(),
+                    StoreId = acc.StoreId,
+                    IsActive = acc.IsActive,
+                    CreatedAt = acc.CreatedAt
+                })
+                .ToListAsync();
+
+            return accounts;
+        }
     }
 }

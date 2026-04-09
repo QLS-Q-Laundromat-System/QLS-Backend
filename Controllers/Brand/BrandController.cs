@@ -75,5 +75,14 @@ namespace QLS.Backend.Controllers.Brand
             var stores = await _brandService.GetStoresByBrandIdAsync(id);
             return Ok(ApiResponse<IEnumerable<StoreResponseDto>>.Success(stores, "Lấy danh sách cửa hàng thành công"));
         }
+
+        // 5. API Lấy danh sách các Account (tài khoản) thuộc về Chuỗi
+        [HttpGet("{id}/accounts")]
+        [Authorize(Roles = "SystemAdmin,BrandAdmin")]
+        public async Task<IActionResult> GetAccountsByBrand(Guid id)
+        {
+            var accounts = await _brandService.GetAccountsByBrandIdAsync(id);
+            return Ok(ApiResponse<IEnumerable<BrandAccountDto>>.Success(accounts, "Lấy danh sách tài khoản thành công"));
+        }
     }
 }
