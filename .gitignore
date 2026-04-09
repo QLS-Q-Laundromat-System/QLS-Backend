@@ -54,3 +54,10 @@ $RECYCLE.BIN/
 
 # Mac OS X
 .DS_Store
+
+# SSH Keys - KHÔNG BAO GIỜ commit lên GitHub!
+*.key
+*.pem
+
+# Production secrets
+appsettings.Production.json
