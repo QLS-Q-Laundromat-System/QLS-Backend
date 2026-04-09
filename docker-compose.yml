@@ -12,6 +12,8 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-QLS@Oracle2026!}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"   # chỉ bind localhost, SSH tunnel dùng được, không expose public
     networks:
       - qls-network
     healthcheck:
