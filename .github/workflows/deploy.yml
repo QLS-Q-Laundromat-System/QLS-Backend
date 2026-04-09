@@ -1,0 +1,99 @@
+name: 🚀 Deploy QLS Backend to Oracle Cloud
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # ─── 1. CHECKOUT ─────────────────────────────────────────────────────
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # ─── 2. SETUP .NET 10 ────────────────────────────────────────────────
+      - name: ⚙️ Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # ─── 3. BUILD & PUBLISH ──────────────────────────────────────────────
+      - name: 🔨 Restore & Publish
+        run: |
+          dotnet restore
+          dotnet publish -c Release -o ./publish --no-restore --no-self-contained -r linux-x64
+
+      # ─── 4. COPY LÊN SERVER ──────────────────────────────────────────────
+      - name: 📤 Copy to Oracle Cloud VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USER }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          source: "publish/*"
+          target: "/tmp/qls-deploy"
+          strip_components: 1
+
+      # ─── 5. DEPLOY & RESTART ─────────────────────────────────────────────
+      - name: 🚀 Deploy & Restart service
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USER }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          script: |
+            set -e
+            APP_DIR="/opt/qls-backend"
+            BACKUP_DIR="/opt/qls-backend-backup"
+
+            # Backup bản đang chạy
+            if [ -f "$APP_DIR/QLS.Backend.dll" ]; then
+              sudo rm -rf $BACKUP_DIR
+              sudo cp -r $APP_DIR $BACKUP_DIR
+              echo "📦 Backup xong tại $BACKUP_DIR"
+            fi
+
+            # Dừng service
+            sudo systemctl stop qls-backend || true
+            echo "🔴 Service đã dừng"
+
+            # Xoá file cũ, giữ lại appsettings.Production.json
+            sudo find $APP_DIR -mindepth 1 ! -name 'appsettings.Production.json' -delete
+            sudo cp -r /tmp/qls-deploy/. $APP_DIR/
+            sudo chown -R qls:qls $APP_DIR
+            sudo rm -rf /tmp/qls-deploy
+            echo "📂 Copy file mới xong"
+
+            # Khởi động lại
+            sudo systemctl start qls-backend
+            sleep 5
+
+            # Kiểm tra service
+            if sudo systemctl is-active --quiet qls-backend; then
+              echo "✅ SERVICE ĐANG CHẠY!"
+            else
+              echo "❌ SERVICE LỖI! Rollback..."
+              sudo systemctl stop qls-backend || true
+              sudo rm -rf $APP_DIR
+              sudo mv $BACKUP_DIR $APP_DIR
+              sudo chown -R qls:qls $APP_DIR
+              sudo systemctl start qls-backend
+              sudo journalctl -u qls-backend --no-pager -n 50
+              exit 1
+            fi
+
+      # ─── 6. HEALTH CHECK ─────────────────────────────────────────────────
+      - name: 🏥 Health Check
+        run: |
+          sleep 5
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.ORACLE_HOST }}:5078/health || echo "000")
+          echo "Health check: $HTTP_CODE"
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ API hoạt động bình thường!"
+          else
+            echo "⚠️ Health check trả về code $HTTP_CODE"
+          fi

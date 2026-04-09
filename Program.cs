@@ -45,19 +45,27 @@ builder.Services.AddHttpClient<LgApiClient>();
 var app = builder.Build();
 
 
+// =====================================================================
+// TỰ ĐỘNG CHẠY MIGRATION & SEED DỮ LIỆU KHI KHỞI ĐỘNG
+// =====================================================================
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
-        // Gọi hàm tự động chèn dữ liệu
-        await QLS.Backend.Data.DbSeeder.SeedAsync(context); 
+
+        logger.LogInformation("🔄 Đang chạy database migration...");
+        await context.Database.MigrateAsync(); // Tự động apply tất cả migration pending
+        logger.LogInformation("✅ Migration hoàn tất!");
+
+        await QLS.Backend.Data.DbSeeder.SeedAsync(context);
+        logger.LogInformation("✅ Seed dữ liệu hoàn tất!");
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Có lỗi xảy ra khi tự động tạo dữ liệu mẫu.");
+        logger.LogError(ex, "❌ Có lỗi xảy ra khi migration hoặc seed dữ liệu.");
     }
 }
 
@@ -102,18 +110,16 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline.
 app.UseMiddleware<QLS.Backend.Middlewares.GlobalExceptionMiddleware>();
 
-if (app.Environment.IsDevelopment())
+// Swagger luôn bật (Development & Production)
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    // Enable middleware to serve generated Swagger as a JSON endpoint.
-    app.UseSwagger();
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "QLS Backend API v1");
+    c.RoutePrefix = string.Empty;
+});
 
-    // Enable middleware to serve swagger-ui
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "QLS Backend API v1");
-        c.RoutePrefix = string.Empty; // Hiển thị Swagger trực tiếp tại http://localhost:5078/
-    });
-}
+// Health Check endpoint cho CI/CD pipeline
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
 // Kích hoạt Middleware CORS
 app.UseCors("AllowAll");
