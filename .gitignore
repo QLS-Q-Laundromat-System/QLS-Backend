@@ -61,3 +61,7 @@ $RECYCLE.BIN/
 
 # Production secrets
 appsettings.Production.json
+
+# Docker environment (chỉ commit .env.example, không commit .env)
+.env
+!.env.example

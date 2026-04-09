@@ -1,4 +1,4 @@
-name: 🚀 Deploy QLS Backend to Oracle Cloud
+name: 🐳 Deploy QLS Backend (Docker) to Oracle Cloud
 
 on:
   push:
@@ -7,39 +7,33 @@ on:
 
 jobs:
   deploy:
-    name: Build & Deploy
+    name: Build Docker & Deploy
     runs-on: ubuntu-latest
 
     steps:
-      # ─── 1. CHECKOUT ─────────────────────────────────────────────────────
+      # ─── 1. CHECKOUT ─────────────────────────────────────────────────────────
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      # ─── 2. SETUP .NET 10 ────────────────────────────────────────────────
-      - name: ⚙️ Setup .NET 10
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      # ─── 3. BUILD & PUBLISH ──────────────────────────────────────────────
-      - name: 🔨 Restore & Publish
+      # ─── 2. BUILD DOCKER IMAGE ───────────────────────────────────────────────
+      - name: 🐳 Build Docker image
         run: |
-          dotnet restore
-          dotnet publish -c Release -o ./publish --no-restore --no-self-contained -r linux-x64
+          docker build -t qls-backend:latest .
+          docker save qls-backend:latest | gzip > qls-backend.tar.gz
+          echo "✅ Docker image built: $(du -sh qls-backend.tar.gz | cut -f1)"
 
-      # ─── 4. COPY LÊN SERVER ──────────────────────────────────────────────
-      - name: 📤 Copy to Oracle Cloud VM
+      # ─── 3. COPY IMAGE LÊN SERVER ────────────────────────────────────────────
+      - name: 📤 Copy image to Oracle Cloud VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USER }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
-          source: "publish/*"
+          source: "qls-backend.tar.gz,docker-compose.yml"
           target: "/tmp/qls-deploy"
-          strip_components: 1
 
-      # ─── 5. DEPLOY & RESTART ─────────────────────────────────────────────
-      - name: 🚀 Deploy & Restart service
+      # ─── 4. DEPLOY TRÊN SERVER ───────────────────────────────────────────────
+      - name: 🚀 Deploy Docker containers
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.ORACLE_HOST }}
@@ -47,46 +41,35 @@ jobs:
           key: ${{ secrets.ORACLE_SSH_KEY }}
           script: |
             set -e
-            APP_DIR="/opt/qls-backend"
-            BACKUP_DIR="/opt/qls-backend-backup"
 
-            # Backup bản đang chạy
-            if [ -f "$APP_DIR/QLS.Backend.dll" ]; then
-              sudo rm -rf $BACKUP_DIR
-              sudo cp -r $APP_DIR $BACKUP_DIR
-              echo "📦 Backup xong tại $BACKUP_DIR"
-            fi
+            echo "📦 Load Docker image..."
+            docker load < /tmp/qls-deploy/qls-backend.tar.gz
+            echo "✅ Image loaded"
 
-            # Dừng service
-            sudo systemctl stop qls-backend || true
-            echo "🔴 Service đã dừng"
+            echo "📂 Copy docker-compose.yml..."
+            cp /tmp/qls-deploy/docker-compose.yml ~/qls-backend/docker-compose.yml
 
-            # Xoá file cũ, giữ lại appsettings.Production.json
-            sudo find $APP_DIR -mindepth 1 ! -name 'appsettings.Production.json' -delete
-            sudo cp -r /tmp/qls-deploy/. $APP_DIR/
-            sudo chown -R qls:qls $APP_DIR
-            sudo rm -rf /tmp/qls-deploy
-            echo "📂 Copy file mới xong"
+            echo "🔄 Restart containers..."
+            cd ~/qls-backend
+            docker compose up -d --remove-orphans
 
-            # Khởi động lại
-            sudo systemctl start qls-backend
-            sleep 5
+            echo "🧹 Cleanup temp files..."
+            rm -rf /tmp/qls-deploy
 
-            # Kiểm tra service
-            if sudo systemctl is-active --quiet qls-backend; then
-              echo "✅ SERVICE ĐANG CHẠY!"
+            echo "⏳ Chờ container khởi động..."
+            sleep 10
+
+            # Kiểm tra container
+            if docker ps | grep -q "qls-backend"; then
+              echo "✅ CONTAINER ĐANG CHẠY!"
+              docker ps --filter "name=qls"
             else
-              echo "❌ SERVICE LỖI! Rollback..."
-              sudo systemctl stop qls-backend || true
-              sudo rm -rf $APP_DIR
-              sudo mv $BACKUP_DIR $APP_DIR
-              sudo chown -R qls:qls $APP_DIR
-              sudo systemctl start qls-backend
-              sudo journalctl -u qls-backend --no-pager -n 50
+              echo "❌ CONTAINER LỖI! Xem logs:"
+              docker logs qls-backend --tail=50
               exit 1
             fi
 
-      # ─── 6. HEALTH CHECK ─────────────────────────────────────────────────
+      # ─── 5. HEALTH CHECK ─────────────────────────────────────────────────────
       - name: 🏥 Health Check
         run: |
           sleep 5
@@ -95,5 +78,5 @@ jobs:
           if [ "$HTTP_CODE" = "200" ]; then
             echo "✅ API hoạt động bình thường!"
           else
-            echo "⚠️ Health check trả về code $HTTP_CODE"
+            echo "⚠️ Health check trả về code $HTTP_CODE (có thể /health chưa được implement)"
           fi

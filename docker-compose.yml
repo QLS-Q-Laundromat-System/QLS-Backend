@@ -1,0 +1,63 @@
+version: "3.9"
+
+services:
+  # ─── PostgreSQL Database ────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: qls-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:-QLS}
+      POSTGRES_USER: ${DB_USER:-qls_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-QLS@Oracle2026!}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - qls-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-qls_user} -d ${DB_NAME:-QLS}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── QLS Backend API ────────────────────────────────────────────────────────
+  qls-backend:
+    image: qls-backend:latest
+    container_name: qls-backend
+    restart: always
+    ports:
+      - "5078:5078"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5078
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${DB_NAME:-QLS};Username=${DB_USER:-qls_user};Password=${DB_PASSWORD:-QLS@Oracle2026!}"
+      Jwt__Key: ${JWT_KEY:-QLaundromatSystem123456789@@2026!}
+      Jwt__Issuer: QLS_Backend
+      Jwt__Audience: QLS_Web
+      Jwt__ExpireDays: 7
+      CorsSettings__AllowedOrigins__0: ${CORS_ORIGIN_0:-http://localhost:5173}
+      CorsSettings__AllowedOrigins__1: ${CORS_ORIGIN_1:-https://your-frontend-domain.com}
+      Zigbee2Mqtt__Host: ${MQTT_HOST:-localhost}
+      Zigbee2Mqtt__Port: ${MQTT_PORT:-1883}
+      LgApi__BaseUrl: https://kic-laundry.lgthinq.com/status/
+      LgApi__ApiKey: vV6bStCpqr5Hqxbcr8Kmp9XkFh4VdlVp568YxBp5
+      LgApi__AppVer: "0.1"
+      LgApi__ClientType: USER
+      LgApi__CountryCode: VN
+      LgApi__ClientId: "12345"
+      LgApi__ServiceCode: CHN000035
+      LgApi__ServicePhase: OP
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - qls-network
+
+volumes:
+  postgres_data:
+    name: qls-postgres-data
+
+networks:
+  qls-network:
+    name: qls-network
+    driver: bridge
