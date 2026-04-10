@@ -10,6 +10,9 @@ namespace QLS.Backend.Models
         public required string Username { get; set; }
 
         public string PasswordHash { get; set; } = string.Empty;
+
+        public string? FullName { get; set; }
+        public string? Email { get; set; }
         
         // Phân quyền: SystemAdmin, AdminBranch, Manager, Staff, Customer
         public UserRole Role { get; set; } = UserRole.Customer; 

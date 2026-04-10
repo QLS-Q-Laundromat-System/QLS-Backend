@@ -122,25 +122,21 @@ namespace QLS.Backend.Data
                 {
                     Username = "admin",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    FullName = "Hệ thống QLS",
+                    Email = "admin@qls.com",
                     Role = UserRole.SystemAdmin,
                     IsActive = true
                 });
 
-                // 2. Brand Admin + User Profile
+                // 2. Brand Admin
                 var brandAdminId = Guid.NewGuid();
-                context.Users.Add(new User 
-                { 
-                    Id = brandAdminId, 
-                    FullName = "Chủ chuỗi QLS Premium", 
-                    Email = "owner@qls.com",
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                });
                 context.Accounts.Add(new Account
                 {
                     Id = brandAdminId,
                     Username = "owner@qls.com",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    FullName = "Chủ chuỗi QLS Premium",
+                    Email = "owner@qls.com",
                     Role = UserRole.BrandAdmin,
                     BrandId = defaultBrand.Id,
                     IsActive = true
@@ -148,19 +144,13 @@ namespace QLS.Backend.Data
 
                 // Brand Admin QLS1
                 var qls1BrandAdminId = Guid.NewGuid();
-                context.Users.Add(new User 
-                { 
-                    Id = qls1BrandAdminId, 
-                    FullName = "Admin QLS1", 
-                    Email = "ntson68199@gmail.com",
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                });
                 context.Accounts.Add(new Account
                 {
                     Id = qls1BrandAdminId,
                     Username = "sonadmin",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    FullName = "Admin QLS1",
+                    Email = "ntson68199@gmail.com",
                     Role = UserRole.BrandAdmin,
                     BrandId = qls1Brand.Id,
                     IsActive = true

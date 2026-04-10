@@ -10,7 +10,7 @@
 |---|---|
 | **Server IP** | `161.118.238.100` |
 | **SSH User** | `ubuntu` |
-| **SSH Key** | `C:\Users\Nguyen Quoc An\.ssh\oracle_key.pem` |
+| **SSH Key** | `C:\Users\{TÊN_MÁY_BẠN}\.ssh\oracle_key.pem` |
 | **DB Name** | `QLS` |
 | **DB User** | `qls_user` |
 | **DB Password** | `QLS@Oracle2026!` |
@@ -55,7 +55,7 @@ Chuột phải vào **Servers** → **Register** → **Server...**
 | **Tunnel port** | `22` |
 | **Username** | `ubuntu` |
 | **Authentication** | `Identity file` |
-| **Identity file** | `C:\Users\Nguyen Quoc An\.ssh\oracle_key.pem` |
+| **Identity file** | Đường dẫn đến file `.pem` trên máy bạn |
 
 ---
 
@@ -80,11 +80,12 @@ Sau đó **double-click** vào `QLS Oracle Cloud` trong danh sách Servers là k
 
 ---
 
-## Lưu ý
-
-- SSH Key phải có đúng quyền. Nếu lỗi permissions, chạy lệnh sau trong PowerShell:
+- SSH Key phải có đúng quyền (Chỉ mình bạn được đọc). Nếu báo lỗi "Permissions are too open", hãy mở PowerShell và chạy:
   ```powershell
-  # Lệnh này tự động dùng username của máy bạn (không cần đổi gì)
-  icacls "C:\Users\$env:USERNAME\.ssh\oracle_key.pem" /inheritance:r /grant:r "$env:USERNAME`:R"
+  # 1. Di chuyển vào thư mục chứa key (Ví dụ: Downloads hoặc .ssh)
+  cd C:\Users\$env:USERNAME\.ssh
+
+  # 2. Chạy lệnh phân quyền (Đảm bảo file oracle_key.pem nằm trong thư mục này)
+  icacls .\oracle_key.pem /inheritance:r /grant:r "$($env:USERNAME):R"
   ```
-- Port `5432` của postgres **không expose ra internet** (chỉ bind `127.0.0.1`) — pgAdmin kết nối qua SSH Tunnel nên an toàn.
+- Port `5432` của postgres **không expose ra internet** (chỉ bind `127.0.0.1`) — pgAdmin kết nối qua SSH Tunnel nên cực kỳ an toàn.
