@@ -15,6 +15,7 @@ namespace QLS.Backend.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public ICollection<Store> Stores { get; set; } = new List<Store>();
         public ICollection<Account> Accounts { get; set; } = new List<Account>();
+        public ICollection<StoreType> StoreTypes { get; set; } = new List<StoreType>();
 
     }
 }

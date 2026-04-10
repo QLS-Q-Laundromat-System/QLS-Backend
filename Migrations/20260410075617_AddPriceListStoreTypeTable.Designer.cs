@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using QLS.Backend.Data;
@@ -11,9 +12,11 @@ using QLS.Backend.Data;
 namespace QLS.Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260410075617_AddPriceListStoreTypeTable")]
+    partial class AddPriceListStoreTypeTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -222,78 +225,6 @@ namespace QLS.Backend.Migrations
                     b.ToTable("PriceListStoreTypes");
                 });
 
-            modelBuilder.Entity("QLS.Backend.Models.PriceModePerKg", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("MachineType")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal?>("MaxKg")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
-
-                    b.Property<decimal>("MinKg")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
-
-                    b.Property<Guid>("PriceListId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("PricePer")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasPrecision(12)
-                        .HasColumnType("numeric(12,0)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PriceListId");
-
-                    b.ToTable("PriceModePerKgs");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.PriceModePerSession", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("DurationMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("MachineCapacityKg")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
-
-                    b.Property<int>("MachineType")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Price")
-                        .HasPrecision(12)
-                        .HasColumnType("numeric(12,0)");
-
-                    b.Property<Guid>("PriceListId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("TimeSlotId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PriceListId");
-
-                    b.HasIndex("TimeSlotId");
-
-                    b.ToTable("PriceModePerSessions");
-                });
-
             modelBuilder.Entity("QLS.Backend.Models.Store", b =>
                 {
                     b.Property<Guid>("Id")
@@ -400,34 +331,6 @@ namespace QLS.Backend.Migrations
                     b.ToTable("StoreTypes");
                 });
 
-            modelBuilder.Entity("QLS.Backend.Models.TimeSlot", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<short>("DayMask")
-                        .HasColumnType("smallint");
-
-                    b.Property<TimeOnly?>("EndTime")
-                        .HasColumnType("time without time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<TimeOnly?>("StartTime")
-                        .HasColumnType("time without time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TimeSlots");
-                });
-
             modelBuilder.Entity("QLS.Backend.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -517,34 +420,6 @@ namespace QLS.Backend.Migrations
                     b.Navigation("StoreType");
                 });
 
-            modelBuilder.Entity("QLS.Backend.Models.PriceModePerKg", b =>
-                {
-                    b.HasOne("QLS.Backend.Models.PriceList", "PriceList")
-                        .WithMany("PriceModePerKgs")
-                        .HasForeignKey("PriceListId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("PriceList");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.PriceModePerSession", b =>
-                {
-                    b.HasOne("QLS.Backend.Models.PriceList", "PriceList")
-                        .WithMany("PriceModePerSessions")
-                        .HasForeignKey("PriceListId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("QLS.Backend.Models.TimeSlot", "TimeSlot")
-                        .WithMany("PriceModesPerSession")
-                        .HasForeignKey("TimeSlotId");
-
-                    b.Navigation("PriceList");
-
-                    b.Navigation("TimeSlot");
-                });
-
             modelBuilder.Entity("QLS.Backend.Models.Store", b =>
                 {
                     b.HasOne("QLS.Backend.Models.Brand", "Brand")
@@ -597,10 +472,6 @@ namespace QLS.Backend.Migrations
             modelBuilder.Entity("QLS.Backend.Models.PriceList", b =>
                 {
                     b.Navigation("PriceListStoreTypes");
-
-                    b.Navigation("PriceModePerKgs");
-
-                    b.Navigation("PriceModePerSessions");
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.Store", b =>
@@ -615,11 +486,6 @@ namespace QLS.Backend.Migrations
                     b.Navigation("PriceListStoreTypes");
 
                     b.Navigation("Stores");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.TimeSlot", b =>
-                {
-                    b.Navigation("PriceModesPerSession");
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.User", b =>

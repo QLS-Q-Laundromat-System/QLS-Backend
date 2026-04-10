@@ -16,6 +16,12 @@ namespace QLS.Backend.Data
         public DbSet<Brand> Brands { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<StoreType> StoreTypes { get; set; }
+        public DbSet<PriceList> PriceLists { get; set; }
+        public DbSet<PriceListStoreType> PriceListStoreTypes { get; set; }
+        public DbSet<PriceModePerKg> PriceModePerKgs { get; set; }
+        public DbSet<TimeSlot> TimeSlots { get; set; }
+        public DbSet<PriceModePerSession> PriceModePerSessions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -27,6 +33,19 @@ namespace QLS.Backend.Data
                 .WithMany(b => b.Stores)
                 .HasForeignKey(s => s.BrandId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<StoreType>()
+                .HasOne(st => st.Brand)
+                .WithMany(b => b.StoreTypes)
+                .HasForeignKey(st => st.BrandId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // --- Cấu hình quan hệ cho Store và StoreType ---
+            modelBuilder.Entity<Store>()
+                .HasOne(s => s.StoreType)
+                .WithMany(st => st.Stores)
+                .HasForeignKey(s => s.StoreTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // --- Cấu hình quan hệ cho Account ---
             modelBuilder.Entity<Account>()
