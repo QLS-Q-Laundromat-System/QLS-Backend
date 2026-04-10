@@ -37,6 +37,20 @@ namespace QLS.Backend.Data
                 };
                 context.Brands.Add(defaultBrand);
 
+                // -- TẠO BRAND QLS1 --
+                var qls1Brand = new Brand
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "QLS1",
+                    Email = "ntson68199@gmail.com",
+                    ContactPhone = "0862789277",
+                    Address = "QLS1 Address",
+                    Logo = "https://via.placeholder.com/150", 
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                context.Brands.Add(qls1Brand);
+
                 // -- TẠO STORE MẪU --
                 var defaultStore = new Store
                 {
@@ -111,6 +125,26 @@ namespace QLS.Backend.Data
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
                     Role = UserRole.BrandAdmin,
                     BrandId = defaultBrand.Id,
+                    IsActive = true
+                });
+
+                // Brand Admin QLS1
+                var qls1BrandAdminId = Guid.NewGuid();
+                context.Users.Add(new User 
+                { 
+                    Id = qls1BrandAdminId, 
+                    FullName = "Admin QLS1", 
+                    Email = "ntson68199@gmail.com",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                });
+                context.Accounts.Add(new Account
+                {
+                    Id = qls1BrandAdminId,
+                    Username = "sonadmin",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    Role = UserRole.BrandAdmin,
+                    BrandId = qls1Brand.Id,
                     IsActive = true
                 });
 
