@@ -51,6 +51,23 @@ namespace QLS.Backend.Data
                 };
                 context.Brands.Add(qls1Brand);
 
+                // -- TẠO STORE TYPE --
+                var premiumType = new StoreType
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Premium District 1",
+                    Level = 2,
+                    BrandId = defaultBrand.Id
+                };
+                var standardType = new StoreType
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Standard QLS",
+                    Level = 1,
+                    BrandId = defaultBrand.Id
+                };
+                context.StoreTypes.AddRange(premiumType, standardType);
+
                 // -- TẠO STORE MẪU --
                 var defaultStore = new Store
                 {
@@ -61,6 +78,7 @@ namespace QLS.Backend.Data
                     Email = "contact@qlslaundry.com",
                     StoreId = "LG_STORE_001",
                     BrandId = defaultBrand.Id,
+                    StoreTypeId = premiumType.Id, // Gán hạng Premium
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -156,6 +174,58 @@ namespace QLS.Backend.Data
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
                     Role = UserRole.Customer,
                     IsActive = true
+                });
+
+                // -- TẠO TIMESLOT (Giờ vàng) --
+                var happyHourSlot = new TimeSlot
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Happy Hour Sáng (8h-11h)",
+                    StartTime = new TimeOnly(8, 0),
+                    EndTime = new TimeOnly(11, 0),
+                    DayMask = DayOfWeekMask.Weekdays | DayOfWeekMask.Saturday
+                };
+                context.TimeSlots.Add(happyHourSlot);
+
+                // -- TẠO BẢNG GIÁ (PriceList) --
+                var mainPriceList = new PriceList
+                {
+                    Id = Guid.NewGuid(),
+                    Code = "STD_2026",
+                    Name = "Bảng giá Niêm yết 2026",
+                    ValidFrom = new DateOnly(2026, 1, 1),
+                    Status = PriceListStatus.Active,
+                    Priority = 10,
+                    Currency = Currency.VND,
+                    CreatedAt = DateTimeOffset.UtcNow
+                };
+                context.PriceLists.Add(mainPriceList);
+
+                // Gán Bảng giá cho hạng cửa hàng Premium
+                context.PriceListStoreTypes.Add(new PriceListStoreType
+                {
+                    PriceListId = mainPriceList.Id,
+                    StoreTypeId = premiumType.Id,
+                    OverridePriority = 20 // Ưu tiên cao hơn bảng giá gốc
+                });
+
+                // -- CẤU HÌNH GIÁ MODE 1 (Per Kg) --
+                context.PriceModePerKgs.AddRange(new List<PriceModePerKg>
+                {
+                    new PriceModePerKg { PriceListId = mainPriceList.Id, MachineType = MachineType.Washer, MinKg = 0, MaxKg = 5, UnitPrice = 15000, PricePer = PricePerType.PerKg, SortOrder = 1 },
+                    new PriceModePerKg { PriceListId = mainPriceList.Id, MachineType = MachineType.Washer, MinKg = 5, MaxKg = 10, UnitPrice = 13000, PricePer = PricePerType.PerKg, SortOrder = 2 },
+                    new PriceModePerKg { PriceListId = mainPriceList.Id, MachineType = MachineType.Washer, MinKg = 10, MaxKg = null, UnitPrice = 120000, PricePer = PricePerType.Flat, SortOrder = 3 }
+                });
+
+                // -- CẤU HÌNH GIÁ MODE 2 (Per Session) --
+                context.PriceModePerSessions.AddRange(new List<PriceModePerSession>
+                {
+                    // Giá Happy Hour cho máy 10kg
+                    new PriceModePerSession { PriceListId = mainPriceList.Id, MachineType = MachineType.Washer, MachineCapacityKg = 10, Price = 30000, DurationMinutes = 30, TimeSlotId = happyHourSlot.Id },
+                    // Giá mặc định cho máy 10kg
+                    new PriceModePerSession { PriceListId = mainPriceList.Id, MachineType = MachineType.Washer, MachineCapacityKg = 10, Price = 50000, DurationMinutes = 30, TimeSlotId = null },
+                    // Giá máy sấy
+                    new PriceModePerSession { PriceListId = mainPriceList.Id, MachineType = MachineType.Dryer, MachineCapacityKg = 15, Price = 40000, DurationMinutes = 45, TimeSlotId = null }
                 });
 
                 await context.SaveChangesAsync();
