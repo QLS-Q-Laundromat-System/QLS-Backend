@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using QLS.Backend.DTOs;
 using System.Collections.Generic;
 using System;
+using QLS.Backend.Exceptions;
 
 namespace QLS.Backend.Controllers.Brand
 {
@@ -37,7 +38,7 @@ namespace QLS.Backend.Controllers.Brand
         public async Task<IActionResult> GetBrandById(Guid id)
         {
             var brand = await _brandService.GetBrandByIdAsync(id);
-            if (brand == null) return NotFound(ApiResponse<object>.Error(404, "Không tìm thấy chủ chuỗi"));
+            if (brand == null) throw new ApiException("Không tìm thấy chủ chuỗi", 404);
             return Ok(ApiResponse<BrandResponseDto>.Success(brand, "Lấy thông tin thành công"));
         }
 

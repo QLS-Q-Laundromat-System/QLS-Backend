@@ -22,6 +22,7 @@ namespace QLS.Backend.Data
         public DbSet<PriceModePerKg> PriceModePerKgs { get; set; }
         public DbSet<TimeSlot> TimeSlots { get; set; }
         public DbSet<PriceModePerSession> PriceModePerSessions { get; set; }
+        public DbSet<BrandLgCredential> BrandLgCredentials { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -84,6 +85,13 @@ namespace QLS.Backend.Data
                 .HasOne(ms => ms.Machine)
                 .WithMany()
                 .HasForeignKey(ms => ms.MachineId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // --- Cấu hình quan hệ 1-1 giữa Brand và BrandLgCredential ---
+            modelBuilder.Entity<BrandLgCredential>()
+                .HasOne(c => c.Brand)
+                .WithOne(b => b.LgCredential)
+                .HasForeignKey<BrandLgCredential>(c => c.BrandId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

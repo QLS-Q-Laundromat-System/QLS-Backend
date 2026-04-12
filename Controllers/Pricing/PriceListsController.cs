@@ -4,6 +4,7 @@ using QLS.Backend.DTOs;
 using QLS.Backend.DTOs.Pricing;
 using QLS.Backend.Interfaces.Pricing;
 using QLS.Backend.Models.Enums;
+using QLS.Backend.Exceptions;
 
 namespace QLS.Backend.Controllers.Pricing;
 
@@ -30,7 +31,7 @@ public class PriceListsController : ControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _pricingService.GetPriceListDetailAsync(id);
-        if (result == null) return NotFound(ApiResponse<object>.Error(404, "Không tìm thấy bảng giá"));
+        if (result == null) throw new ApiException("Không tìm thấy bảng giá", 404);
         return Ok(ApiResponse<PriceListDetailDto>.Success(result));
     }
 
@@ -47,7 +48,7 @@ public class PriceListsController : ControllerBase
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdatePriceListStatusDto dto)
     {
         var result = await _pricingService.UpdatePriceListStatusAsync(id, dto.Status);
-        if (!result) return NotFound(ApiResponse<object>.Error(404, "Không tìm thấy bảng giá"));
+        if (!result) throw new ApiException("Không tìm thấy bảng giá", 404);
         return Ok(ApiResponse<object>.Success(new { }, "Cập nhật trạng thái thành công"));
     }
 
@@ -56,7 +57,7 @@ public class PriceListsController : ControllerBase
     public async Task<IActionResult> AssignStoreTypes(Guid id, [FromBody] AssignStoreTypeDto dto)
     {
         var result = await _pricingService.AssignStoreTypesAsync(id, dto);
-        if (!result) return NotFound(ApiResponse<object>.Error(404, "Không tìm thấy bảng giá"));
+        if (!result) throw new ApiException("Không tìm thấy bảng giá", 404);
         return Ok(ApiResponse<object>.Success(new { }, "Gán hạng cửa hàng thành công"));
     }
 
@@ -65,7 +66,7 @@ public class PriceListsController : ControllerBase
     public async Task<IActionResult> SyncPerKg(Guid id, [FromBody] List<PriceModePerKgItemDto> modes)
     {
         var result = await _pricingService.SyncPriceModePerKgAsync(id, modes);
-        if (!result) return NotFound(ApiResponse<object>.Error(404, "Không tìm thấy bảng giá"));
+        if (!result) throw new ApiException("Không tìm thấy bảng giá", 404);
         return Ok(ApiResponse<object>.Success(new { }, "Đồng bộ giá theo Kg thành công"));
     }
 
@@ -74,7 +75,7 @@ public class PriceListsController : ControllerBase
     public async Task<IActionResult> SyncPerSession(Guid id, [FromBody] List<PriceModePerSessionItemDto> modes)
     {
         var result = await _pricingService.SyncPriceModePerSessionAsync(id, modes);
-        if (!result) return NotFound(ApiResponse<object>.Error(404, "Không tìm thấy bảng giá"));
+        if (!result) throw new ApiException("Không tìm thấy bảng giá", 404);
         return Ok(ApiResponse<object>.Success(new { }, "Đồng bộ giá theo lượt thành công"));
     }
 }

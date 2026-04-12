@@ -2,8 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using QLS.Backend.DTOs;
 using QLS.Backend.Interfaces.Auth;
-using QLS.Backend.Services; // Thêm using thư mục Services
+using QLS.Backend.Services;
 using QLS.Backend.Models.Enums;
+using QLS.Backend.Exceptions;
 
 namespace QLS.Backend.Controllers
 {
@@ -13,7 +14,6 @@ namespace QLS.Backend.Controllers
     {
         private readonly IAuthService _authService;
 
-        // Tiêm (Inject) IAuthService vào thay vì AppDbContext
         public AuthController(IAuthService authService)
         {
             _authService = authService;
@@ -22,12 +22,11 @@ namespace QLS.Backend.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            // Chuyển toàn bộ logic xuống Service xử lý
             var response = await _authService.LoginAsync(request);
 
             if (response == null)
             {
-                return Unauthorized(ApiResponse<object>.Error(401, "Email hoặc mật khẩu không chính xác!"));
+                throw new ApiException("Email hoặc mật khẩu không chính xác!", 401);
             }
 
             return Ok(ApiResponse<LoginResponse>.Success(response, "Đăng nhập thành công"));
@@ -40,36 +39,34 @@ namespace QLS.Backend.Controllers
 
             if (!result)
             {
-                return BadRequest(new { message = "Tên đăng nhập đã tồn tại hoặc dữ liệu không hợp lệ." });
+                throw new ApiException("Tên đăng nhập đã tồn tại hoặc dữ liệu không hợp lệ.", 400);
             }
 
-            return Ok(new { message = "Đăng ký tài khoản thành công" });
+            return Ok(ApiResponse<object?>.Success(null, "Đăng ký tài khoản thành công"));
         }
 
         [HttpPost("create-account")]
-        [Authorize] // Phân quyên phân cấp: Chỉ những ai có Token hợp lệ
+        [Authorize]
         public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request)
         {
-            // 1. Trích xuất thông tin người tạo từ Token
             var userRoleStr = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
             var brandIdStr = User.FindFirst("BrandId")?.Value;
 
             if (!Enum.TryParse(userRoleStr, out UserRole creatorRole))
             {
-                return Unauthorized(new { message = "Không tìm thấy vai trò người dùng trong Token." });
+                throw new ApiException("Không tìm thấy vai trò người dùng trong Token.", 401);
             }
 
             Guid? creatorBrandId = string.IsNullOrEmpty(brandIdStr) ? null : Guid.Parse(brandIdStr);
 
-            // 2. Chuyển sang Service xử lý kèm theo bối cảnh người tạo
             var result = await _authService.CreateAdminAccountAsync(request, creatorRole, creatorBrandId);
 
             if (!result)
             {
-                return BadRequest(new { message = "Tên đăng nhập đã tồn tại hoặc bạn không có quyên hạn tạo vai trò này." });
+                throw new ApiException("Tên đăng nhập đã tồn tại hoặc bạn không có quyền hạn tạo vai trò này.", 400);
             }
 
-            return Ok(new { message = $"Tạo tài khoản {request.Role} thành công" });
+            return Ok(ApiResponse<object?>.Success(null, $"Tạo tài khoản {request.Role} thành công"));
         }
     }
 }

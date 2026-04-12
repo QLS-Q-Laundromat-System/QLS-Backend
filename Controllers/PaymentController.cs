@@ -29,16 +29,16 @@ namespace QLS.Backend.Controllers
             int count, 
             [FromQuery] string topic = "QLS.Washer",
             [FromQuery] Guid? branchId = null,
-            [FromQuery] string? machineId = null,
+            [FromQuery] Guid? machineId = null,
             [FromQuery] Guid? userId = null,
             [FromQuery] int? minutes = null)
         {
             Console.WriteLine($"[DIAGNOSTIC] EXECUTING TRIGGER: topic={topic}, count={count}");
 
             // 1. LƯU DATABASE (Chỉ chạy khi FE truyền đủ thông tin)
-            if (branchId.HasValue && machineId != null && userId.HasValue && minutes.HasValue)
+            if (branchId.HasValue && machineId.HasValue && userId.HasValue && minutes.HasValue)
             {
-                await _dryerService.SaveSessionAsync(branchId.Value, machineId, userId.Value, minutes.Value);
+                await _dryerService.SaveSessionAsync(branchId.Value, machineId.Value, userId.Value, minutes.Value);
                 Console.WriteLine($"[DB] Đã lưu lịch sử sấy: User {userId}, {minutes} phút.");
             }
 

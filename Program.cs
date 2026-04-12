@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Data;
 using QLS.Backend.Extensions;
 using QLS.Backend.Services;
-using QLS.Backend.Integrations.LG;
+using QLS.Backend.Services.LgService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -55,10 +55,6 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
-
-        logger.LogInformation("🔄 Đang chạy database migration...");
-        await context.Database.MigrateAsync(); // Tự động apply tất cả migration pending
-        logger.LogInformation("✅ Migration hoàn tất!");
 
         await QLS.Backend.Data.DbSeeder.SeedAsync(context);
         logger.LogInformation("✅ Seed dữ liệu hoàn tất!");

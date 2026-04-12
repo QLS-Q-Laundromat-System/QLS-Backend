@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 using QLS.Backend.DTOs;
+using QLS.Backend.Exceptions;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -12,11 +15,13 @@ namespace QLS.Backend.Middlewares
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<GlobalExceptionMiddleware> _logger;
+        private readonly IHostEnvironment _env;
 
-        public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger)
+        public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger, IHostEnvironment env)
         {
             _next = next;
             _logger = logger;
+            _env = env;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -27,45 +32,69 @@ namespace QLS.Backend.Middlewares
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Đã xảy ra lỗi hệ thống: {Message}", ex.Message);
+                _logger.LogError(ex, "Đã xảy ra lỗi tại {Path}: {Message}", context.Request.Path, ex.Message);
                 await HandleExceptionAsync(context, ex);
             }
         }
 
-        private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+        private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             context.Response.ContentType = "application/json";
 
-            int statusCode;
-            string message;
+            var statusCode = (int)HttpStatusCode.InternalServerError;
+            var message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.";
 
+            // Xác định StatusCode và Message dựa trên loại Exception
             switch (exception)
             {
-                case ArgumentException e:
-                    statusCode = StatusCodes.Status400BadRequest;
-                    message = e.Message;
+                case ApiException apiEx:
+                    statusCode = apiEx.StatusCode;
+                    message = apiEx.Message;
                     break;
-                case UnauthorizedAccessException e:
-                    statusCode = StatusCodes.Status401Unauthorized;
-                    message = e.Message;
+                case ArgumentNullException _:
+                case ArgumentException _:
+                    statusCode = (int)HttpStatusCode.BadRequest;
+                    message = exception.Message;
                     break;
-                case KeyNotFoundException e:
-                    statusCode = StatusCodes.Status404NotFound;
-                    message = e.Message;
+                case UnauthorizedAccessException _:
+                    statusCode = (int)HttpStatusCode.Unauthorized;
+                    message = "Bạn không có quyền thực hiện hành động này.";
+                    break;
+                case KeyNotFoundException _:
+                    statusCode = (int)HttpStatusCode.NotFound;
+                    message = "Không tìm thấy dữ liệu yêu cầu.";
                     break;
                 default:
-                    statusCode = StatusCodes.Status500InternalServerError;
-                    message = "Lỗi hệ thống: " + exception.Message;
+                    // Với lỗi hệ thống không xác định, chỉ hiển thị message thật sự khi ở Development
+                    if (_env.IsDevelopment())
+                    {
+                        message = exception.Message;
+                    }
                     break;
             }
 
             context.Response.StatusCode = statusCode;
 
+            // Tạo response chuẩn hóa
             var response = ApiResponse<object>.Error(statusCode, message);
-            var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-            var json = JsonSerializer.Serialize(response, options);
 
-            return context.Response.WriteAsync(json);
+            // Nếu đang ở môi trường Dev, thêm StackTrace để dễ debug
+            var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+            
+            object finalResponse = response;
+            if (_env.IsDevelopment())
+            {
+                finalResponse = new
+                {
+                    response.Status,
+                    response.Message,
+                    Detail = exception.StackTrace,
+                    InnerException = exception.InnerException?.Message
+                };
+            }
+
+            var result = JsonSerializer.Serialize(finalResponse, jsonOptions);
+            await context.Response.WriteAsync(result);
         }
     }
 }

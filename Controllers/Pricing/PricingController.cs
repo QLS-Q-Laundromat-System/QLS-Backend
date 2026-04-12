@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using QLS.Backend.DTOs;
 using QLS.Backend.DTOs.Pricing;
 using QLS.Backend.Interfaces.Pricing;
+using QLS.Backend.Exceptions;
 
 namespace QLS.Backend.Controllers.Pricing;
 
@@ -23,7 +24,7 @@ public class PricingController : ControllerBase
     {
         var result = await _pricingCalculatorService.CalculatePriceAsync(dto);
         if (result == null) 
-            return BadRequest(ApiResponse<object>.Error(400, "Không tìm thấy bảng giá hoặc cấu hình giá phù hợp cho yêu cầu này"));
+            throw new ApiException("Không tìm thấy bảng giá hoặc cấu hình giá phù hợp cho yêu cầu này", 400);
             
         return Ok(ApiResponse<PriceCalculationResponseDto>.Success(result));
     }

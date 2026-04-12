@@ -19,7 +19,7 @@ namespace QLS.Backend.Services
             _context = context;
         }
 
-        public async Task<DryerOptionResponseDto> GetDryerOptionsAsync(Guid branchId, string machineId, Guid userId)
+        public async Task<DryerOptionResponseDto> GetDryerOptionsAsync(Guid branchId, Guid machineId, Guid userId)
         {
             // 1. Lấy bộ Cài đặt của Cửa hàng (Store)
             var setting = await _context.StoreSettings
@@ -74,7 +74,7 @@ namespace QLS.Backend.Services
                 };
             }
         }
-        public async Task SaveSessionAsync(Guid branchId, string machineId, Guid userId, int minutes)
+        public async Task SaveSessionAsync(Guid branchId, Guid machineId, Guid userId, int minutes)
         {
             var now = DateTime.UtcNow;
             var session = new MachineSession

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using QLS.Backend.Services;
 using QLS.Backend.DTOs;
-using QLS.Backend.Integrations.LG;
+using QLS.Backend.Services.LgService;
 
 namespace QLS.Backend.Controllers;
 

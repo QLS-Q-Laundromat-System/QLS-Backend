@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using QLS.Backend.Data;
@@ -11,9 +12,11 @@ using QLS.Backend.Data;
 namespace QLS.Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260412151532_AddBrandLgCredential")]
+    partial class AddBrandLgCredential
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -117,9 +120,6 @@ namespace QLS.Backend.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("Oauth2BackendUrl")
-                        .HasColumnType("text");
-
                     b.Property<string>("RefreshToken")
                         .HasColumnType("text");
 
@@ -140,27 +140,13 @@ namespace QLS.Backend.Migrations
 
             modelBuilder.Entity("QLS.Backend.Models.Machine", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("MachineId")
+                        .HasColumnType("text");
 
                     b.Property<string>("Capacity")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Esp32MacAddress")
-                        .HasMaxLength(17)
-                        .HasColumnType("character varying(17)");
-
-                    b.Property<string>("LgDeviceId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
 
                     b.Property<Guid>("StoreId")
                         .HasColumnType("uuid");
@@ -168,11 +154,7 @@ namespace QLS.Backend.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
-                    b.Property<string>("ZigbeeNetworkId")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("Id");
+                    b.HasKey("MachineId");
 
                     b.HasIndex("StoreId");
 
@@ -188,8 +170,10 @@ namespace QLS.Backend.Migrations
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("MachineId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("MachineId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("timestamp with time zone");

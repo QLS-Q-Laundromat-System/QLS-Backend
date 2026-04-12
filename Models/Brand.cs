@@ -17,5 +17,8 @@ namespace QLS.Backend.Models
         public ICollection<Account> Accounts { get; set; } = new List<Account>();
         public ICollection<StoreType> StoreTypes { get; set; } = new List<StoreType>();
 
+        // Navigation: thông tin xác thực LG OAuth (1 Brand - 1 tài khoản LG)
+        public BrandLgCredential? LgCredential { get; set; }
+
     }
 }
