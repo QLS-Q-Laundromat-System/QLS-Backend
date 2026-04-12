@@ -17,6 +17,8 @@ namespace QLS.Backend.Models
 
         public Guid BrandId { get; set; }
         public Brand? Brand { get; set; }
+        public Guid? StoreTypeId { get; set; }
+        public StoreType? StoreType { get; set; }
         public ICollection<Machine> Machines { get; set; } = new List<Machine>();
         public StoreSetting? StoreSetting { get; set; }
     }

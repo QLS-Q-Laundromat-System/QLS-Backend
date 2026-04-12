@@ -1,7 +1,7 @@
 using System.Text.Json;
 using QLS.Backend.DTOs;
 
-namespace QLS.Backend.Integrations.LG;
+namespace QLS.Backend.Services.LgService;
 
 public static class LgMapper
 {

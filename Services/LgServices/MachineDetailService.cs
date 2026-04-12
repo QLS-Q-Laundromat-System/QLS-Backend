@@ -1,6 +1,6 @@
 using QLS.Backend.Data;
 using QLS.Backend.DTOs;
-using QLS.Backend.Integrations.LG;
+using QLS.Backend.Services.LgService;
 using QLS.Backend.Models;
 using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Models.Enums;
@@ -27,14 +27,16 @@ public class MachineDetailService : IMachineDetailService
         var statusList = LgMapper.MapToDto(rawJson);
 
         // 3. Logic: Tự động cập nhật Database
-        var existingIds = await _context.Machines.Select(m => m.MachineId).ToHashSetAsync();
+        var existingLgIds = await _context.Machines.Select(m => m.LgDeviceId).ToHashSetAsync();
         var newMachines = statusList
-            .Where(s => !existingIds.Contains(s.DeviceId))
+            .Where(s => !existingLgIds.Contains(s.DeviceId))
             .Select(s => new Machine {
-                MachineId = s.DeviceId,
-                StoreId = storeId,
-                Type = s.DeviceType == "0" ? MachineType.Washer : MachineType.Dryer,
-                Capacity = "LG_COMMERCIAL"
+                Id          = Guid.NewGuid(),
+                LgDeviceId  = s.DeviceId,
+                Name        = s.DeviceId, // Tên tạm – admin có thể đổi tên sau
+                StoreId     = storeId,
+                Type        = s.DeviceType == "0" ? MachineType.Washer : MachineType.Dryer,
+                Capacity    = "LG_COMMERCIAL"
             }).ToList();
 
         if (newMachines.Any())

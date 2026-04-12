@@ -10,10 +10,9 @@ namespace QLS.Backend.Models
         public Guid Id { get; set; } 
 
         [Required]
-        [MaxLength(50)]
-        public string MachineId { get; set; } = string.Empty;
+        public Guid MachineId { get; set; }
 
-        [ForeignKey("MachineId")]
+        [ForeignKey(nameof(MachineId))]
         public Machine? Machine { get; set; }
 
         [Required]

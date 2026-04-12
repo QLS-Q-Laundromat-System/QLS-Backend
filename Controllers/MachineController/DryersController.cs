@@ -19,8 +19,8 @@ namespace QLS.Backend.Controllers
         }
 
         // Endpoint GET: /api/branches/{branchId}/machines/{machineId}/options?userId=abc
-        [HttpGet("{machineId}/options")]
-        public async Task<IActionResult> GetDryerOptions(Guid branchId, string machineId, [FromQuery] Guid userId)
+        [HttpGet("{machineId:guid}/options")]
+        public async Task<IActionResult> GetDryerOptions(Guid branchId, Guid machineId, [FromQuery] Guid userId)
         {
             // Kiểm tra đầu vào cơ bản
             if (userId == Guid.Empty)
