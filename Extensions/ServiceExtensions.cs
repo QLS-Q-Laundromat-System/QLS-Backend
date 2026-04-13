@@ -2,7 +2,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using QLS.Backend.Services;
 using QLS.Backend.Services.LgServices.authToken;
-using Microsoft.OpenApi;// IMachineDetailService lives here
+using Microsoft.OpenApi;
+using QLS.Backend.Services.LgService;
+// IMachineDetailService lives here
 
 namespace QLS.Backend.Extensions;
 
@@ -18,13 +20,15 @@ public static class ServiceExtensions
                 "QLS.Backend.Services.LgServices.authToken",
                 "QLS.Backend.Services.Brand",
                 "QLS.Backend.Services.Machine",
-                "QLS.Backend.Services.LgService"
+                "QLS.Backend.Services.LgService",
+                "QLS.Backend.Services.Revenue"
             ))
             .AsImplementedInterfaces()
             .WithScopedLifetime());
 
-        // Đăng ký HttpClient cho LgAuthTokenService
+        // Đăng ký HttpClient cho LgAuthTokenService và LgApiClient
         services.AddHttpClient<LgAuthTokenService>();
+        services.AddHttpClient<LgApiClient>();
     }
 
     // 2. Thêm hàm cấu hình CORS ngay bên dưới

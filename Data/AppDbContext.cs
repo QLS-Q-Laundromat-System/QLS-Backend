@@ -87,6 +87,16 @@ namespace QLS.Backend.Data
                 .HasForeignKey(ms => ms.MachineId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<MachineSession>()
+                .HasOne(ms => ms.Store)
+                .WithMany()
+                .HasForeignKey(ms => ms.StoreId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<MachineSession>()
+                .Property(ms => ms.PricePaid)
+                .HasPrecision(18, 2);
+
             // --- Cấu hình quan hệ 1-1 giữa Brand và BrandLgCredential ---
             modelBuilder.Entity<BrandLgCredential>()
                 .HasOne(c => c.Brand)

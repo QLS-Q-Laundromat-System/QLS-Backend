@@ -8,6 +8,8 @@ using QLS.Backend.DTOs.Dryer;
 
 using QLS.Backend.Interfaces;
 
+using QLS.Backend.Models.Enums;
+
 namespace QLS.Backend.Services
 {
     public class DryerService : IDryerService
@@ -74,17 +76,22 @@ namespace QLS.Backend.Services
                 };
             }
         }
-        public async Task SaveSessionAsync(Guid branchId, Guid machineId, Guid userId, int minutes)
+        public async Task SaveSessionAsync(Guid branchId, Guid machineId, Guid userId, int minutes, decimal pricePaid)
         {
             var now = DateTime.UtcNow;
             var session = new MachineSession
             {
-                Id        = Guid.NewGuid(),
-                MachineId = machineId,
-                UserId    = userId,
-                StartTime = now,
-                EndTime   = now.AddSeconds(minutes * 60),
-                Status    = 0 // 0 = Đang chạy (Running)
+                Id           = Guid.NewGuid(),
+                MachineId    = machineId,
+                StoreId      = branchId,
+                UserId       = userId,
+                PricePaid    = pricePaid,
+                TotalMinutes = minutes,
+                StartTime    = now,
+                EndTime      = now.AddSeconds(minutes * 60),
+                Status       = MachineSessionStatus.Running,
+                CreatedAt    = now,
+                UpdatedAt    = now
             };
 
             _context.MachineSessions.Add(session);
@@ -92,3 +99,4 @@ namespace QLS.Backend.Services
         }
     }
 }
+

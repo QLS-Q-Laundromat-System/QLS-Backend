@@ -31,15 +31,16 @@ namespace QLS.Backend.Controllers
             [FromQuery] Guid? branchId = null,
             [FromQuery] Guid? machineId = null,
             [FromQuery] Guid? userId = null,
-            [FromQuery] int? minutes = null)
+            [FromQuery] int? minutes = null,
+            [FromQuery] decimal pricePaid = 0)
         {
             Console.WriteLine($"[DIAGNOSTIC] EXECUTING TRIGGER: topic={topic}, count={count}");
 
             // 1. LƯU DATABASE (Chỉ chạy khi FE truyền đủ thông tin)
             if (branchId.HasValue && machineId.HasValue && userId.HasValue && minutes.HasValue)
             {
-                await _dryerService.SaveSessionAsync(branchId.Value, machineId.Value, userId.Value, minutes.Value);
-                Console.WriteLine($"[DB] Đã lưu lịch sử sấy: User {userId}, {minutes} phút.");
+                await _dryerService.SaveSessionAsync(branchId.Value, machineId.Value, userId.Value, minutes.Value, pricePaid);
+                Console.WriteLine($"[DB] Đã lưu lịch sử sấy: User {userId}, {minutes} phút, Giá: {pricePaid}.");
             }
 
             // 2. KÍCH HOẠT ESP32 NHẢ XU

@@ -1,4 +1,7 @@
 using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
+using QLS.Backend.DTOs.Lg;
 
 namespace QLS.Backend.Services.LgService;
 
@@ -26,10 +29,24 @@ public class LgApiClient
         return await SendThinqRequestAsync(url, userNo, accessToken);
     }
 
-    private async Task<string> SendThinqRequestAsync(string url, string? userNo, string? accessToken)
+    public async Task<LgStoreCreateResponse> CreateStoreLgAsync(LgStoreCreateRequest body, string userNo, string accessToken)
+    {
+        var url = "https://kic-laundry.lgthinq.com/stores";
+        var json = JsonSerializer.Serialize(body);
+        var responseString = await SendThinqRequestAsync(url, userNo, accessToken, HttpMethod.Post, json);
+        return JsonSerializer.Deserialize<LgStoreCreateResponse>(responseString) ?? new();
+    }
+
+    private async Task<string> SendThinqRequestAsync(string url, string? userNo, string? accessToken, HttpMethod? method = null, string? body = null)
     {
         var section = _config.GetSection("LgApi");
-        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        var requestMethod = method ?? HttpMethod.Get;
+        var request = new HttpRequestMessage(requestMethod, url);
+
+        if (body != null)
+        {
+            request.Content = new StringContent(body, Encoding.UTF8, "application/json");
+        }
         
         request.Headers.Add("x-thinq-app-ver", section["AppVer"] ?? "0.1");
         request.Headers.Add("x-thinq-client-type", "WEB");

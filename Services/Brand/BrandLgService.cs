@@ -149,5 +149,29 @@ namespace QLS.Backend.Services.Brand
             await _context.SaveChangesAsync();
             return syncCount;
         }
+        public async Task<BrandLgCredential?> GetValidCredentialAsync(Guid brandId)
+        {
+            var credential = await _context.BrandLgCredentials.FindAsync(brandId);
+            if (credential == null) return null;
+
+            // Kiểm tra nếu token đã hết hạn hoặc sắp hết hạn (còn dưới 5 phút)
+            if (credential.TokenExpiresAt == null || credential.TokenExpiresAt <= DateTime.UtcNow.AddMinutes(5))
+            {
+                _logger.LogInformation("[BrandLg] Token cho Brand {Id} đã hết hạn hoặc sắp hết hạn. Đang tiến hành refresh...", brandId);
+                try 
+                {
+                    await RefreshBrandTokenAsync(brandId);
+                    // Tải lại dữ liệu mới nhất từ DB
+                    credential = await _context.BrandLgCredentials.FindAsync(brandId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "[BrandLg] Không thể refresh token cho Brand {Id}", brandId);
+                    // Nếu không refresh được, vẫn trả về credential cũ (có thể sẽ fail API sau đó nhưng tốt hơn là null)
+                }
+            }
+
+            return credential;
+        }
     }
 }

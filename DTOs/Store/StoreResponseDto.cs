@@ -10,6 +10,7 @@ namespace QLS.Backend.DTOs.Store
         public string Phone { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string? StoreId { get; set; }
+        public string? LgPinCode { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public Guid BrandId { get; set; }
