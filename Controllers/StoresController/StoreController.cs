@@ -74,4 +74,13 @@ public class StoreController : ControllerBase
         var machines = await _storeService.GetMachinesByStoreIdAsync(id);
         return Ok(ApiResponse<IEnumerable<Machine>>.Success(machines, "Lấy danh sách máy thành công"));
     }
+
+    [HttpPatch("{id}/type")]
+    [Authorize(Roles = "SystemAdmin,BrandAdmin")]
+    public async Task<IActionResult> AssignStoreType(Guid id, [FromBody] AssignStoreTypeDto dto)
+    {
+        var result = await _storeService.AssignStoreTypeAsync(id, dto.StoreTypeId);
+        if (!result) return NotFound(ApiResponse<object>.Error(404, "Không tìm thấy cửa hàng"));
+        return Ok(ApiResponse<object>.Success(new { }, "Gán hạng cửa hàng thành công"));
+    }
 }

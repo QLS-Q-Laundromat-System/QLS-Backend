@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Models.Enums;
 
@@ -19,6 +20,9 @@ public class PriceModePerSession
     public required decimal Price { get; set; }
 
     public required int DurationMinutes { get; set; }
+
+    [MaxLength(100)]
+    public string? CycleName { get; set; } // Ví dụ: "Giặt nước nóng", "Sanitize"
 
     // --- LIÊN KẾT TỚI TIMESLOT (RÀNG BUỘC THỜI GIAN) ---
     // Khóa ngoại Nullable (Guid?) vì như bạn nói, nó là Optional

@@ -30,8 +30,11 @@ public class PricingCalculatorService : IPricingCalculatorService
         if (store == null || store.StoreTypeId == null) return null;
 
         // 2 & 3. Tìm Bảng giá (PriceList) đang có hiệu lực và có ưu tiên cao nhất
+        // Thêm điều kiện lọc theo BrandId của cửa hàng và kiểm tra IsDeleted
         var priceList = await _context.PriceLists
-            .Where(p => p.Status == PriceListStatus.Active &&
+            .Where(p => p.BrandId == store.BrandId && 
+                        !p.IsDeleted &&
+                        p.Status == PriceListStatus.Active &&
                         p.ValidFrom <= currentDate &&
                         (p.ValidTo == null || p.ValidTo >= currentDate))
             .Join(_context.PriceListStoreTypes,
@@ -59,15 +62,18 @@ public class PricingCalculatorService : IPricingCalculatorService
 
             if (modeKg != null)
             {
-                decimal finalPrice = 0;
+                decimal calculatedPrice = 0;
                 if (modeKg.PricePer == PricePerType.PerKg)
                 {
-                    finalPrice = modeKg.UnitPrice * dto.ClothingWeightKg.Value;
+                    calculatedPrice = modeKg.UnitPrice * dto.ClothingWeightKg.Value;
                 }
                 else // Flat
                 {
-                    finalPrice = modeKg.UnitPrice;
+                    calculatedPrice = modeKg.UnitPrice;
                 }
+
+                // Áp dụng Giá tối thiểu (MinimumPrice)
+                decimal finalPrice = Math.Max(calculatedPrice, modeKg.MinimumPrice);
 
                 return new PriceCalculationResponseDto
                 {
@@ -76,6 +82,7 @@ public class PricingCalculatorService : IPricingCalculatorService
                     PriceListName = priceList.Name,
                     Mode = "PerKg",
                     CalculationDetail = $"Áp dụng mức {modeKg.MinKg}-{modeKg.MaxKg ?? 99} kg. " +
+                                       (finalPrice > calculatedPrice ? $"Giá tối thiểu áp dụng: {finalPrice:N0}. " : "") +
                                        $"Cách tính: {(modeKg.PricePer == PricePerType.PerKg ? $"{dto.ClothingWeightKg}kg * {modeKg.UnitPrice:N0}" : "Trọn gói")}"
                 };
             }
@@ -116,6 +123,7 @@ public class PricingCalculatorService : IPricingCalculatorService
                 PriceListName = priceList.Name,
                 Mode = "PerSession",
                 CalculationDetail = $"Máy {dto.MachineCapacityKg}kg, thời lượng {matchedMode.DurationMinutes} phút. " +
+                                   (!string.IsNullOrEmpty(matchedMode.CycleName) ? $"Dịch vụ: {matchedMode.CycleName}. " : "") +
                                    (matchedMode.TimeSlot != null ? $"Khung giờ: {matchedMode.TimeSlot.Name}" : "Giá mặc định")
             };
         }

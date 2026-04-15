@@ -94,5 +94,36 @@ namespace QLS.Backend.Controllers.Brand
             var accounts = await _brandService.GetAccountsByBrandIdAsync(id);
             return Ok(ApiResponse<IEnumerable<BrandAccountDto>>.Success(accounts, "Lấy danh sách tài khoản thành công"));
         }
+
+        [HttpGet("{id}/store-types")]
+        [Authorize(Roles = "SystemAdmin,BrandAdmin")]
+        public async Task<IActionResult> GetStoreTypesByBrand(Guid id)
+        {
+            var storeTypes = await _brandService.GetStoreTypesByBrandIdAsync(id);
+            return Ok(ApiResponse<IEnumerable<StoreTypeDto>>.Success(storeTypes, "Lấy danh sách hạng cửa hàng thành công"));
+        }
+
+        [HttpPost("{id}/store-types")]
+        [Authorize(Roles = "SystemAdmin,BrandAdmin")]
+        public async Task<IActionResult> CreateStoreType(Guid id, [FromBody] CreateStoreTypeDto dto)
+        {
+            var brandIdStr = User.FindFirst("BrandId")?.Value;
+            if (!string.IsNullOrEmpty(brandIdStr))
+            {
+                var tokenBrandId = Guid.Parse(brandIdStr);
+                if (tokenBrandId != id)
+                {
+                    throw new ApiException("Bạn không có quyền tạo hạng cửa hàng cho thương hiệu này", 403);
+                }
+                dto.BrandId = tokenBrandId;
+            }
+            else
+            {
+                dto.BrandId = id;
+            }
+
+            var result = await _brandService.CreateStoreTypeAsync(dto);
+            return Ok(ApiResponse<StoreTypeDto>.Success(result, "Tạo hạng cửa hàng thành công"));
+        }
     }
 }

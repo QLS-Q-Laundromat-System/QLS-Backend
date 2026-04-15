@@ -14,5 +14,6 @@ namespace QLS.Backend.Interfaces.Stores
         Task<StoreResponseDto> UpdateStoreAsync(Guid id, UpdateStoreDto dto);
         Task<List<StoreAccountDto>> GetAccountsByStoreIdAsync(Guid storeId);
         Task<List<Machine>> GetMachinesByStoreIdAsync(Guid storeId);
+        Task<bool> AssignStoreTypeAsync(Guid storeId, Guid storeTypeId);
     }
 }

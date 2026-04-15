@@ -45,8 +45,9 @@ namespace QLS.Backend.Services.Stores
                 Address = s.Address,
                 Phone = s.Phone,
                 Email = s.Email,
-                StoreId = s.StoreId,
+                LgPinCode = s.LgPinCode,
                 BrandId = s.BrandId,
+                StoreTypeId = s.StoreTypeId,
                 IsActive = s.IsActive,
                 CreatedAt = s.CreatedAt
             };
@@ -73,6 +74,7 @@ namespace QLS.Backend.Services.Stores
             store.Email = dto.Email;
             store.StoreId = dto.StoreId;
             store.IsActive = dto.IsActive;
+            store.StoreTypeId = dto.StoreTypeId;
 
             _context.Stores.Update(store);
             await _context.SaveChangesAsync();
@@ -86,6 +88,7 @@ namespace QLS.Backend.Services.Stores
                 Email = store.Email,
                 StoreId = store.StoreId,
                 BrandId = store.BrandId,
+                StoreTypeId = store.StoreTypeId,
                 IsActive = store.IsActive,
                 CreatedAt = store.CreatedAt
             };
@@ -126,6 +129,7 @@ namespace QLS.Backend.Services.Stores
                 Email = dto.Email,
                 StoreId = dto.StoreId,
                 BrandId = dto.BrandId,
+                StoreTypeId = dto.StoreTypeId,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
@@ -188,6 +192,7 @@ namespace QLS.Backend.Services.Stores
                 StoreId = newStore.StoreId,
                 LgPinCode = newStore.LgPinCode,
                 BrandId = newStore.BrandId,
+                StoreTypeId = newStore.StoreTypeId,
                 IsActive = newStore.IsActive,
                 CreatedAt = newStore.CreatedAt
             };
@@ -220,6 +225,24 @@ namespace QLS.Backend.Services.Stores
             return await _context.Machines
                 .Where(m => m.StoreId == storeId)
                 .ToListAsync();
+        }
+
+        public async Task<bool> AssignStoreTypeAsync(Guid storeId, Guid storeTypeId)
+        {
+            var store = await _context.Stores.FindAsync(storeId);
+            if (store == null) return false;
+
+            var storeType = await _context.StoreTypes.FindAsync(storeTypeId);
+            if (storeType == null) throw new KeyNotFoundException("Không tìm thấy hạng cửa hàng.");
+
+            if (storeType.BrandId != store.BrandId)
+            {
+                throw new ArgumentException("Hạng cửa hàng không thuộc cùng thương hiệu với cửa hàng.");
+            }
+
+            store.StoreTypeId = storeTypeId;
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

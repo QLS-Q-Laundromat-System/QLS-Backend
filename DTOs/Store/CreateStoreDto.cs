@@ -25,5 +25,7 @@ namespace QLS.Backend.DTOs.Store
 
         [Required(ErrorMessage = "BrandId không được để trống")]
         public Guid BrandId { get; set; }
+
+        public Guid? StoreTypeId { get; set; }
     }
 }

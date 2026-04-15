@@ -5,6 +5,7 @@ namespace QLS.Backend.DTOs.Pricing;
 public class PriceListDto
 {
     public Guid Id { get; set; }
+    public Guid BrandId { get; set; }
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -13,10 +14,13 @@ public class PriceListDto
     public int Priority { get; set; }
     public PriceListStatus Status { get; set; }
     public Currency Currency { get; set; }
+    public decimal TaxPercentage { get; set; }
+    public string? PromotionLabel { get; set; }
 }
 
 public class CreatePriceListDto
 {
+    public Guid BrandId { get; set; }
     public required string Code { get; set; }
     public required string Name { get; set; }
     public string? Description { get; set; }
@@ -24,6 +28,8 @@ public class CreatePriceListDto
     public DateOnly? ValidTo { get; set; }
     public int Priority { get; set; }
     public Currency Currency { get; set; } = Currency.VND;
+    public decimal TaxPercentage { get; set; } = 0;
+    public string? PromotionLabel { get; set; }
 }
 
 public class PriceListDetailDto : PriceListDto
@@ -46,6 +52,7 @@ public class PriceModePerKgItemDto
     public decimal MinKg { get; set; }
     public decimal? MaxKg { get; set; }
     public decimal UnitPrice { get; set; }
+    public decimal MinimumPrice { get; set; }
     public PricePerType PricePer { get; set; }
     public int SortOrder { get; set; }
 }
@@ -56,6 +63,7 @@ public class PriceModePerSessionItemDto
     public decimal MachineCapacityKg { get; set; }
     public decimal Price { get; set; }
     public int DurationMinutes { get; set; }
+    public string? CycleName { get; set; }
     public Guid? TimeSlotId { get; set; }
     public string? TimeSlotName { get; set; }
 }

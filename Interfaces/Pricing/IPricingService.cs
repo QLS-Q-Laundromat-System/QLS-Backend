@@ -6,17 +6,16 @@ namespace QLS.Backend.Interfaces.Pricing;
 public interface IPricingService
 {
     // TimeSlots
-    Task<IEnumerable<TimeSlotDto>> GetAllTimeSlotsAsync();
+    Task<IEnumerable<TimeSlotDto>> GetAllTimeSlotsAsync(Guid? brandId = null);
     Task<TimeSlotDto> CreateTimeSlotAsync(CreateTimeSlotDto dto);
-    Task<TimeSlotDto?> UpdateTimeSlotAsync(Guid id, CreateTimeSlotDto dto);
-    Task<bool> DeleteTimeSlotAsync(Guid id);
+    Task<TimeSlotDto?> UpdateTimeSlotAsync(Guid id, CreateTimeSlotDto dto, Guid? brandId = null);
+    Task<bool> DeleteTimeSlotAsync(Guid id, Guid? brandId = null);
 
-    // PriceLists
-    Task<IEnumerable<PriceListDto>> GetPriceListsAsync(PriceListStatus? status, DateOnly? validFrom);
-    Task<PriceListDetailDto?> GetPriceListDetailAsync(Guid id);
+    Task<IEnumerable<PriceListDto>> GetPriceListsAsync(PriceListStatus? status, DateOnly? validFrom, Guid? brandId = null);
+    Task<PriceListDetailDto?> GetPriceListDetailAsync(Guid id, Guid? brandId = null);
     Task<PriceListDto> CreatePriceListAsync(CreatePriceListDto dto);
-    Task<bool> UpdatePriceListStatusAsync(Guid id, PriceListStatus status);
-    Task<bool> AssignStoreTypesAsync(Guid id, AssignStoreTypeDto dto);
-    Task<bool> SyncPriceModePerKgAsync(Guid id, List<PriceModePerKgItemDto> modes);
-    Task<bool> SyncPriceModePerSessionAsync(Guid id, List<PriceModePerSessionItemDto> modes);
+    Task<bool> UpdatePriceListStatusAsync(Guid id, PriceListStatus status, Guid? brandId = null);
+    Task<bool> AssignStoreTypesAsync(Guid id, AssignStoreTypeDto dto, Guid? brandId = null);
+    Task<bool> SyncPriceModePerKgAsync(Guid id, List<PriceModePerKgItemDto> modes, Guid? brandId = null);
+    Task<bool> SyncPriceModePerSessionAsync(Guid id, List<PriceModePerSessionItemDto> modes, Guid? brandId = null);
 }

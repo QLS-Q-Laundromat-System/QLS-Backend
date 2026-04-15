@@ -17,13 +17,20 @@ public class PricingService : IPricingService
     }
 
     // --- TimeSlots ---
-    public async Task<IEnumerable<TimeSlotDto>> GetAllTimeSlotsAsync()
+    public async Task<IEnumerable<TimeSlotDto>> GetAllTimeSlotsAsync(Guid? brandId = null)
     {
-        return await _context.TimeSlots
+        var query = _context.TimeSlots.AsQueryable();
+
+        if (brandId.HasValue)
+            query = query.Where(ts => ts.BrandId == brandId.Value);
+
+        return await query
             .Select(ts => new TimeSlotDto
             {
                 Id = ts.Id,
+                BrandId = ts.BrandId,
                 Name = ts.Name,
+                Description = ts.Description,
                 StartTime = ts.StartTime,
                 EndTime = ts.EndTime,
                 DayMask = ts.DayMask,
@@ -36,7 +43,9 @@ public class PricingService : IPricingService
     {
         var timeSlot = new TimeSlot
         {
+            BrandId = dto.BrandId,
             Name = dto.Name,
+            Description = dto.Description,
             StartTime = dto.StartTime,
             EndTime = dto.EndTime,
             DayMask = dto.DayMask
@@ -48,7 +57,9 @@ public class PricingService : IPricingService
         return new TimeSlotDto
         {
             Id = timeSlot.Id,
+            BrandId = timeSlot.BrandId,
             Name = timeSlot.Name,
+            Description = timeSlot.Description,
             StartTime = timeSlot.StartTime,
             EndTime = timeSlot.EndTime,
             DayMask = timeSlot.DayMask,
@@ -56,12 +67,18 @@ public class PricingService : IPricingService
         };
     }
 
-    public async Task<TimeSlotDto?> UpdateTimeSlotAsync(Guid id, CreateTimeSlotDto dto)
+    public async Task<TimeSlotDto?> UpdateTimeSlotAsync(Guid id, CreateTimeSlotDto dto, Guid? brandId = null)
     {
-        var timeSlot = await _context.TimeSlots.FindAsync(id);
+        var query = _context.TimeSlots.Where(ts => ts.Id == id);
+        if (brandId.HasValue)
+            query = query.Where(ts => ts.BrandId == brandId.Value);
+
+        var timeSlot = await query.FirstOrDefaultAsync();
         if (timeSlot == null) return null;
 
+        timeSlot.BrandId = dto.BrandId;
         timeSlot.Name = dto.Name;
+        timeSlot.Description = dto.Description;
         timeSlot.StartTime = dto.StartTime;
         timeSlot.EndTime = dto.EndTime;
         timeSlot.DayMask = dto.DayMask;
@@ -70,7 +87,9 @@ public class PricingService : IPricingService
         return new TimeSlotDto
         {
             Id = timeSlot.Id,
+            BrandId = timeSlot.BrandId,
             Name = timeSlot.Name,
+            Description = timeSlot.Description,
             StartTime = timeSlot.StartTime,
             EndTime = timeSlot.EndTime,
             DayMask = timeSlot.DayMask,
@@ -78,9 +97,13 @@ public class PricingService : IPricingService
         };
     }
 
-    public async Task<bool> DeleteTimeSlotAsync(Guid id)
+    public async Task<bool> DeleteTimeSlotAsync(Guid id, Guid? brandId = null)
     {
-        var timeSlot = await _context.TimeSlots.FindAsync(id);
+        var query = _context.TimeSlots.Where(ts => ts.Id == id);
+        if (brandId.HasValue)
+            query = query.Where(ts => ts.BrandId == brandId.Value);
+
+        var timeSlot = await query.FirstOrDefaultAsync();
         if (timeSlot == null) return false;
 
         // Xóa cứng hoặc mềm tùy ý, ở đây tôi xóa cứng hoặc set IsActive = false
@@ -91,9 +114,12 @@ public class PricingService : IPricingService
     }
 
     // --- PriceLists ---
-    public async Task<IEnumerable<PriceListDto>> GetPriceListsAsync(PriceListStatus? status, DateOnly? validFrom)
+    public async Task<IEnumerable<PriceListDto>> GetPriceListsAsync(PriceListStatus? status, DateOnly? validFrom, Guid? brandId = null)
     {
-        var query = _context.PriceLists.AsQueryable();
+        var query = _context.PriceLists.Where(p => !p.IsDeleted);
+
+        if (brandId.HasValue)
+            query = query.Where(p => p.BrandId == brandId.Value);
 
         if (status.HasValue)
             query = query.Where(p => p.Status == status.Value);
@@ -105,6 +131,7 @@ public class PricingService : IPricingService
             .Select(p => new PriceListDto
             {
                 Id = p.Id,
+                BrandId = p.BrandId,
                 Code = p.Code,
                 Name = p.Name,
                 Description = p.Description,
@@ -112,26 +139,34 @@ public class PricingService : IPricingService
                 ValidTo = p.ValidTo,
                 Priority = p.Priority,
                 Status = p.Status,
-                Currency = p.Currency
+                Currency = p.Currency,
+                TaxPercentage = p.TaxPercentage,
+                PromotionLabel = p.PromotionLabel
             })
             .ToListAsync();
     }
 
-    public async Task<PriceListDetailDto?> GetPriceListDetailAsync(Guid id)
+    public async Task<PriceListDetailDto?> GetPriceListDetailAsync(Guid id, Guid? brandId = null)
     {
-        var p = await _context.PriceLists
+        var query = _context.PriceLists
             .Include(p => p.PriceListStoreTypes)
                 .ThenInclude(pst => pst.StoreType)
             .Include(p => p.PriceModePerKgs)
             .Include(p => p.PriceModePerSessions)
                 .ThenInclude(ps => ps.TimeSlot)
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .Where(p => p.Id == id && !p.IsDeleted);
+
+        if (brandId.HasValue)
+            query = query.Where(p => p.BrandId == brandId.Value);
+
+        var p = await query.FirstOrDefaultAsync();
 
         if (p == null) return null;
 
         return new PriceListDetailDto
         {
             Id = p.Id,
+            BrandId = p.BrandId,
             Code = p.Code,
             Name = p.Name,
             Description = p.Description,
@@ -140,6 +175,8 @@ public class PricingService : IPricingService
             Priority = p.Priority,
             Status = p.Status,
             Currency = p.Currency,
+            TaxPercentage = p.TaxPercentage,
+            PromotionLabel = p.PromotionLabel,
             StoreTypes = p.PriceListStoreTypes.Select(pst => new PriceListStoreTypeItemDto
             {
                 StoreTypeId = pst.StoreTypeId,
@@ -152,6 +189,7 @@ public class PricingService : IPricingService
                 MinKg = m.MinKg,
                 MaxKg = m.MaxKg,
                 UnitPrice = m.UnitPrice,
+                MinimumPrice = m.MinimumPrice,
                 PricePer = m.PricePer,
                 SortOrder = m.SortOrder
             }).ToList(),
@@ -161,6 +199,7 @@ public class PricingService : IPricingService
                 MachineCapacityKg = m.MachineCapacityKg,
                 Price = m.Price,
                 DurationMinutes = m.DurationMinutes,
+                CycleName = m.CycleName,
                 TimeSlotId = m.TimeSlotId,
                 TimeSlotName = m.TimeSlot?.Name
             }).ToList()
@@ -171,6 +210,7 @@ public class PricingService : IPricingService
     {
         var priceList = new PriceList
         {
+            BrandId = dto.BrandId,
             Code = dto.Code,
             Name = dto.Name,
             Description = dto.Description,
@@ -178,6 +218,8 @@ public class PricingService : IPricingService
             ValidTo = dto.ValidTo,
             Priority = dto.Priority,
             Currency = dto.Currency,
+            TaxPercentage = dto.TaxPercentage,
+            PromotionLabel = dto.PromotionLabel,
             Status = PriceListStatus.Draft
         };
 
@@ -187,6 +229,7 @@ public class PricingService : IPricingService
         return new PriceListDto
         {
             Id = priceList.Id,
+            BrandId = priceList.BrandId,
             Code = priceList.Code,
             Name = priceList.Name,
             Description = priceList.Description,
@@ -194,13 +237,19 @@ public class PricingService : IPricingService
             ValidTo = priceList.ValidTo,
             Priority = priceList.Priority,
             Status = priceList.Status,
-            Currency = priceList.Currency
+            Currency = priceList.Currency,
+            TaxPercentage = priceList.TaxPercentage,
+            PromotionLabel = priceList.PromotionLabel
         };
     }
 
-    public async Task<bool> UpdatePriceListStatusAsync(Guid id, PriceListStatus status)
+    public async Task<bool> UpdatePriceListStatusAsync(Guid id, PriceListStatus status, Guid? brandId = null)
     {
-        var priceList = await _context.PriceLists.FindAsync(id);
+        var query = _context.PriceLists.Where(p => p.Id == id && !p.IsDeleted);
+        if (brandId.HasValue)
+            query = query.Where(p => p.BrandId == brandId.Value);
+
+        var priceList = await query.FirstOrDefaultAsync();
         if (priceList == null) return false;
 
         priceList.Status = status;
@@ -210,12 +259,16 @@ public class PricingService : IPricingService
         return true;
     }
 
-    public async Task<bool> AssignStoreTypesAsync(Guid id, AssignStoreTypeDto dto)
+    public async Task<bool> AssignStoreTypesAsync(Guid id, AssignStoreTypeDto dto, Guid? brandId = null)
     {
-        var priceList = await _context.PriceLists
+        var query = _context.PriceLists
             .Include(p => p.PriceListStoreTypes)
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .Where(p => p.Id == id && !p.IsDeleted);
         
+        if (brandId.HasValue)
+            query = query.Where(p => p.BrandId == brandId.Value);
+
+        var priceList = await query.FirstOrDefaultAsync();
         if (priceList == null) return false;
 
         // Xóa gán cũ
@@ -236,12 +289,16 @@ public class PricingService : IPricingService
         return true;
     }
 
-    public async Task<bool> SyncPriceModePerKgAsync(Guid id, List<PriceModePerKgItemDto> modes)
+    public async Task<bool> SyncPriceModePerKgAsync(Guid id, List<PriceModePerKgItemDto> modes, Guid? brandId = null)
     {
-        var priceList = await _context.PriceLists
+        var query = _context.PriceLists
             .Include(p => p.PriceModePerKgs)
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .Where(p => p.Id == id && !p.IsDeleted);
             
+        if (brandId.HasValue)
+            query = query.Where(p => p.BrandId == brandId.Value);
+
+        var priceList = await query.FirstOrDefaultAsync();
         if (priceList == null) return false;
 
         _context.PriceModePerKgs.RemoveRange(priceList.PriceModePerKgs);
@@ -255,6 +312,7 @@ public class PricingService : IPricingService
                 MinKg = m.MinKg,
                 MaxKg = m.MaxKg,
                 UnitPrice = m.UnitPrice,
+                MinimumPrice = m.MinimumPrice,
                 PricePer = m.PricePer,
                 SortOrder = m.SortOrder
             });
@@ -264,12 +322,16 @@ public class PricingService : IPricingService
         return true;
     }
 
-    public async Task<bool> SyncPriceModePerSessionAsync(Guid id, List<PriceModePerSessionItemDto> modes)
+    public async Task<bool> SyncPriceModePerSessionAsync(Guid id, List<PriceModePerSessionItemDto> modes, Guid? brandId = null)
     {
-        var priceList = await _context.PriceLists
+        var query = _context.PriceLists
             .Include(p => p.PriceModePerSessions)
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .Where(p => p.Id == id && !p.IsDeleted);
             
+        if (brandId.HasValue)
+            query = query.Where(p => p.BrandId == brandId.Value);
+
+        var priceList = await query.FirstOrDefaultAsync();
         if (priceList == null) return false;
 
         _context.PriceModePerSessions.RemoveRange(priceList.PriceModePerSessions);
@@ -283,6 +345,7 @@ public class PricingService : IPricingService
                 MachineCapacityKg = m.MachineCapacityKg,
                 Price = m.Price,
                 DurationMinutes = m.DurationMinutes,
+                CycleName = m.CycleName,
                 TimeSlotId = m.TimeSlotId
             });
         }

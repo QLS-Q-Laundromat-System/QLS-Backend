@@ -24,6 +24,9 @@ public class PriceModePerKg
     [Precision(12, 0)] // Yêu cầu EF Core tạo cột decimal(12,0) như bạn thiết kế
     public required decimal UnitPrice { get; set; }
 
+    [Precision(12, 0)]
+    public decimal MinimumPrice { get; set; } = 0;
+
     // Phương thức tính giá (Trọn gói hay Tính theo Kg)
     public PricePerType PricePer { get; set; } = PricePerType.PerKg;
 

@@ -24,6 +24,15 @@ public class PriceList
 
     public Currency Currency { get; set; } = Currency.VND;
 
+    public Guid BrandId { get; set; }
+    public Brand? Brand { get; set; }
+
+    public bool IsDeleted { get; set; } = false;
+
+    public decimal TaxPercentage { get; set; } = 0;
+
+    public string? PromotionLabel { get; set; }
+
     public Guid? CreatedBy { get; set; }
     
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;

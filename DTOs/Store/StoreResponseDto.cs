@@ -14,5 +14,6 @@ namespace QLS.Backend.DTOs.Store
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public Guid BrandId { get; set; }
+        public Guid? StoreTypeId { get; set; }
     }
 }
