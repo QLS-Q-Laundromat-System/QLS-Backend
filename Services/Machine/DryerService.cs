@@ -11,6 +11,7 @@ using QLS.Backend.Interfaces;
 
 using QLS.Backend.Interfaces.Pricing;
 using QLS.Backend.DTOs.Pricing;
+using QLS.Backend.Models.Enums;
 
 namespace QLS.Backend.Services
 {
