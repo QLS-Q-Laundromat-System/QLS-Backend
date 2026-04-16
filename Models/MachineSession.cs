@@ -37,7 +37,30 @@ namespace QLS.Backend.Models
         [Precision(18, 2)]
         public decimal PricePaid { get; set; }
 
+        [Precision(18, 2)]
+        public decimal TaxAmount { get; set; }
+
         public int TotalMinutes { get; set; }
+
+        // Liên kết đến Bảng giá đã áp dụng (để đối soát)
+        public Guid? PriceListId { get; set; }
+        
+        [ForeignKey(nameof(PriceListId))]
+        public PriceList? PriceList { get; set; }
+
+        // Chế độ tính giá lúc bắt đầu (Theo Kg hay Theo Lượt)
+        public PricePerType PricingMode { get; set; }
+
+        // Phụ trợ: Cân nặng thực tế (nếu giặt sấy theo cân)
+        [Precision(5, 2)]
+        public decimal? WeightKg { get; set; }
+
+        // Phụ trợ: Tên chu trình máy giặt (nếu có)
+        [MaxLength(100)]
+        public string? CycleName { get; set; }
+
+        // Phụ trợ: Có phải là lượt sấy gia hạn (Extension) hay không?
+        public bool IsExtension { get; set; } = false;
 
         // --- Timing ---
 
@@ -46,7 +69,7 @@ namespace QLS.Backend.Models
         
         // Thời điểm máy sấy xong dự kiến (StartTime + TotalMinutes)
         public DateTime EndTime { get; set; } 
-
+        
         // Thời điểm thực tế kết thúc (nếu khác với EndTime)
         public DateTime? ActualEndTime { get; set; }
 

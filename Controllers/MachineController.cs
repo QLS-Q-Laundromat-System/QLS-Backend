@@ -19,10 +19,20 @@ public class MachineController : ControllerBase
 
     // API lấy trạng thái trực tiếp từ LG
     [HttpGet("status/{storeId}")]
-    public async Task<IActionResult> GetLgStatus(Guid storeId)
+    public async Task<IActionResult> GetLgStatus(string storeId)
     {
         var result = await _machineDetailService.GetLgMachineStatusAsync(storeId);
-        return Ok(result);
+        return Ok(ApiResponse<IEnumerable<MachineDetailDto>>.Success(result, "Lấy trạng thái máy thành công"));
     }
 
+    // API Cập nhật công suất (số kg) của máy
+    [HttpPatch("{id}/capacity")]
+    // [Authorize(Roles = "SystemAdmin,BrandAdmin,StoreAdmin")]
+    public async Task<IActionResult> UpdateCapacity(Guid id, [FromBody] QLS.Backend.DTOs.Machine.UpdateMachineCapacityDto dto)
+    {
+        var result = await _machineDetailService.UpdateMachineCapacityAsync(id, dto.Capacity);
+        if (!result) return NotFound(new { message = "Không tìm thấy máy" });
+        
+        return Ok(new { message = "Cập nhật công suất máy thành công" });
+    }
 }

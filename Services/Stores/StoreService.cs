@@ -45,6 +45,7 @@ namespace QLS.Backend.Services.Stores
                 Address = s.Address,
                 Phone = s.Phone,
                 Email = s.Email,
+                StoreId = s.StoreId,
                 LgPinCode = s.LgPinCode,
                 BrandId = s.BrandId,
                 StoreTypeId = s.StoreTypeId,

@@ -31,7 +31,7 @@ namespace QLS.Backend.Services.Revenue
             else if (brandId.HasValue)
             {
                 // Join with Store to filter by BrandId
-                query = query.Where(s => s.Store.BrandId == brandId.Value);
+                query = query.Where(s => s.Store!.BrandId == brandId.Value);
             }
 
             if (startTime.HasValue)
@@ -63,7 +63,7 @@ namespace QLS.Backend.Services.Revenue
             }
             else if (brandId.HasValue)
             {
-                query = query.Where(s => s.Store.BrandId == brandId.Value);
+                query = query.Where(s => s.Store!.BrandId == brandId.Value);
             }
 
             var result = await query
@@ -83,7 +83,7 @@ namespace QLS.Backend.Services.Revenue
         public async Task<List<StoreRevenueDto>> GetStoresRevenueAsync(Guid brandId, DateTime? startTime, DateTime? endTime)
         {
             var query = _context.MachineSessions
-                .Where(s => s.Store.BrandId == brandId && 
+                .Where(s => s.Store!.BrandId == brandId && 
                             (s.Status == MachineSessionStatus.Completed || s.Status == MachineSessionStatus.Running));
 
             if (startTime.HasValue)
@@ -93,7 +93,7 @@ namespace QLS.Backend.Services.Revenue
                 query = query.Where(s => s.StartTime <= endTime.Value);
 
             var result = await query
-                .GroupBy(s => new { s.StoreId, s.Store.Name })
+                .GroupBy(s => new { s.StoreId, s.Store!.Name })
                 .Select(g => new StoreRevenueDto
                 {
                     StoreId = g.Key.StoreId,
@@ -120,7 +120,7 @@ namespace QLS.Backend.Services.Revenue
                 query = query.Where(s => s.StartTime <= endTime.Value);
 
             var result = await query
-                .GroupBy(s => new { s.MachineId, s.Machine.Name })
+                .GroupBy(s => new { s.MachineId, s.Machine!.Name })
                 .Select(g => new MachineRevenueRankingDto
                 {
                     MachineId = g.Key.MachineId,

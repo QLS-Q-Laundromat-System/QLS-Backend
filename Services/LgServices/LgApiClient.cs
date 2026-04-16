@@ -16,11 +16,11 @@ public class LgApiClient
         _config = config;
     }
 
-    public async Task<string> GetRawStatusAsync(string storeId)
+    public async Task<string> GetRawStatusAsync(string storeId, string userNo, string accessToken)
     {
         var section = _config.GetSection("LgApi");
         var url = $"{section["BaseUrl"]}{storeId}";
-        return await SendThinqRequestAsync(url, null, null);
+        return await SendThinqRequestAsync(url, userNo, accessToken);
     }
 
     public async Task<string> GetStoresAsync(string userNo, string accessToken)
@@ -49,11 +49,11 @@ public class LgApiClient
         }
         
         request.Headers.Add("x-thinq-app-ver", section["AppVer"] ?? "0.1");
-        request.Headers.Add("x-thinq-client-type", "WEB");
+        request.Headers.Add("x-thinq-client-type", section["ClientType"] ?? "USER");
         request.Headers.Add("x-api-key", section["ApiKey"]);
         request.Headers.Add("x-country-code", section["CountryCode"] ?? "VN");
         request.Headers.Add("x-client-id", section["ClientId"] ?? "12345");
-        request.Headers.Add("x-service-code", section["ServiceCode"] ?? "CHN000037");
+        request.Headers.Add("x-service-code", "CHN000037"); // Sử dụng cấu hình cứng giống request mẫu thành công
         request.Headers.Add("x-service-phase", section["ServicePhase"] ?? "OP");
         request.Headers.Add("x-thinq-app-level", "DEV");
         request.Headers.Add("x-language-code", "en-VN");

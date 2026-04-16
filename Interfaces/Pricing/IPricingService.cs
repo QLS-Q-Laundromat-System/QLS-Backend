@@ -15,7 +15,10 @@ public interface IPricingService
     Task<PriceListDetailDto?> GetPriceListDetailAsync(Guid id, Guid? brandId = null);
     Task<PriceListDto> CreatePriceListAsync(CreatePriceListDto dto);
     Task<bool> UpdatePriceListStatusAsync(Guid id, PriceListStatus status, Guid? brandId = null);
-    Task<bool> AssignStoreTypesAsync(Guid id, AssignStoreTypeDto dto, Guid? brandId = null);
+    Task<bool> AssignStoreTypesAsync(Guid id, AssignPriceListStoreTypesDto dto, Guid? brandId = null);
     Task<bool> SyncPriceModePerKgAsync(Guid id, List<PriceModePerKgItemDto> modes, Guid? brandId = null);
     Task<bool> SyncPriceModePerSessionAsync(Guid id, List<PriceModePerSessionItemDto> modes, Guid? brandId = null);
+
+    // Calculation
+    Task<PriceCalculationResponseDto> CalculatePriceAsync(CalculatePriceRequestDto dto);
 }

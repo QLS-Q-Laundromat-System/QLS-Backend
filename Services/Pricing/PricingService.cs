@@ -149,11 +149,13 @@ public class PricingService : IPricingService
     public async Task<PriceListDetailDto?> GetPriceListDetailAsync(Guid id, Guid? brandId = null)
     {
         var query = _context.PriceLists
+            .AsNoTracking()
             .Include(p => p.PriceListStoreTypes)
                 .ThenInclude(pst => pst.StoreType)
             .Include(p => p.PriceModePerKgs)
             .Include(p => p.PriceModePerSessions)
                 .ThenInclude(ps => ps.TimeSlot)
+            .AsSplitQuery()
             .Where(p => p.Id == id && !p.IsDeleted);
 
         if (brandId.HasValue)
@@ -177,12 +179,14 @@ public class PricingService : IPricingService
             Currency = p.Currency,
             TaxPercentage = p.TaxPercentage,
             PromotionLabel = p.PromotionLabel,
+            
             StoreTypes = p.PriceListStoreTypes.Select(pst => new PriceListStoreTypeItemDto
             {
                 StoreTypeId = pst.StoreTypeId,
                 StoreTypeName = pst.StoreType?.Name,
                 OverridePriority = pst.OverridePriority
             }).ToList(),
+
             ModePerKg = p.PriceModePerKgs.Select(m => new PriceModePerKgItemDto
             {
                 MachineType = m.MachineType,
@@ -193,15 +197,18 @@ public class PricingService : IPricingService
                 PricePer = m.PricePer,
                 SortOrder = m.SortOrder
             }).ToList(),
+
             ModePerSession = p.PriceModePerSessions.Select(m => new PriceModePerSessionItemDto
             {
-                MachineType = m.MachineType,
+                MachineType = m is WasherPriceMode ? MachineType.Washer : MachineType.Dryer,
                 MachineCapacityKg = m.MachineCapacityKg,
                 Price = m.Price,
                 DurationMinutes = m.DurationMinutes,
-                CycleName = m.CycleName,
                 TimeSlotId = m.TimeSlotId,
-                TimeSlotName = m.TimeSlot?.Name
+                TimeSlotName = m.TimeSlot?.Name,
+                CycleName = (m as WasherPriceMode)?.CycleName,
+                MinInitialSteps = (m as DryerPriceMode)?.MinInitialSteps,
+                ExtensionTimeoutMinutes = (m as DryerPriceMode)?.ExtensionTimeoutMinutes
             }).ToList()
         };
     }
@@ -259,7 +266,7 @@ public class PricingService : IPricingService
         return true;
     }
 
-    public async Task<bool> AssignStoreTypesAsync(Guid id, AssignStoreTypeDto dto, Guid? brandId = null)
+    public async Task<bool> AssignStoreTypesAsync(Guid id, AssignPriceListStoreTypesDto dto, Guid? brandId = null)
     {
         var query = _context.PriceLists
             .Include(p => p.PriceListStoreTypes)
@@ -334,23 +341,168 @@ public class PricingService : IPricingService
         var priceList = await query.FirstOrDefaultAsync();
         if (priceList == null) return false;
 
+        // Xóa gán cũ
         _context.PriceModePerSessions.RemoveRange(priceList.PriceModePerSessions);
 
+        // Thêm gán mới
         foreach (var m in modes)
         {
-            _context.PriceModePerSessions.Add(new PriceModePerSession
+            // Khai báo class cha
+            PriceModePerSession newMode;
+
+            // Rẽ nhánh dựa vào MachineType Frontend gửi lên để khởi tạo đúng Class con
+            if (m.MachineType == MachineType.Washer)
             {
-                PriceListId = id,
-                MachineType = m.MachineType,
-                MachineCapacityKg = m.MachineCapacityKg,
-                Price = m.Price,
-                DurationMinutes = m.DurationMinutes,
-                CycleName = m.CycleName,
-                TimeSlotId = m.TimeSlotId
-            });
+                newMode = new WasherPriceMode
+                {
+                    PriceListId = id,
+                    MachineCapacityKg = m.MachineCapacityKg,
+                    Price = m.Price,
+                    DurationMinutes = m.DurationMinutes,
+                    TimeSlotId = m.TimeSlotId,
+                    
+                    // Gán trường riêng của máy giặt
+                    CycleName = m.CycleName 
+                };
+            }
+            else if (m.MachineType == MachineType.Dryer)
+            {
+                newMode = new DryerPriceMode
+                {
+                    PriceListId = id,
+                    MachineCapacityKg = m.MachineCapacityKg,
+                    Price = m.Price,
+                    DurationMinutes = m.DurationMinutes,
+                    TimeSlotId = m.TimeSlotId,
+                    
+                    // Gán trường riêng của máy sấy
+                    MinInitialSteps = m.MinInitialSteps,
+                    ExtensionTimeoutMinutes = m.ExtensionTimeoutMinutes
+                };
+            }
+            else
+            {
+                throw new ArgumentException("MachineType không hợp lệ trong quá trình đồng bộ giá.");
+            }
+
+            // Entity Framework Core đủ thông minh để nhận ra đây là class con 
+            // và tự động lưu đúng "Discriminator" xuống DB
+            _context.PriceModePerSessions.Add(newMode);
         }
 
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<PriceCalculationResponseDto> CalculatePriceAsync(CalculatePriceRequestDto dto)
+    {
+        var calculateTime = dto.CalculateTime ?? DateTime.UtcNow;
+
+        // 1. Lấy thông tin cửa hàng để biết BrandId và StoreTypeId
+        var store = await _context.Stores
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == dto.StoreId);
+
+        if (store == null)
+            throw new Exception("Không tìm thấy cửa hàng.");
+
+        // 2. Tìm bảng giá phù hợp nhất
+        // Ưu tiên: Trạng thái Active > Đúng Brand > Trong hạn sử dụng > Đúng StoreType (nếu có cấu hình) > Priority cao nhất
+        var priceListQuery = _context.PriceLists
+            .AsNoTracking()
+            .Include(p => p.PriceListStoreTypes)
+            .Include(p => p.PriceModePerKgs)
+            .Include(p => p.PriceModePerSessions)
+                .ThenInclude(m => m.TimeSlot)
+            .Where(p => p.BrandId == store.BrandId 
+                   && p.Status == PriceListStatus.Active 
+                   && !p.IsDeleted
+                   && p.ValidFrom <= DateOnly.FromDateTime(calculateTime)
+                   && (p.ValidTo == null || p.ValidTo >= DateOnly.FromDateTime(calculateTime)));
+
+        var priceLists = await priceListQuery.ToListAsync();
+
+        // Lọc theo StoreType: 
+        // - Nếu bảng giá có cấu hình StoreType, cửa hàng phải thuộc StoreType đó.
+        // - Nếu bảng giá không cấu hình StoreType nào, coi như áp dụng cho tất cả.
+        var applicablePriceList = priceLists
+            .Where(p => !p.PriceListStoreTypes.Any() || (store.StoreTypeId.HasValue && p.PriceListStoreTypes.Any(pst => pst.StoreTypeId == store.StoreTypeId.Value)))
+            .OrderByDescending(p => p.Priority)
+            .ThenByDescending(p => p.CreatedAt)
+            .FirstOrDefault();
+
+        if (applicablePriceList == null)
+            throw new Exception("Không tìm thấy bảng giá nào áp dụng cho cửa hàng này tại thời điểm hiện tại.");
+
+        var response = new PriceCalculationResponseDto
+        {
+            PriceListId = applicablePriceList.Id,
+            PriceListName = applicablePriceList.Name
+        };
+
+        // 3. Tính toán giá dựa trên Mode
+        
+        // --- TRƯỜNG HỢP 1: TÍNH THEO CÂN NẶNG (Ưu tiên nếu có truyền ClothingWeightKg) ---
+        if (dto.ClothingWeightKg.HasValue && dto.ClothingWeightKg.Value > 0)
+        {
+            var weight = dto.ClothingWeightKg.Value;
+            var mode = applicablePriceList.PriceModePerKgs
+                .Where(m => m.MachineType == dto.MachineType && weight >= m.MinKg && (m.MaxKg == null || weight <= m.MaxKg))
+                .OrderBy(m => m.SortOrder)
+                .FirstOrDefault();
+
+            if (mode != null)
+            {
+                decimal calculatedPrice = mode.PricePer == PricePerType.PerKg 
+                    ? mode.UnitPrice * weight 
+                    : mode.UnitPrice;
+
+                response.FinalPrice = Math.Max(mode.MinimumPrice, calculatedPrice);
+                response.Mode = "PerKg";
+                response.CalculationDetail = $"Bảng giá {applicablePriceList.Name}: {weight}kg x {mode.UnitPrice:N0} ({mode.PricePer}). Min: {mode.MinimumPrice:N0}";
+                return response;
+            }
+        }
+
+        // --- TRƯỜNG HỢP 2: TÍNH THEO LƯỢT (SESSION) ---
+        var timeOnly = TimeOnly.FromDateTime(calculateTime);
+        var dayOfWeek = calculateTime.DayOfWeek;
+        // Chuyển DayOfWeek sang Mask (Sunday = 1, Monday = 2, ...)
+        var currentDayMask = (DayOfWeekMask)(1 << (int)dayOfWeek);
+
+        var sessionMode = applicablePriceList.PriceModePerSessions
+            .Where(m => m.MachineCapacityKg == dto.MachineCapacityKg)
+            .Where(m => (dto.MachineType == MachineType.Washer && m is WasherPriceMode) || 
+                        (dto.MachineType == MachineType.Dryer && m is DryerPriceMode))
+            .Where(m => m.TimeSlot == null || 
+                        (m.TimeSlot.IsActive && 
+                         (m.TimeSlot.DayMask & currentDayMask) != 0 &&
+                         (m.TimeSlot.StartTime == null || timeOnly >= m.TimeSlot.StartTime) &&
+                         (m.TimeSlot.EndTime == null || timeOnly <= m.TimeSlot.EndTime)))
+            .FirstOrDefault();
+
+        if (sessionMode != null)
+        {
+            response.FinalPrice = sessionMode.Price;
+            response.Mode = "PerSession";
+            
+            var detail = $"Bảng giá {applicablePriceList.Name}: Máy {dto.MachineCapacityKg}kg - {sessionMode.DurationMinutes} phút - {sessionMode.Price:N0} VNĐ";
+            
+            if (sessionMode.TimeSlot != null)
+            {
+                detail += $" [Khung giờ: {sessionMode.TimeSlot.Name}]";
+            }
+
+            // Bổ sung thông tin riêng cho máy sấy
+            if (sessionMode is DryerPriceMode dMode)
+            {
+                detail += $" (Sấy tối thiểu: {dMode.MinInitialSteps} bước, Thời gian chờ gia hạn: {dMode.ExtensionTimeoutMinutes} phút)";
+            }
+            
+            response.CalculationDetail = detail;
+            return response;
+        }
+
+        throw new Exception($"Không tìm thấy cấu hình giá phù hợp cho máy {dto.MachineType} công suất {dto.MachineCapacityKg}kg.");
     }
 }

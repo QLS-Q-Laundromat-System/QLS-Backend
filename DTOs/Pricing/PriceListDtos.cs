@@ -63,9 +63,15 @@ public class PriceModePerSessionItemDto
     public decimal MachineCapacityKg { get; set; }
     public decimal Price { get; set; }
     public int DurationMinutes { get; set; }
-    public string? CycleName { get; set; }
     public Guid? TimeSlotId { get; set; }
     public string? TimeSlotName { get; set; }
+
+    // --- RIÊNG CỦA MÁY GIẶT ---
+    public string? CycleName { get; set; }
+
+    // --- RIÊNG CỦA MÁY SẤY ---
+    public int? MinInitialSteps { get; set; }
+    public int? ExtensionTimeoutMinutes { get; set; }
 }
 
 public class UpdatePriceListStatusDto
@@ -73,7 +79,7 @@ public class UpdatePriceListStatusDto
     public PriceListStatus Status { get; set; }
 }
 
-public class AssignStoreTypeDto
+public class AssignPriceListStoreTypesDto
 {
     public List<PriceListStoreTypeItemDto> StoreTypes { get; set; } = [];
 }
@@ -94,4 +100,9 @@ public class PriceCalculationResponseDto
     public string PriceListName { get; set; } = string.Empty;
     public string Mode { get; set; } = string.Empty;
     public string CalculationDetail { get; set; } = string.Empty;
+    
+    // --- RIÊNG CỦA MÁY SẤY ---
+    public int? MinInitialSteps { get; set; }
+    public int? DurationMinutes { get; set; }
+    public int? ExtensionTimeoutMinutes { get; set; }
 }

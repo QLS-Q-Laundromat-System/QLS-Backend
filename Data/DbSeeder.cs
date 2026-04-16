@@ -208,11 +208,11 @@ namespace QLS.Backend.Data
                 context.PriceModePerSessions.AddRange(new List<PriceModePerSession>
                 {
                     // Giá Happy Hour cho máy 10kg
-                    new PriceModePerSession { PriceListId = mainPriceList.Id, MachineType = MachineType.Washer, MachineCapacityKg = 10, Price = 30000, DurationMinutes = 30, TimeSlotId = happyHourSlot.Id },
+                    new WasherPriceMode { PriceListId = mainPriceList.Id, MachineCapacityKg = 10, Price = 30000, DurationMinutes = 30, TimeSlotId = happyHourSlot.Id },
                     // Giá mặc định cho máy 10kg
-                    new PriceModePerSession { PriceListId = mainPriceList.Id, MachineType = MachineType.Washer, MachineCapacityKg = 10, Price = 50000, DurationMinutes = 30, TimeSlotId = null },
+                    new WasherPriceMode { PriceListId = mainPriceList.Id, MachineCapacityKg = 10, Price = 50000, DurationMinutes = 30, TimeSlotId = null },
                     // Giá máy sấy
-                    new PriceModePerSession { PriceListId = mainPriceList.Id, MachineType = MachineType.Dryer, MachineCapacityKg = 15, Price = 40000, DurationMinutes = 45, TimeSlotId = null }
+                    new DryerPriceMode { PriceListId = mainPriceList.Id, MachineCapacityKg = 15, Price = 40000, DurationMinutes = 45, TimeSlotId = null }
                 });
 
                 await context.SaveChangesAsync();

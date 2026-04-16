@@ -69,7 +69,7 @@ public class PriceListsController : ControllerBase
 
     [HttpPost("{id}/store-types")]
     [Authorize(Roles = "SystemAdmin,BrandAdmin")]
-    public async Task<IActionResult> AssignStoreTypes(Guid id, [FromBody] AssignStoreTypeDto dto)
+    public async Task<IActionResult> AssignStoreTypes(Guid id, [FromBody] AssignPriceListStoreTypesDto dto)
     {
         var brandIdStr = User.FindFirst("BrandId")?.Value;
         Guid? brandId = string.IsNullOrEmpty(brandIdStr) ? null : Guid.Parse(brandIdStr);
@@ -101,5 +101,12 @@ public class PriceListsController : ControllerBase
         var result = await _pricingService.SyncPriceModePerSessionAsync(id, modes, brandId);
         if (!result) throw new ApiException("Không tìm thấy bảng giá", 404);
         return Ok(ApiResponse<object>.Success(new { }, "Đồng bộ giá theo lượt thành công"));
+    }
+
+    [HttpPost("calculate")]
+    public async Task<IActionResult> Calculate([FromBody] CalculatePriceRequestDto dto)
+    {
+        var result = await _pricingService.CalculatePriceAsync(dto);
+        return Ok(ApiResponse<PriceCalculationResponseDto>.Success(result));
     }
 }

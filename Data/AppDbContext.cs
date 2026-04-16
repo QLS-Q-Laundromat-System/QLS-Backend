@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Models;
+using QLS.Backend.Models.Enums;
 
 namespace QLS.Backend.Data
 {
@@ -103,6 +104,12 @@ namespace QLS.Backend.Data
                 .WithOne(b => b.LgCredential)
                 .HasForeignKey<BrandLgCredential>(c => c.BrandId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // --- Cấu hình Inheritance cho PriceModePerSession (TPH) ---
+            modelBuilder.Entity<PriceModePerSession>()
+                .HasDiscriminator<MachineType>("MachineType")
+                .HasValue<WasherPriceMode>(MachineType.Washer)
+                .HasValue<DryerPriceMode>(MachineType.Dryer);
         }
     }
 }

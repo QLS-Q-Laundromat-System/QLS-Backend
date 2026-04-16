@@ -21,7 +21,8 @@ public static class ServiceExtensions
                 "QLS.Backend.Services.Brand",
                 "QLS.Backend.Services.Machine",
                 "QLS.Backend.Services.LgService",
-                "QLS.Backend.Services.Revenue"
+                "QLS.Backend.Services.Revenue",
+                "QLS.Backend.Services.Pricing"
             ))
             .AsImplementedInterfaces()
             .WithScopedLifetime());
@@ -56,6 +57,7 @@ public static class ServiceExtensions
     services.AddSwaggerGen(options =>
     {
         options.SwaggerDoc("v1", new OpenApiInfo { Title = "QLS Backend", Version = "v1" });
+        options.CustomSchemaIds(type => type.FullName ?? type.Name);
 
         // Dùng ApiKey: Bắt buộc gửi chính xác những gì người dùng nhập
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

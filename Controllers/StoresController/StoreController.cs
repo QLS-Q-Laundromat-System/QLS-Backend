@@ -77,7 +77,7 @@ public class StoreController : ControllerBase
 
     [HttpPatch("{id}/type")]
     [Authorize(Roles = "SystemAdmin,BrandAdmin")]
-    public async Task<IActionResult> AssignStoreType(Guid id, [FromBody] AssignStoreTypeDto dto)
+    public async Task<IActionResult> AssignStoreType(Guid id, [FromBody] UpdateStoreTypeDto dto)
     {
         var result = await _storeService.AssignStoreTypeAsync(id, dto.StoreTypeId);
         if (!result) return NotFound(ApiResponse<object>.Error(404, "Không tìm thấy cửa hàng"));

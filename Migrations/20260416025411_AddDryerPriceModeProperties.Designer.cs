@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using QLS.Backend.Data;
@@ -11,9 +12,11 @@ using QLS.Backend.Data;
 namespace QLS.Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260416025411_AddDryerPriceModeProperties")]
+    partial class AddDryerPriceModeProperties
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -191,28 +194,15 @@ namespace QLS.Backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("CycleName")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsExtension")
-                        .HasColumnType("boolean");
-
                     b.Property<Guid>("MachineId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("PriceListId")
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("PricePaid")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
-
-                    b.Property<int>("PricingMode")
-                        .HasColumnType("integer");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("timestamp with time zone");
@@ -222,10 +212,6 @@ namespace QLS.Backend.Migrations
 
                     b.Property<Guid>("StoreId")
                         .HasColumnType("uuid");
-
-                    b.Property<decimal>("TaxAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("TotalMinutes")
                         .HasColumnType("integer");
@@ -239,15 +225,9 @@ namespace QLS.Backend.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
-                    b.Property<decimal?>("WeightKg")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("MachineId");
-
-                    b.HasIndex("PriceListId");
 
                     b.HasIndex("StoreId");
 
@@ -662,10 +642,6 @@ namespace QLS.Backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("QLS.Backend.Models.PriceList", "PriceList")
-                        .WithMany()
-                        .HasForeignKey("PriceListId");
-
                     b.HasOne("QLS.Backend.Models.Store", "Store")
                         .WithMany()
                         .HasForeignKey("StoreId")
@@ -679,8 +655,6 @@ namespace QLS.Backend.Migrations
                         .IsRequired();
 
                     b.Navigation("Machine");
-
-                    b.Navigation("PriceList");
 
                     b.Navigation("Store");
 
