@@ -15,7 +15,17 @@ namespace QLS.Backend.DTOs.Store
         public string Email { get; set; } = string.Empty;
         public string? StoreId { get; set; }
 
+        // LG ThinQ Integration Fields
+        public string? City { get; set; }
+        public string? Zipcode { get; set; }
+        public string? States { get; set; }
+        public string? Latitude { get; set; }
+        public string? Longitude { get; set; }
+        public string LTime { get; set; } = "Asia/Saigon";
+
         [Required(ErrorMessage = "BrandId không được để trống")]
         public Guid BrandId { get; set; }
+
+        public Guid? StoreTypeId { get; set; }
     }
 }

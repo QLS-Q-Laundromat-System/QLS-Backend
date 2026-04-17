@@ -1,4 +1,6 @@
 using QLS.Backend.DTOs.Lg;
+using QLS.Backend.Models;
+using System;
 using System.Threading.Tasks;
 
 namespace QLS.Backend.Interfaces.Brand
@@ -19,5 +21,10 @@ namespace QLS.Backend.Interfaces.Brand
         /// Đồng bộ danh sách cửa hàng từ LG ThinQ về database địa phương.
         /// </summary>
         Task<int> SyncBrandStoresAsync(Guid brandId);
+
+        /// <summary>
+        /// Lấy thông tin xác thực LG của Brand, tự động refresh nếu token hết hạn.
+        /// </summary>
+        Task<BrandLgCredential?> GetValidCredentialAsync(Guid brandId);
     }
 }

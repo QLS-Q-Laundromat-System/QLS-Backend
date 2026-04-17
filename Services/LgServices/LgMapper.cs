@@ -12,6 +12,12 @@ public static class LgMapper
         
         if (!doc.RootElement.TryGetProperty("result", out var resultArr)) return statusList;
 
+        if (resultArr.ValueKind == JsonValueKind.Object)
+        {
+            throw new Exception($"LG API Error Output: {resultArr.GetRawText()}");
+        }
+        
+        if (resultArr.ValueKind != JsonValueKind.Array) return statusList;
         foreach (var element in resultArr.EnumerateArray())
         {
             var deviceId = element.GetProperty("deviceId").GetString() ?? "";
@@ -49,11 +55,20 @@ public static class LgMapper
                           (wd.TryGetProperty("process", out var p2) ? (p2.GetString() ?? "") : "");
             }
 
+            // Xử lý Trạng thái Online (Ưu tiên lấy từ snapshot.online)
             bool isOnline = true;
-            if (element.TryGetProperty("online", out var onlineElement) && (onlineElement.ValueKind == JsonValueKind.True || onlineElement.ValueKind == JsonValueKind.False)) 
-                isOnline = onlineElement.GetBoolean();
-            else if (snapshot.TryGetProperty("online", out var snapshotOnline) && (snapshotOnline.ValueKind == JsonValueKind.True || snapshotOnline.ValueKind == JsonValueKind.False)) 
-                isOnline = snapshotOnline.GetBoolean();
+            if (snapshot.TryGetProperty("online", out var snapshotOnline))
+            {
+                if (snapshotOnline.ValueKind == JsonValueKind.True) isOnline = true;
+                else if (snapshotOnline.ValueKind == JsonValueKind.False) isOnline = false;
+                else if (snapshotOnline.ValueKind == JsonValueKind.String) 
+                    isOnline = snapshotOnline.GetString()?.ToLower() == "y" || snapshotOnline.GetString()?.ToLower() == "true";
+            }
+            else if (element.TryGetProperty("online", out var elementOnline))
+            {
+                if (elementOnline.ValueKind == JsonValueKind.True) isOnline = true;
+                else if (elementOnline.ValueKind == JsonValueKind.False) isOnline = false;
+            }
 
             statusList.Add(new MachineDetailDto {
                 DeviceId = deviceId,

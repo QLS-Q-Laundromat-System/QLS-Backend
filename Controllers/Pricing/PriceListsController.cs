@@ -23,14 +23,20 @@ public class PriceListsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] PriceListStatus? status, [FromQuery] DateOnly? validFrom)
     {
-        var result = await _pricingService.GetPriceListsAsync(status, validFrom);
+        var brandIdStr = User.FindFirst("BrandId")?.Value;
+        Guid? brandId = string.IsNullOrEmpty(brandIdStr) ? null : Guid.Parse(brandIdStr);
+
+        var result = await _pricingService.GetPriceListsAsync(status, validFrom, brandId);
         return Ok(ApiResponse<IEnumerable<PriceListDto>>.Success(result));
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var result = await _pricingService.GetPriceListDetailAsync(id);
+        var brandIdStr = User.FindFirst("BrandId")?.Value;
+        Guid? brandId = string.IsNullOrEmpty(brandIdStr) ? null : Guid.Parse(brandIdStr);
+
+        var result = await _pricingService.GetPriceListDetailAsync(id, brandId);
         if (result == null) throw new ApiException("Không tìm thấy bảng giá", 404);
         return Ok(ApiResponse<PriceListDetailDto>.Success(result));
     }
@@ -39,6 +45,12 @@ public class PriceListsController : ControllerBase
     [Authorize(Roles = "SystemAdmin,BrandAdmin")]
     public async Task<IActionResult> Create([FromBody] CreatePriceListDto dto)
     {
+        var brandIdStr = User.FindFirst("BrandId")?.Value;
+        if (!string.IsNullOrEmpty(brandIdStr))
+        {
+            dto.BrandId = Guid.Parse(brandIdStr);
+        }
+
         var result = await _pricingService.CreatePriceListAsync(dto);
         return Ok(ApiResponse<PriceListDto>.Success(result, "Tạo bảng giá thành công"));
     }
@@ -47,16 +59,22 @@ public class PriceListsController : ControllerBase
     [Authorize(Roles = "SystemAdmin,BrandAdmin")]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdatePriceListStatusDto dto)
     {
-        var result = await _pricingService.UpdatePriceListStatusAsync(id, dto.Status);
+        var brandIdStr = User.FindFirst("BrandId")?.Value;
+        Guid? brandId = string.IsNullOrEmpty(brandIdStr) ? null : Guid.Parse(brandIdStr);
+
+        var result = await _pricingService.UpdatePriceListStatusAsync(id, dto.Status, brandId);
         if (!result) throw new ApiException("Không tìm thấy bảng giá", 404);
         return Ok(ApiResponse<object>.Success(new { }, "Cập nhật trạng thái thành công"));
     }
 
     [HttpPost("{id}/store-types")]
     [Authorize(Roles = "SystemAdmin,BrandAdmin")]
-    public async Task<IActionResult> AssignStoreTypes(Guid id, [FromBody] AssignStoreTypeDto dto)
+    public async Task<IActionResult> AssignStoreTypes(Guid id, [FromBody] AssignPriceListStoreTypesDto dto)
     {
-        var result = await _pricingService.AssignStoreTypesAsync(id, dto);
+        var brandIdStr = User.FindFirst("BrandId")?.Value;
+        Guid? brandId = string.IsNullOrEmpty(brandIdStr) ? null : Guid.Parse(brandIdStr);
+
+        var result = await _pricingService.AssignStoreTypesAsync(id, dto, brandId);
         if (!result) throw new ApiException("Không tìm thấy bảng giá", 404);
         return Ok(ApiResponse<object>.Success(new { }, "Gán hạng cửa hàng thành công"));
     }
@@ -65,7 +83,10 @@ public class PriceListsController : ControllerBase
     [Authorize(Roles = "SystemAdmin,BrandAdmin")]
     public async Task<IActionResult> SyncPerKg(Guid id, [FromBody] List<PriceModePerKgItemDto> modes)
     {
-        var result = await _pricingService.SyncPriceModePerKgAsync(id, modes);
+        var brandIdStr = User.FindFirst("BrandId")?.Value;
+        Guid? brandId = string.IsNullOrEmpty(brandIdStr) ? null : Guid.Parse(brandIdStr);
+
+        var result = await _pricingService.SyncPriceModePerKgAsync(id, modes, brandId);
         if (!result) throw new ApiException("Không tìm thấy bảng giá", 404);
         return Ok(ApiResponse<object>.Success(new { }, "Đồng bộ giá theo Kg thành công"));
     }
@@ -74,8 +95,18 @@ public class PriceListsController : ControllerBase
     [Authorize(Roles = "SystemAdmin,BrandAdmin")]
     public async Task<IActionResult> SyncPerSession(Guid id, [FromBody] List<PriceModePerSessionItemDto> modes)
     {
-        var result = await _pricingService.SyncPriceModePerSessionAsync(id, modes);
+        var brandIdStr = User.FindFirst("BrandId")?.Value;
+        Guid? brandId = string.IsNullOrEmpty(brandIdStr) ? null : Guid.Parse(brandIdStr);
+
+        var result = await _pricingService.SyncPriceModePerSessionAsync(id, modes, brandId);
         if (!result) throw new ApiException("Không tìm thấy bảng giá", 404);
         return Ok(ApiResponse<object>.Success(new { }, "Đồng bộ giá theo lượt thành công"));
+    }
+
+    [HttpPost("calculate")]
+    public async Task<IActionResult> Calculate([FromBody] CalculatePriceRequestDto dto)
+    {
+        var result = await _pricingService.CalculatePriceAsync(dto);
+        return Ok(ApiResponse<PriceCalculationResponseDto>.Success(result));
     }
 }

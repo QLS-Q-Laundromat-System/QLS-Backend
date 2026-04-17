@@ -8,17 +8,10 @@ namespace QLS.Backend.Data
     {
         public static async Task SeedAsync(AppDbContext context)
         {
-            // 0. Xóa database cũ trước
-            await context.Database.EnsureDeletedAsync();
-
-            // Sửa lỗi pooling của PostgreSQL sau khi drop database
-            Npgsql.NpgsqlConnection.ClearAllPools();
-            await Task.Delay(500);
-
-            // 1. Tự động chạy Migration
+            // 1. Tự động chạy Migration để cập nhật cấu trúc DB mới nhất (không xóa dữ liệu cũ)
             await context.Database.MigrateAsync();
 
-            Console.WriteLine("====== [SYSTEM] ĐÃ DROP DATABASE & CHẠY LẠI MIGRATIONS ======");
+            Console.WriteLine("====== [SYSTEM] ĐÃ CẬP NHẬT MIGRATIONS (NẾU CÓ) ======");
 
             // 2. Kiểm tra nếu chưa có Brand nào thì tạo bộ dữ liệu mẫu
             if (!await context.Brands.AnyAsync())
@@ -170,7 +163,9 @@ namespace QLS.Backend.Data
                 var happyHourSlot = new TimeSlot
                 {
                     Id = Guid.NewGuid(),
+                    BrandId = defaultBrand.Id,
                     Name = "Happy Hour Sáng (8h-11h)",
+                    Description = "Giảm giá đặc biệt khung giờ sáng",
                     StartTime = new TimeOnly(8, 0),
                     EndTime = new TimeOnly(11, 0),
                     DayMask = DayOfWeekMask.Weekdays | DayOfWeekMask.Saturday
@@ -181,8 +176,10 @@ namespace QLS.Backend.Data
                 var mainPriceList = new PriceList
                 {
                     Id = Guid.NewGuid(),
+                    BrandId = defaultBrand.Id,
                     Code = "STD_2026",
                     Name = "Bảng giá Niêm yết 2026",
+                    PromotionLabel = "Giá tốt mỗi ngày",
                     ValidFrom = new DateOnly(2026, 1, 1),
                     Status = PriceListStatus.Active,
                     Priority = 10,
@@ -211,11 +208,11 @@ namespace QLS.Backend.Data
                 context.PriceModePerSessions.AddRange(new List<PriceModePerSession>
                 {
                     // Giá Happy Hour cho máy 10kg
-                    new PriceModePerSession { PriceListId = mainPriceList.Id, MachineType = MachineType.Washer, MachineCapacityKg = 10, Price = 30000, DurationMinutes = 30, TimeSlotId = happyHourSlot.Id },
+                    new WasherPriceMode { PriceListId = mainPriceList.Id, MachineCapacityKg = 10, Price = 30000, DurationMinutes = 30, TimeSlotId = happyHourSlot.Id },
                     // Giá mặc định cho máy 10kg
-                    new PriceModePerSession { PriceListId = mainPriceList.Id, MachineType = MachineType.Washer, MachineCapacityKg = 10, Price = 50000, DurationMinutes = 30, TimeSlotId = null },
+                    new WasherPriceMode { PriceListId = mainPriceList.Id, MachineCapacityKg = 10, Price = 50000, DurationMinutes = 30, TimeSlotId = null },
                     // Giá máy sấy
-                    new PriceModePerSession { PriceListId = mainPriceList.Id, MachineType = MachineType.Dryer, MachineCapacityKg = 15, Price = 40000, DurationMinutes = 45, TimeSlotId = null }
+                    new DryerPriceMode { PriceListId = mainPriceList.Id, MachineCapacityKg = 15, Price = 40000, DurationMinutes = 45, TimeSlotId = null }
                 });
 
                 await context.SaveChangesAsync();

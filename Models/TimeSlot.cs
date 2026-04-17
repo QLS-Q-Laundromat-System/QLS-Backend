@@ -20,6 +20,11 @@ public class TimeSlot
     // Sử dụng lại Enum [Flags] chúng ta đã định nghĩa ở trước
     public DayOfWeekMask DayMask { get; set; } = DayOfWeekMask.AllDays;
 
+    public Guid BrandId { get; set; }
+    public Brand? Brand { get; set; }
+
+    public string? Description { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     // Navigation property 1:N

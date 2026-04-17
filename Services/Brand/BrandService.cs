@@ -167,7 +167,8 @@ namespace QLS.Backend.Services.Brand
                     StoreId = s.StoreId,
                     IsActive = s.IsActive,
                     CreatedAt = s.CreatedAt,
-                    BrandId = s.BrandId
+                    BrandId = s.BrandId,
+                    StoreTypeId = s.StoreTypeId
                 })
                 .ToListAsync();
         }
@@ -192,6 +193,43 @@ namespace QLS.Backend.Services.Brand
                 .ToListAsync();
 
             return accounts;
+        }
+        public async Task<List<StoreTypeDto>> GetStoreTypesByBrandIdAsync(Guid brandId)
+        {
+            return await _context.StoreTypes
+                .Where(st => st.BrandId == brandId)
+                .Select(st => new StoreTypeDto
+                {
+                    Id = st.Id,
+                    Name = st.Name,
+                    Level = st.Level,
+                    IsActive = st.IsActive,
+                    BrandId = st.BrandId
+                })
+                .ToListAsync();
+        }
+
+        public async Task<StoreTypeDto> CreateStoreTypeAsync(CreateStoreTypeDto dto)
+        {
+            var storeType = new StoreType
+            {
+                Name = dto.Name,
+                Level = dto.Level,
+                IsActive = dto.IsActive,
+                BrandId = dto.BrandId ?? Guid.Empty // BrandId should be set in controller
+            };
+
+            _context.StoreTypes.Add(storeType);
+            await _context.SaveChangesAsync();
+
+            return new StoreTypeDto
+            {
+                Id = storeType.Id,
+                Name = storeType.Name,
+                Level = storeType.Level,
+                IsActive = storeType.IsActive,
+                BrandId = storeType.BrandId
+            };
         }
     }
 }

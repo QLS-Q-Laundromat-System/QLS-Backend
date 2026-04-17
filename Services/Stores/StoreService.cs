@@ -5,17 +5,25 @@ using QLS.Backend.Interfaces.Stores;
 using QLS.Backend.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using QLS.Backend.Services.LgService;
+using QLS.Backend.DTOs.Lg;
+using QLS.Backend.Interfaces.Brand;
 
 namespace QLS.Backend.Services.Stores
 {
     public class StoreService : IStoreService
     {
         private readonly AppDbContext _context;
+        private readonly LgApiClient _lgApiClient;
+        private readonly IBrandLgService _brandLgService;
 
-        public StoreService(AppDbContext context)
+        public StoreService(AppDbContext context, LgApiClient lgApiClient, IBrandLgService brandLgService)
         {
             _context = context;
+            _lgApiClient = lgApiClient;
+            _brandLgService = brandLgService;
         }
 
         public async Task<IEnumerable<Store>> GetStoresAsync()
@@ -38,7 +46,9 @@ namespace QLS.Backend.Services.Stores
                 Phone = s.Phone,
                 Email = s.Email,
                 StoreId = s.StoreId,
+                LgPinCode = s.LgPinCode,
                 BrandId = s.BrandId,
+                StoreTypeId = s.StoreTypeId,
                 IsActive = s.IsActive,
                 CreatedAt = s.CreatedAt
             };
@@ -65,6 +75,7 @@ namespace QLS.Backend.Services.Stores
             store.Email = dto.Email;
             store.StoreId = dto.StoreId;
             store.IsActive = dto.IsActive;
+            store.StoreTypeId = dto.StoreTypeId;
 
             _context.Stores.Update(store);
             await _context.SaveChangesAsync();
@@ -78,6 +89,7 @@ namespace QLS.Backend.Services.Stores
                 Email = store.Email,
                 StoreId = store.StoreId,
                 BrandId = store.BrandId,
+                StoreTypeId = store.StoreTypeId,
                 IsActive = store.IsActive,
                 CreatedAt = store.CreatedAt
             };
@@ -118,9 +130,54 @@ namespace QLS.Backend.Services.Stores
                 Email = dto.Email,
                 StoreId = dto.StoreId,
                 BrandId = dto.BrandId,
+                StoreTypeId = dto.StoreTypeId,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
+
+            // --- Tích hợp LG ThinQ ---
+            var lgCredential = await _brandLgService.GetValidCredentialAsync(dto.BrandId);
+            if (lgCredential != null && !string.IsNullOrEmpty(lgCredential.LgUserNo) && !string.IsNullOrEmpty(lgCredential.AccessToken))
+            {
+                try
+                {
+                    var lgRequest = new LgStoreCreateRequest
+                    {
+                        Request = new LgStoreCreateData
+                        {
+                            Name = dto.Name,
+                            StoreName = dto.Name, // Sử dụng tên cửa hàng cho cả hai trường
+                            Address1 = dto.Address,
+                            City = dto.City ?? "Ho Chi Minh",
+                            States = dto.States ?? "Quan 9",
+                            Zipcode = dto.Zipcode ?? "70000",
+                            Phone = dto.Phone,
+                            Email = dto.Email,
+                            Emails = string.IsNullOrEmpty(dto.Email) ? new List<string>() : new List<string> { dto.Email },
+                            LTime = dto.LTime ?? "Asia/Saigon",
+                            Longitude = (string.IsNullOrEmpty(dto.Latitude) || string.IsNullOrEmpty(dto.Longitude)) 
+                                ? new List<string> { "10.8433015", "106.8425105" } // Tọa độ mặc định nếu không cung cấp
+                                : new List<string> { dto.Latitude, dto.Longitude }
+                        }
+                    };
+
+                    var lgResponse = await _lgApiClient.CreateStoreLgAsync(lgRequest, lgCredential.LgUserNo, lgCredential.AccessToken);
+                    
+                    if (lgResponse != null && lgResponse.ResultCode == "0000")
+                    {
+                        newStore.StoreId = lgResponse.Result.StoreId;
+                        newStore.LgPinCode = lgResponse.Result.PinCode;
+                    }
+                    else
+                    {
+                         throw new Exception($"Không thể tạo cửa hàng trên LG ThinQ: {lgResponse?.ResultCode ?? "Unknown error"}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Lỗi khi kết nối với LG ThinQ: {ex.Message}");
+                }
+            }
 
             _context.Stores.Add(newStore);
             await _context.SaveChangesAsync();
@@ -134,7 +191,9 @@ namespace QLS.Backend.Services.Stores
                 Phone = newStore.Phone,
                 Email = newStore.Email,
                 StoreId = newStore.StoreId,
+                LgPinCode = newStore.LgPinCode,
                 BrandId = newStore.BrandId,
+                StoreTypeId = newStore.StoreTypeId,
                 IsActive = newStore.IsActive,
                 CreatedAt = newStore.CreatedAt
             };
@@ -167,6 +226,24 @@ namespace QLS.Backend.Services.Stores
             return await _context.Machines
                 .Where(m => m.StoreId == storeId)
                 .ToListAsync();
+        }
+
+        public async Task<bool> AssignStoreTypeAsync(Guid storeId, Guid storeTypeId)
+        {
+            var store = await _context.Stores.FindAsync(storeId);
+            if (store == null) return false;
+
+            var storeType = await _context.StoreTypes.FindAsync(storeTypeId);
+            if (storeType == null) throw new KeyNotFoundException("Không tìm thấy hạng cửa hàng.");
+
+            if (storeType.BrandId != store.BrandId)
+            {
+                throw new ArgumentException("Hạng cửa hàng không thuộc cùng thương hiệu với cửa hàng.");
+            }
+
+            store.StoreTypeId = storeTypeId;
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

@@ -18,5 +18,6 @@ namespace QLS.Backend.DTOs.Store
         public string? StoreId { get; set; }
 
         public bool IsActive { get; set; }
+        public Guid? StoreTypeId { get; set; }
     }
 }

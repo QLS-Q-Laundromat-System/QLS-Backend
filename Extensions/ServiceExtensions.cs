@@ -2,7 +2,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using QLS.Backend.Services;
 using QLS.Backend.Services.LgServices.authToken;
-using Microsoft.OpenApi;// IMachineDetailService lives here
+using Microsoft.OpenApi;
+using QLS.Backend.Services.LgService;
+// IMachineDetailService lives here
 
 namespace QLS.Backend.Extensions;
 
@@ -18,13 +20,16 @@ public static class ServiceExtensions
                 "QLS.Backend.Services.LgServices.authToken",
                 "QLS.Backend.Services.Brand",
                 "QLS.Backend.Services.Machine",
-                "QLS.Backend.Services.LgService"
+                "QLS.Backend.Services.LgService",
+                "QLS.Backend.Services.Revenue",
+                "QLS.Backend.Services.Pricing"
             ))
             .AsImplementedInterfaces()
             .WithScopedLifetime());
 
-        // Đăng ký HttpClient cho LgAuthTokenService
+        // Đăng ký HttpClient cho LgAuthTokenService và LgApiClient
         services.AddHttpClient<LgAuthTokenService>();
+        services.AddHttpClient<LgApiClient>();
     }
 
     // 2. Thêm hàm cấu hình CORS ngay bên dưới
@@ -52,6 +57,7 @@ public static class ServiceExtensions
     services.AddSwaggerGen(options =>
     {
         options.SwaggerDoc("v1", new OpenApiInfo { Title = "QLS Backend", Version = "v1" });
+        options.CustomSchemaIds(type => type.FullName ?? type.Name);
 
         // Dùng ApiKey: Bắt buộc gửi chính xác những gì người dùng nhập
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

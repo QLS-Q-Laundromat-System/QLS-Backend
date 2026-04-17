@@ -185,11 +185,34 @@ namespace QLS.Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("ActualEndTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CycleName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsExtension")
+                        .HasColumnType("boolean");
+
                     b.Property<Guid>("MachineId")
                         .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PriceListId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("PricePaid")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("PricingMode")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("timestamp with time zone");
@@ -197,12 +220,36 @@ namespace QLS.Backend.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("TotalMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TransactionId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
+
+                    b.Property<decimal?>("WeightKg")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("MachineId");
+
+                    b.HasIndex("PriceListId");
+
+                    b.HasIndex("StoreId");
 
                     b.HasIndex("UserId");
 
@@ -213,6 +260,9 @@ namespace QLS.Backend.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BrandId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Code")
@@ -232,6 +282,9 @@ namespace QLS.Backend.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -240,8 +293,14 @@ namespace QLS.Backend.Migrations
                     b.Property<int>("Priority")
                         .HasColumnType("integer");
 
+                    b.Property<string>("PromotionLabel")
+                        .HasColumnType("text");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("TaxPercentage")
+                        .HasColumnType("numeric");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -253,6 +312,8 @@ namespace QLS.Backend.Migrations
                         .HasColumnType("date");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BrandId");
 
                     b.ToTable("PriceLists");
                 });
@@ -298,6 +359,10 @@ namespace QLS.Backend.Migrations
                     b.Property<decimal>("MinKg")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)");
+
+                    b.Property<decimal>("MinimumPrice")
+                        .HasPrecision(12)
+                        .HasColumnType("numeric(12,0)");
 
                     b.Property<Guid>("PriceListId")
                         .HasColumnType("uuid");
@@ -352,6 +417,10 @@ namespace QLS.Backend.Migrations
                     b.HasIndex("TimeSlotId");
 
                     b.ToTable("PriceModePerSessions");
+
+                    b.HasDiscriminator<int>("MachineType");
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.Store", b =>
@@ -376,6 +445,9 @@ namespace QLS.Backend.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("LgPinCode")
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -466,8 +538,14 @@ namespace QLS.Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("BrandId")
+                        .HasColumnType("uuid");
+
                     b.Property<short>("DayMask")
                         .HasColumnType("smallint");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
 
                     b.Property<TimeOnly?>("EndTime")
                         .HasColumnType("time without time zone");
@@ -484,6 +562,8 @@ namespace QLS.Backend.Migrations
                         .HasColumnType("time without time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BrandId");
 
                     b.ToTable("TimeSlots");
                 });
@@ -511,6 +591,30 @@ namespace QLS.Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("QLS.Backend.Models.DryerPriceMode", b =>
+                {
+                    b.HasBaseType("QLS.Backend.Models.PriceModePerSession");
+
+                    b.Property<int?>("ExtensionTimeoutMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MinInitialSteps")
+                        .HasColumnType("integer");
+
+                    b.HasDiscriminator().HasValue(1);
+                });
+
+            modelBuilder.Entity("QLS.Backend.Models.WasherPriceMode", b =>
+                {
+                    b.HasBaseType("QLS.Backend.Models.PriceModePerSession");
+
+                    b.Property<string>("CycleName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasDiscriminator().HasValue(0);
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.Account", b =>
@@ -558,6 +662,16 @@ namespace QLS.Backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("QLS.Backend.Models.PriceList", "PriceList")
+                        .WithMany()
+                        .HasForeignKey("PriceListId");
+
+                    b.HasOne("QLS.Backend.Models.Store", "Store")
+                        .WithMany()
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("QLS.Backend.Models.User", "User")
                         .WithMany("MachineSessions")
                         .HasForeignKey("UserId")
@@ -566,7 +680,22 @@ namespace QLS.Backend.Migrations
 
                     b.Navigation("Machine");
 
+                    b.Navigation("PriceList");
+
+                    b.Navigation("Store");
+
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("QLS.Backend.Models.PriceList", b =>
+                {
+                    b.HasOne("QLS.Backend.Models.Brand", "Brand")
+                        .WithMany()
+                        .HasForeignKey("BrandId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Brand");
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.PriceListStoreType", b =>
@@ -649,6 +778,17 @@ namespace QLS.Backend.Migrations
                 {
                     b.HasOne("QLS.Backend.Models.Brand", "Brand")
                         .WithMany("StoreTypes")
+                        .HasForeignKey("BrandId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Brand");
+                });
+
+            modelBuilder.Entity("QLS.Backend.Models.TimeSlot", b =>
+                {
+                    b.HasOne("QLS.Backend.Models.Brand", "Brand")
+                        .WithMany()
                         .HasForeignKey("BrandId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
