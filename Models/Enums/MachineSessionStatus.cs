@@ -1,10 +1,11 @@
 namespace QLS.Backend.Models.Enums
 {
     public enum MachineSessionStatus
-    {
-        Running = 0,
-        Completed = 1,
-        Cancelled = 2,
-        Error = 3
+    { 
+        PendingPayment = 0,     
+        Running = 1,        
+        Completed = 2,
+        Cancelled = 3,
+        Error = 4
     }
 }

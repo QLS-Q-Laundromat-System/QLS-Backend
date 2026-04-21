@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using QLS.Backend.DTOs.Dryer;
 using QLS.Backend.Models.Enums;
@@ -8,10 +9,16 @@ namespace QLS.Backend.Interfaces
     public interface IDryerService
     {
         Task<DryerOptionResponseDto> GetDryerOptionsAsync(Guid branchId, Guid machineId, Guid userId);
-        Task SaveSessionAsync(CreateMachineSessionDto dto);
-            
-        Task<bool> UpdateSessionStatusAsync(Guid sessionId, MachineSessionStatus status);
+
+        /// <summary>Lưu session mới với status PendingPayment, trả về sessionId.</summary>
+        Task<Guid> SaveSessionAsync(CreateMachineSessionDto dto);
+
+        /// <summary>Xác nhận thanh toán thành công → chuyển PendingPayment → Running.</summary>
+        Task<bool> ConfirmPaymentAsync(Guid sessionId, string? transactionId = null);
+
+        /// <summary>Cập nhật trạng thái session (Running→Completed/Error/Cancelled).</summary>
+        Task<bool> UpdateSessionStatusAsync(Guid sessionId, MachineSessionStatus status, string? refundNote = null);
+
         Task<InitPaymentResponseDto> InitSessionAsync(InitPaymentRequestDto dto);
     }
 }
-
