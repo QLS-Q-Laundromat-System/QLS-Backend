@@ -429,7 +429,12 @@ namespace QLS.Backend.Services.Dashboard
             if (storeId.HasValue)
                 machinesQuery = machinesQuery.Where(m => m.StoreId == storeId.Value);
             else if (brandId.HasValue)
-                machinesQuery = machinesQuery.Where(m => m.Store.BrandId == brandId.Value);
+            {
+                machinesQuery = machinesQuery
+                    .Join(_context.Stores, m => m.StoreId, st => st.Id, (m, st) => new { m, st })
+                    .Where(x => x.st.BrandId == brandId.Value)
+                    .Select(x => x.m);
+            }
 
             var totalMachines = await machinesQuery.CountAsync();
 
@@ -482,7 +487,7 @@ namespace QLS.Backend.Services.Dashboard
             {
                 return await _context.MachineSessions
                     .Where(s => s.StartTime >= startDate && s.Status == MachineSessionStatus.Completed)
-                    .GroupBy(s => new { s.StoreId, s.Store.Name })
+                    .GroupBy(s => new { s.StoreId, Name = s.Store!.Name })
                     .Select(g => new LeaderboardEntryDto
                     {
                         Id = g.Key.StoreId,
@@ -501,7 +506,7 @@ namespace QLS.Backend.Services.Dashboard
             {
                 return await _context.MachineSessions
                     .Where(s => s.StartTime >= startDate && s.Status == MachineSessionStatus.Completed)
-                    .GroupBy(s => new { s.Store.BrandId, BrandName = s.Store.Brand.Name })
+                    .GroupBy(s => new { s.Store!.BrandId, BrandName = s.Store.Brand!.Name })
                     .Select(g => new LeaderboardEntryDto
                     {
                         Id = g.Key.BrandId,

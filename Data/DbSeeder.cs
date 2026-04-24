@@ -77,17 +77,6 @@ namespace QLS.Backend.Data
                 };
                 context.Stores.Add(defaultStore);
 
-                // -- TẠO STORE SETTING --
-                var defaultSetting = new StoreSetting
-                {
-                    StoreId = defaultStore.Id,
-                    DryerStepMinutes = 10,
-                    DryerStepPrice = 13000,
-                    DryerMinInitialMinutes = 30,
-                    DryerGracePeriodMinutes = 10
-                };
-                context.StoreSettings.Add(defaultSetting);
-
                 // -- TẠO MÁY MẪU (MACHINES) --
                 var machines = new List<Machine>
                 {
