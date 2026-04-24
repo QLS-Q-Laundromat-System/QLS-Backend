@@ -81,7 +81,7 @@ namespace QLS.Backend.Services
                 };
             }
         }
-        public async Task SaveSessionAsync(CreateMachineSessionDto dto)
+        public async Task<Guid> SaveSessionAsync(CreateMachineSessionDto dto)
         {
             var now = DateTime.UtcNow;
             var session = new MachineSession
@@ -95,7 +95,7 @@ namespace QLS.Backend.Services
                 TotalMinutes = dto.TotalMinutes,
                 StartTime    = now,
                 EndTime      = now.AddMinutes(dto.TotalMinutes),
-                Status       = MachineSessionStatus.Running,
+                Status       = MachineSessionStatus.PendingPayment, // 䌜ờ thanh toán - chưa chạy
                 CreatedAt    = now,
                 UpdatedAt    = now,
                 
@@ -109,20 +109,61 @@ namespace QLS.Backend.Services
 
             _context.MachineSessions.Add(session);
             await _context.SaveChangesAsync();
+            return session.Id;
         }
 
-        public async Task<bool> UpdateSessionStatusAsync(Guid sessionId, MachineSessionStatus status)
+        public async Task<bool> UpdateSessionStatusAsync(Guid sessionId, MachineSessionStatus status, string? refundNote = null)
         {
             var session = await _context.MachineSessions.FindAsync(sessionId);
             if (session == null) return false;
 
-            session.Status = status;
+            session.Status    = status;
             session.UpdatedAt = DateTime.UtcNow;
 
-            if (status == MachineSessionStatus.Completed)
+            switch (status)
             {
-                session.ActualEndTime = DateTime.UtcNow;
+                case MachineSessionStatus.Completed:
+                    // Máy hoàn thành — ghi nhận thời gian kết thúc thực tế
+                    session.ActualEndTime = DateTime.UtcNow;
+                    break;
+
+                case MachineSessionStatus.Error:
+                    // Máy lỗi — đánh dấu cần xử lý hoàn tiền
+                    session.ActualEndTime = DateTime.UtcNow;
+                    session.RefundStatus  = "Pending";
+                    session.RefundNote    = refundNote ?? "Máy gặp sự cố trong lúc vận hành.";
+                    break;
+
+                case MachineSessionStatus.Cancelled:
+                    // Hủy trước khi chạy — session đã ở PendingPayment nên không cần hoàn tiền
+                    session.ActualEndTime = DateTime.UtcNow;
+                    break;
             }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        /// <summary>
+        /// Xác nhận thanh toán thành công: chuyển session từ PendingPayment → Running.
+        /// Gọi sau khi payment gateway trả về thành công và máy bắt đầu chạy.
+        /// </summary>
+        public async Task<bool> ConfirmPaymentAsync(Guid sessionId, string? transactionId = null)
+        {
+            var session = await _context.MachineSessions.FindAsync(sessionId);
+            if (session == null) return false;
+
+            if (session.Status != MachineSessionStatus.PendingPayment)
+                throw new InvalidOperationException(
+                    $"Session không thể xác nhận: trạng thái hiận tại là '{session.Status}', chỉ có thể confirm khi PendingPayment.");
+
+            var now = DateTime.UtcNow;
+            session.Status             = MachineSessionStatus.Running;
+            session.PaymentConfirmedAt = now;
+            session.StartTime          = now;                          // Máy bắt đầu chạy từ lúc này
+            session.EndTime            = now.AddMinutes(session.TotalMinutes);
+            session.TransactionId      = transactionId;
+            session.UpdatedAt          = now;
 
             await _context.SaveChangesAsync();
             return true;
@@ -167,32 +208,32 @@ namespace QLS.Backend.Services
                 totalMinutes = priceResponse.DurationMinutes ?? 0;
             }
 
-            // 4. LƯU DATABASE
+            // 4. LƯU DATABASE với trạng thái PendingPayment (chưa thu tiền, chưa chạy máy)
             var sessionDto = new CreateMachineSessionDto
             {
-                BranchId = dto.StoreId,
-                MachineId = dto.MachineId,
-                UserId = dto.UserId,
+                BranchId    = dto.StoreId,
+                MachineId   = dto.MachineId,
+                UserId      = dto.UserId,
                 TotalMinutes = totalMinutes,
-                PricePaid = totalAmount,
+                PricePaid   = totalAmount,
                 PriceListId = priceResponse.PriceListId,
                 PricingMode = priceResponse.Mode == "PerKg" ? PricePerType.PerKg : PricePerType.Flat,
-                WeightKg = dto.WeightKg,
-                CycleName = priceResponse.CalculationDetail, 
+                WeightKg    = dto.WeightKg,
+                CycleName   = priceResponse.CalculationDetail, 
                 IsExtension = false
             };
 
-            await SaveSessionAsync(sessionDto);
+            var sessionId = await SaveSessionAsync(sessionDto);
 
-            // 5. Trả về thông tin
+            // 5. Trả về thông tin — client sẽ dùng SessionId này để confirm sau khi thanh toán
             return new InitPaymentResponseDto
             {
+                SessionId              = sessionId,
                 ServerCalculatedAmount = totalAmount, 
-                TotalMinutes = totalMinutes,
-                PaymentMethod = dto.PaymentMethod,
-                Message = "Session đã khởi tạo, chờ thanh toán."
+                TotalMinutes           = totalMinutes,
+                PaymentMethod          = dto.PaymentMethod,
+                Message                = "Session đã tạo. Vui lòng hoàn tất thanh toán để khởi động máy."
             };
         }
     }
 }
-

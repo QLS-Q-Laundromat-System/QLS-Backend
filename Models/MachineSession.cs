@@ -81,9 +81,32 @@ namespace QLS.Backend.Models
         
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        // --- Payment Confirmation ---
+
+        /// <summary>
+        /// Thời điểm thanh toán được xác nhận thành công (chuyển từ PendingPayment → Running).
+        /// Null nếu session bị cancel trước khi thanh toán.
+        /// </summary>
+        public DateTime? PaymentConfirmedAt { get; set; }
+
         // --- External References ---
         
         public string? TransactionId { get; set; }
+
+        // --- Refund Tracking ---
+
+        /// <summary>
+        /// Trạng thái hoàn tiền. Null = chưa cần hoàn tiền.
+        /// "Pending" = đang xử lý hoàn tiền, "Completed" = đã hoàn tiền xong.
+        /// </summary>
+        [MaxLength(20)]
+        public string? RefundStatus { get; set; }
+
+        /// <summary>
+        /// Ghi chú lý do hoàn tiền (VD: "Máy gặp lỗi sau 3 phút hoạt động").
+        /// </summary>
+        [MaxLength(500)]
+        public string? RefundNote { get; set; }
     }
 }
 
