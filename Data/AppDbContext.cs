@@ -12,7 +12,6 @@ namespace QLS.Backend.Data
 
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Machine> Machines { get; set; }
-        public DbSet<StoreSetting> StoreSettings { get; set; }
         public DbSet<MachineSession> MachineSessions { get; set; }
         public DbSet<Brand> Brands { get; set; }
         public DbSet<Store> Stores { get; set; }
@@ -68,12 +67,6 @@ namespace QLS.Backend.Data
                 .WithMany(s => s.Machines)
                 .HasForeignKey(m => m.StoreId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            // --- Cấu hình quan hệ cho StoreSetting ---
-            modelBuilder.Entity<StoreSetting>()
-                .HasOne(s => s.Store)
-                .WithOne(st => st.StoreSetting)
-                .HasForeignKey<StoreSetting>(s => s.StoreId);
 
             // --- Cấu hình quan hệ cho MachineSession ---
             modelBuilder.Entity<MachineSession>()

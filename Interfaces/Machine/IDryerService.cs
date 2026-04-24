@@ -1,6 +1,5 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
-using QLS.Backend.DTOs.Dryer;
 using QLS.Backend.Models.Enums;
 using QLS.Backend.DTOs.Machine;
 
@@ -8,8 +7,6 @@ namespace QLS.Backend.Interfaces
 {
     public interface IDryerService
     {
-        Task<DryerOptionResponseDto> GetDryerOptionsAsync(Guid branchId, Guid machineId, Guid userId);
-
         /// <summary>Lưu session mới với status PendingPayment, trả về sessionId.</summary>
         Task<Guid> SaveSessionAsync(CreateMachineSessionDto dto);
 

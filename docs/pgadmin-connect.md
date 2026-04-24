@@ -73,7 +73,6 @@ Sau đó **double-click** vào `QLS Oracle Cloud` trong danh sách Servers là k
 | `Brands` | Thương hiệu |
 | `MachineSessions` | Phiên máy giặt |
 | `Machines` | Máy giặt |
-| `StoreSettings` | Cài đặt cửa hàng |
 | `Stores` | Cửa hàng |
 | `Users` | Người dùng |
 | `__EFMigrationsHistory` | Lịch sử migration EF Core |
