@@ -83,6 +83,8 @@ MQTT_PORT=1883
 # pgAdmin (Database Web UI)
 PGADMIN_EMAIL=admin@qls.com
 PGADMIN_PASSWORD=admin123
+# Fix cho môi trường HTTP/IP trực tiếp
+PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=False
 ENV
   chmod 600 ${APP_DIR}/.env
   echo_green "Tạo file .env tại ${APP_DIR}/.env"

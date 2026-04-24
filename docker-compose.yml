@@ -30,6 +30,9 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@qls.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      # Fix cho môi trường HTTP/IP trực tiếp
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
+      PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: 10
     ports:
       - "5050:80"
     networks:
