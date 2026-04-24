@@ -8,7 +8,7 @@ RUN dotnet restore
 
 # Copy toàn bộ source và publish
 COPY . ./
-RUN dotnet publish -c Release -o /app/publish --no-restore
+RUN dotnet publish QLS.Backend.csproj -c Release -o /app/publish --no-restore
 
 # ─── Stage 2: Runtime ─────────────────────────────────────────────────────────
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
