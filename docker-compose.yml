@@ -33,6 +33,7 @@ services:
       # Fix cho môi trường HTTP/IP trực tiếp
       PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
       PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: 10
+      PGADMIN_SERVER_JSON_FILE: '/pgadmin4/servers.json'
     ports:
       - "5050:80"
     volumes:
