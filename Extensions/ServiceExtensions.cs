@@ -19,11 +19,13 @@ public static class ServiceExtensions
                 "QLS.Backend.Services",
                 "QLS.Backend.Services.LgServices.authToken",
                 "QLS.Backend.Services.Brand",
+                "QLS.Backend.Services.MachineSettings",
                 "QLS.Backend.Services.Machine",
                 "QLS.Backend.Services.LgService",
                 "QLS.Backend.Services.Revenue",
                 "QLS.Backend.Services.Pricing",
-                "QLS.Backend.Services.Dashboard"
+                "QLS.Backend.Services.Dashboard",
+                "QLS.Backend.Services.Stores"
             ))
             .AsImplementedInterfaces()
             .WithScopedLifetime());

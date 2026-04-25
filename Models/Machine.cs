@@ -13,7 +13,6 @@ public class Machine
     [Required]
     public Guid StoreId { get; set; }
 
-    /// <summary>Tên hiển thị cho người dùng (Vd: Máy số 1, Máy số 2).</summary>
     [Required]
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
@@ -31,9 +30,6 @@ public class Machine
     [MaxLength(17)]
     public string? Esp32MacAddress { get; set; }
 
-    /// <summary>
-    /// Mã mạng Zigbee (tùy chọn), dùng khi hệ thống có Zigbee Hub trung gian.
-    /// </summary>
     [MaxLength(50)]
     public string? ZigbeeNetworkId { get; set; }
 
@@ -46,4 +42,7 @@ public class Machine
     /// <summary>Sức chứa của máy. Vd: "10kg", "15kg".</summary>
     [MaxLength(50)]
     public string Capacity { get; set; } = string.Empty;
+
+    // Configuration for the machine
+    public MachineSetting? Setting { get; set; }
 }
