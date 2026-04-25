@@ -23,6 +23,15 @@ public class LgApiClient
         return await SendThinqRequestAsync(url, userNo, accessToken);
     }
 
+    /// <summary>
+    /// Gọi LG API lấy setting của một device cụ thể: GET /devices/{deviceId}/settings
+    /// </summary>
+    public async Task<string> GetRawSettingsAsync(string deviceId, string userNo, string accessToken)
+    {
+        var url = $"https://kic-laundry.lgthinq.com/devices/{deviceId}/settings";
+        return await SendThinqRequestAsync(url, userNo, accessToken);
+    }
+
     public async Task<string> GetStoresAsync(string userNo, string accessToken)
     {
         var url = "https://kic-laundry.lgthinq.com/stores/page?page=1&pageSize=8";

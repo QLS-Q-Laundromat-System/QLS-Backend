@@ -23,6 +23,7 @@ namespace QLS.Backend.Data
         public DbSet<TimeSlot> TimeSlots { get; set; }
         public DbSet<PriceModePerSession> PriceModePerSessions { get; set; }
         public DbSet<BrandLgCredential> BrandLgCredentials { get; set; }
+        public DbSet<MachineSetting> MachineSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -103,6 +104,13 @@ namespace QLS.Backend.Data
                 .HasDiscriminator<MachineType>("MachineType")
                 .HasValue<WasherPriceMode>(MachineType.Washer)
                 .HasValue<DryerPriceMode>(MachineType.Dryer);
+
+            // --- Cấu hình quan hệ cho MachineSetting ---
+            modelBuilder.Entity<MachineSetting>()
+                .HasOne(ms => ms.Machine)
+                .WithOne(m => m.Setting)
+                .HasForeignKey<MachineSetting>(ms => ms.MachineId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
