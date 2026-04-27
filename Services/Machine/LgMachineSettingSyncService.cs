@@ -19,17 +19,20 @@ public class LgMachineSettingSyncService : ILgMachineSettingSyncService
     private readonly LgApiClient _lgClient;
     private readonly IBrandLgService _brandLgService;
     private readonly IMachineSettingService _settingService;
+    private readonly ILogger<LgMachineSettingSyncService> _logger;
 
     public LgMachineSettingSyncService(
         AppDbContext context,
         LgApiClient lgClient,
         IBrandLgService brandLgService,
-        IMachineSettingService settingService)
+        IMachineSettingService settingService,
+        ILogger<LgMachineSettingSyncService> logger)
     {
         _context = context;
         _lgClient = lgClient;
         _brandLgService = brandLgService;
         _settingService = settingService;
+        _logger = logger;
     }
 
     public async Task<MachineSettingDto> GetOrFetchSettingAsync(Guid machineId)
@@ -68,6 +71,66 @@ public class LgMachineSettingSyncService : ILgMachineSettingSyncService
         return await _settingService.UpsertAsync(machineId, dto);
     }
 
+    public async Task<MachineSettingDto> UpdateAndSyncSettingAsync(Guid machineId, UpsertMachineSettingDto dto)
+    {
+        // 1. Cập nhật local DB trước
+        var updatedDto = await _settingService.UpsertAsync(machineId, dto);
+
+        // 2. Lấy thông tin để đẩy lên LG
+        var machine = await _context.Machines
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.Id == machineId)
+            ?? throw new KeyNotFoundException($"Không tìm thấy máy với Id = {machineId}.");
+
+        if (!string.IsNullOrEmpty(machine.LgDeviceId))
+        {
+            var store = await _context.Stores
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == machine.StoreId);
+
+            if (store != null)
+            {
+                var cred = await _brandLgService.GetValidCredentialAsync(store.BrandId);
+                if (cred != null)
+                {
+                    // 3. Chuẩn bị payload cho LG
+                    object payload = machine.Type == Models.Enums.MachineType.Washer
+                        ? new
+                        {
+                            washingTime = dto.WashingTime,
+                            waterLevel = dto.WaterLevel,
+                            rinsingTime = dto.RinsingTime,
+                            rinsingCount = dto.RinsingCount,
+                            dropCount = dto.DropCount,
+                            twinSpray = dto.TwinSpray,
+                            price = dto.Price,
+                            coin = dto.Coin,
+                            addSuperWash = dto.AddSuperWash,
+                            nonStopRinsing = dto.NonStopRinsing,
+                            spinSpeed = dto.SpinSpeed,
+                            ratingMoney = dto.RatingMoney
+                        }
+                        : new
+                        {
+                            dryCycleTime = dto.DryCycleTime,
+                            topOffTime = dto.TopOffTime,
+                            topOff = dto.TopOff,
+                            sensingDry = dto.SensingDry,
+                            regularPrice = dto.Price, // LG dùng regularPrice cho máy sấy
+                            topOffPrice = dto.TopOffPrice,
+                            coin1 = dto.Coin, // LG dùng coin1 cho máy sấy
+                            ratingMoney = dto.RatingMoney
+                        };
+
+                    // 4. Đẩy lên LG
+                    await _lgClient.UpdateSettingsAsync(machine.LgDeviceId, payload, cred.LgUserNo, cred.AccessToken);
+                }
+            }
+        }
+
+        return updatedDto;
+    }
+
     // ────────────────────────────────────────────────────────────────
     // PARSE JSON từ LG API /devices/{deviceId}/settings
     // Washer (Type == Washer):
@@ -99,6 +162,7 @@ public class LgMachineSettingSyncService : ILgMachineSettingSyncService
             dto.Price        = ReadIntArray(result, "price") ?? [];
             dto.Coin         = ReadInt(result, "coin");
             dto.AddSuperWash = ReadInt(result, "addSuperWash");
+            dto.RatingMoney = ReadDouble(result, "ratingMoney");
         }
         else
         {
@@ -111,6 +175,7 @@ public class LgMachineSettingSyncService : ILgMachineSettingSyncService
             dto.Price        = ReadIntArray(result, "regularPrice") ?? [];
             dto.Coin         = ReadInt(result, "coin1");
             dto.AddSuperWash = ReadInt(result, "addSuperWash");
+            dto.RatingMoney = ReadDouble(result, "ratingMoney");
         }
 
         return dto;
@@ -161,5 +226,12 @@ public class LgMachineSettingSyncService : ILgMachineSettingSyncService
         if (prop.ValueKind == JsonValueKind.True) return true;
         if (prop.ValueKind == JsonValueKind.False) return false;
         return null;
+    }
+
+    private static double ReadDouble(JsonElement el, string key)
+    {
+        if (!el.TryGetProperty(key, out var prop) || prop.ValueKind != JsonValueKind.Number)
+            return 0;
+        return prop.GetDouble();
     }
 }

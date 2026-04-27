@@ -27,4 +27,5 @@ public class UpsertMachineSettingDto
     public string? TopOff { get; set; }
     public string? SensingDry { get; set; }
     public int[]? TopOffPrice { get; set; }
+    public double RatingMoney { get; set; }
 }

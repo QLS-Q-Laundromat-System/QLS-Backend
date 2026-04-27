@@ -36,4 +36,5 @@ public class MachineSetting
     public string? TopOff { get; set; }
     public string? SensingDry { get; set; }
     public int[]? TopOffPrice { get; set; }
+    public double RatingMoney { get; set; } // Tỷ lệ quy đổi tiền (VD: 0.05)
 }
