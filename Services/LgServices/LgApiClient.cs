@@ -32,6 +32,16 @@ public class LgApiClient
         return await SendThinqRequestAsync(url, userNo, accessToken);
     }
 
+    /// <summary>
+    /// Gửi setting lên LG API: POST /devices/{deviceId}/settings
+    /// </summary>
+    public async Task<string> UpdateSettingsAsync(string deviceId, object payload, string userNo, string accessToken)
+    {
+        var url = $"https://kic-laundry.lgthinq.com/devices/{deviceId}/settings";
+        var json = JsonSerializer.Serialize(new { request = payload });
+        return await SendThinqRequestAsync(url, userNo, accessToken, HttpMethod.Post, json);
+    }
+
     public async Task<string> GetStoresAsync(string userNo, string accessToken)
     {
         var url = "https://kic-laundry.lgthinq.com/stores/page?page=1&pageSize=8";

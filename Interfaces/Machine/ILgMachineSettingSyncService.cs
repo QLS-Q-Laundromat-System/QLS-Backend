@@ -14,4 +14,7 @@ public interface ILgMachineSettingSyncService
     /// - Nếu chưa có → gọi LG API, parse, upsert DB, rồi trả về.
     /// </summary>
     Task<MachineSettingDto> GetOrFetchSettingAsync(Guid machineId);
+
+    /// <summary>Cập nhật cấu hình xuống DB VÀ đẩy lên LG server.</summary>
+    Task<MachineSettingDto> UpdateAndSyncSettingAsync(Guid machineId, UpsertMachineSettingDto dto);
 }

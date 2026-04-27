@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using QLS.Backend.Data;
@@ -11,9 +12,11 @@ using QLS.Backend.Data;
 namespace QLS.Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260425141136_AddRatingMoneyToMachineSetting")]
+    partial class AddRatingMoneyToMachineSetting
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -136,117 +139,6 @@ namespace QLS.Backend.Migrations
                     b.HasKey("BrandId");
 
                     b.ToTable("BrandLgCredentials");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.DiscountCode", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BrandId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<int>("DiscountType")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("DiscountValue")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsApplyAllStores")
-                        .HasColumnType("boolean");
-
-                    b.Property<decimal?>("MaxDiscountAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<decimal?>("MinOrderValue")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("UsageLimit")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("UsedCount")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UserUsageLimit")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BrandId");
-
-                    b.HasIndex("Code", "BrandId")
-                        .IsUnique();
-
-                    b.ToTable("DiscountCodes");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.DiscountCodeStore", b =>
-                {
-                    b.Property<Guid>("DiscountCodeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("StoreId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("DiscountCodeId", "StoreId");
-
-                    b.HasIndex("StoreId");
-
-                    b.ToTable("DiscountCodeStores");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.DiscountCodeUsage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("DiscountCodeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("MachineSessionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UsedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DiscountCodeId");
-
-                    b.HasIndex("MachineSessionId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("DiscountCodeUsages");
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.Machine", b =>
@@ -805,61 +697,6 @@ namespace QLS.Backend.Migrations
                     b.Navigation("Brand");
                 });
 
-            modelBuilder.Entity("QLS.Backend.Models.DiscountCode", b =>
-                {
-                    b.HasOne("QLS.Backend.Models.Brand", "Brand")
-                        .WithMany()
-                        .HasForeignKey("BrandId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Brand");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.DiscountCodeStore", b =>
-                {
-                    b.HasOne("QLS.Backend.Models.DiscountCode", "DiscountCode")
-                        .WithMany("DiscountCodeStores")
-                        .HasForeignKey("DiscountCodeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("QLS.Backend.Models.Store", "Store")
-                        .WithMany()
-                        .HasForeignKey("StoreId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DiscountCode");
-
-                    b.Navigation("Store");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.DiscountCodeUsage", b =>
-                {
-                    b.HasOne("QLS.Backend.Models.DiscountCode", "DiscountCode")
-                        .WithMany("DiscountCodeUsages")
-                        .HasForeignKey("DiscountCodeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("QLS.Backend.Models.MachineSession", "MachineSession")
-                        .WithMany()
-                        .HasForeignKey("MachineSessionId");
-
-                    b.HasOne("QLS.Backend.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DiscountCode");
-
-                    b.Navigation("MachineSession");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("QLS.Backend.Models.Machine", b =>
                 {
                     b.HasOne("QLS.Backend.Models.Store", null)
@@ -1020,13 +857,6 @@ namespace QLS.Backend.Migrations
                     b.Navigation("StoreTypes");
 
                     b.Navigation("Stores");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.DiscountCode", b =>
-                {
-                    b.Navigation("DiscountCodeStores");
-
-                    b.Navigation("DiscountCodeUsages");
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.Machine", b =>

@@ -46,8 +46,8 @@ public class MachineSettingController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> Upsert(Guid machineId, [FromBody] UpsertMachineSettingDto dto)
     {
-        var result = await _settingService.UpsertAsync(machineId, dto);
-        return Ok(ApiResponse<MachineSettingDto>.Success(result, "Lưu cấu hình máy thành công."));
+        var result = await _syncService.UpdateAndSyncSettingAsync(machineId, dto);
+        return Ok(ApiResponse<MachineSettingDto>.Success(result, "Lưu và đồng bộ cấu hình máy thành công."));
     }
 
     // DELETE api/machines/{machineId}/setting

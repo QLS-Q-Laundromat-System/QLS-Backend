@@ -96,6 +96,7 @@ public class MachineSettingService : IMachineSettingService
         entity.TopOff = dto.TopOff;
         entity.SensingDry = dto.SensingDry;
         entity.TopOffPrice = dto.TopOffPrice;
+        entity.RatingMoney = dto.RatingMoney;
     }
 
     private static MachineSettingDto MapToDto(MachineSetting entity) => new()
@@ -121,5 +122,6 @@ public class MachineSettingService : IMachineSettingService
         TopOff = entity.TopOff,
         SensingDry = entity.SensingDry,
         TopOffPrice = entity.TopOffPrice,
+        RatingMoney = entity.RatingMoney,
     };
 }

@@ -24,6 +24,9 @@ namespace QLS.Backend.Data
         public DbSet<PriceModePerSession> PriceModePerSessions { get; set; }
         public DbSet<BrandLgCredential> BrandLgCredentials { get; set; }
         public DbSet<MachineSetting> MachineSettings { get; set; }
+        public DbSet<DiscountCode> DiscountCodes { get; set; }
+        public DbSet<DiscountCodeStore> DiscountCodeStores { get; set; }
+        public DbSet<DiscountCodeUsage> DiscountCodeUsages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -110,6 +113,28 @@ namespace QLS.Backend.Data
                 .HasOne(ms => ms.Machine)
                 .WithOne(m => m.Setting)
                 .HasForeignKey<MachineSetting>(ms => ms.MachineId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // --- Cấu hình quan hệ cho DiscountCode ---
+            modelBuilder.Entity<DiscountCodeStore>()
+                .HasKey(dcs => new { dcs.DiscountCodeId, dcs.StoreId });
+
+            modelBuilder.Entity<DiscountCodeStore>()
+                .HasOne(dcs => dcs.DiscountCode)
+                .WithMany(dc => dc.DiscountCodeStores)
+                .HasForeignKey(dcs => dcs.DiscountCodeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DiscountCodeStore>()
+                .HasOne(dcs => dcs.Store)
+                .WithMany()
+                .HasForeignKey(dcs => dcs.StoreId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DiscountCodeUsage>()
+                .HasOne(dcu => dcu.DiscountCode)
+                .WithMany(dc => dc.DiscountCodeUsages)
+                .HasForeignKey(dcu => dcu.DiscountCodeId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

@@ -25,7 +25,8 @@ public static class ServiceExtensions
                 "QLS.Backend.Services.Revenue",
                 "QLS.Backend.Services.Pricing",
                 "QLS.Backend.Services.Dashboard",
-                "QLS.Backend.Services.Stores"
+                "QLS.Backend.Services.Stores",
+                "QLS.Backend.Services.DiscountCode"
             ))
             .AsImplementedInterfaces()
             .WithScopedLifetime());
