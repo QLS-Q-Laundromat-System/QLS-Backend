@@ -231,5 +231,37 @@ namespace QLS.Backend.Services.Brand
                 BrandId = storeType.BrandId
             };
         }
+
+        public async Task<StoreTypeDto?> UpdateStoreTypeAsync(Guid storeTypeId, UpdateStoreTypeInfoDto dto)
+        {
+            var storeType = await _context.StoreTypes.FindAsync(storeTypeId);
+            if (storeType == null) return null;
+
+            storeType.Name = dto.Name;
+            storeType.Level = dto.Level;
+            storeType.IsActive = dto.IsActive;
+
+            _context.StoreTypes.Update(storeType);
+            await _context.SaveChangesAsync();
+
+            return new StoreTypeDto
+            {
+                Id = storeType.Id,
+                Name = storeType.Name,
+                Level = storeType.Level,
+                IsActive = storeType.IsActive,
+                BrandId = storeType.BrandId
+            };
+        }
+
+        public async Task<bool> DeleteStoreTypeAsync(Guid storeTypeId)
+        {
+            var storeType = await _context.StoreTypes.FindAsync(storeTypeId);
+            if (storeType == null) return false;
+
+            storeType.IsActive = false;
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

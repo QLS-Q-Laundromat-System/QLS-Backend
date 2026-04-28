@@ -86,7 +86,8 @@ namespace QLS.Backend.Controllers.Brand
             return Ok(ApiResponse<IEnumerable<StoreResponseDto>>.Success(stores, "Lấy danh sách cửa hàng thành công"));
         }
 
-        // 5. API Lấy danh sách các Account (tài khoản) thuộc về Chuỗi
+
+        // 6. API Lấy danh sách các Account (tài khoản) thuộc về Chuỗi
         [HttpGet("{id}/accounts")]
         [Authorize(Roles = "SystemAdmin,BrandAdmin")]
         public async Task<IActionResult> GetAccountsByBrand(Guid id)
@@ -124,6 +125,52 @@ namespace QLS.Backend.Controllers.Brand
 
             var result = await _brandService.CreateStoreTypeAsync(dto);
             return Ok(ApiResponse<StoreTypeDto>.Success(result, "Tạo hạng cửa hàng thành công"));
+        }
+
+        [HttpPut("store-types/{storeTypeId}")]
+        [Authorize(Roles = "SystemAdmin,BrandAdmin")]
+        public async Task<IActionResult> UpdateStoreType(Guid storeTypeId, [FromBody] UpdateStoreTypeInfoDto dto)
+        {
+            var brandIdStr = User.FindFirst("BrandId")?.Value;
+            
+            // If logged in as BrandAdmin, verify ownership
+            if (!string.IsNullOrEmpty(brandIdStr))
+            {
+                var tokenBrandId = Guid.Parse(brandIdStr);
+                var storeTypes = await _brandService.GetStoreTypesByBrandIdAsync(tokenBrandId);
+                if (!storeTypes.Any(st => st.Id == storeTypeId))
+                {
+                    throw new ApiException("Bạn không có quyền cập nhật hạng cửa hàng này", 403);
+                }
+            }
+
+            var result = await _brandService.UpdateStoreTypeAsync(storeTypeId, dto);
+            if (result == null) throw new ApiException("Không tìm thấy hạng cửa hàng", 404);
+
+            return Ok(ApiResponse<StoreTypeDto>.Success(result, "Cập nhật hạng cửa hàng thành công"));
+        }
+
+        [HttpDelete("store-types/{storeTypeId}")]
+        [Authorize(Roles = "SystemAdmin,BrandAdmin")]
+        public async Task<IActionResult> DeleteStoreType(Guid storeTypeId)
+        {
+            var brandIdStr = User.FindFirst("BrandId")?.Value;
+            
+            // If logged in as BrandAdmin, verify ownership
+            if (!string.IsNullOrEmpty(brandIdStr))
+            {
+                var tokenBrandId = Guid.Parse(brandIdStr);
+                var storeTypes = await _brandService.GetStoreTypesByBrandIdAsync(tokenBrandId);
+                if (!storeTypes.Any(st => st.Id == storeTypeId))
+                {
+                    throw new ApiException("Bạn không có quyền xóa hạng cửa hàng này", 403);
+                }
+            }
+
+            var result = await _brandService.DeleteStoreTypeAsync(storeTypeId);
+            if (!result) throw new ApiException("Không tìm thấy hạng cửa hàng", 404);
+
+            return Ok(ApiResponse<bool>.Success(true, "Xóa hạng cửa hàng thành công"));
         }
     }
 }
