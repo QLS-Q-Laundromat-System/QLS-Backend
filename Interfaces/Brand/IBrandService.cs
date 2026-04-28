@@ -17,5 +17,7 @@ namespace QLS.Backend.Interfaces.Brand
         Task<List<BrandAccountDto>> GetAccountsByBrandIdAsync(Guid brandId);
         Task<List<StoreTypeDto>> GetStoreTypesByBrandIdAsync(Guid brandId);
         Task<StoreTypeDto> CreateStoreTypeAsync(CreateStoreTypeDto dto);
+        Task<StoreTypeDto?> UpdateStoreTypeAsync(Guid storeTypeId, UpdateStoreTypeInfoDto dto);
+        Task<bool> DeleteStoreTypeAsync(Guid storeTypeId);
     }
 }
