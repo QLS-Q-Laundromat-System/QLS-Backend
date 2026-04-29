@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using QLS.Backend.DTOs.Dashboard;
 using QLS.Backend.Interfaces;
 using System;
@@ -116,6 +116,17 @@ namespace QLS.Backend.Controllers.Dashboard
         public async Task<ActionResult<SystemOverviewDto>> GetSystemOverview()
         {
             var result = await _dashboardService.GetSystemOverviewAsync();
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// [Dashboard - Brand Admin] Tổng quan cho 1 Brand:
+        /// Số store, máy, session đang chạy, doanh thu hôm nay của Brand.
+        /// </summary>
+        [HttpGet("brand-overview/{brandId}")]
+        public async Task<ActionResult<BrandOverviewDto>> GetBrandOverview(Guid brandId)
+        {
+            var result = await _dashboardService.GetBrandOverviewAsync(brandId);
             return Ok(result);
         }
 

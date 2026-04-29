@@ -137,6 +137,29 @@ namespace QLS.Backend.DTOs.Dashboard
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
+    // 4.1. BRAND OVERVIEW - Tổng quan cho Brand Admin
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    public class BrandOverviewDto
+    {
+        public int TotalStores { get; set; }
+        public int ActiveStores { get; set; }
+
+        public int TotalMachines { get; set; }
+        public int WasherCount { get; set; }
+        public int DryerCount { get; set; }
+
+        /// <summary>Số session đang chạy ngay lúc này trong Brand</summary>
+        public int ActiveSessionsNow { get; set; }
+
+        /// <summary>Tổng doanh thu hôm nay của Brand</summary>
+        public decimal TodayRevenue { get; set; }
+
+        /// <summary>Số lần giặt hôm nay của Brand</summary>
+        public int TodaySessionCount { get; set; }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
     // 5. MACHINE UTILIZATION - Tỷ lệ sử dụng máy
     // ─────────────────────────────────────────────────────────────────────────────
 

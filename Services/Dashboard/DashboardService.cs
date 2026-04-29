@@ -244,6 +244,49 @@ namespace QLS.Backend.Services.Dashboard
         }
 
         // ─────────────────────────────────────────────────────────────────────
+        // 4.1. BRAND OVERVIEW - Tổng quan cho Brand Admin
+        // ─────────────────────────────────────────────────────────────────────
+
+        public async Task<BrandOverviewDto> GetBrandOverviewAsync(Guid brandId)
+        {
+            var today = DateTime.UtcNow.Date;
+
+            var storeStats = await _context.Stores
+                .Where(s => s.BrandId == brandId)
+                .GroupBy(s => s.IsActive)
+                .Select(g => new { IsActive = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var machineStats = await _context.Machines
+                .Join(_context.Stores, m => m.StoreId, s => s.Id, (m, s) => new { m, s })
+                .Where(x => x.s.BrandId == brandId)
+                .GroupBy(x => x.m.Type)
+                .Select(g => new { Type = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var activeSessionsNow = await _context.MachineSessions
+                .CountAsync(s => s.Store!.BrandId == brandId && s.Status == MachineSessionStatus.Running);
+
+            var todaySessions = await _context.MachineSessions
+                .Where(s => s.Store!.BrandId == brandId && s.StartTime >= today &&
+                            (s.Status == MachineSessionStatus.Completed || s.Status == MachineSessionStatus.Running))
+                .Select(s => new { s.PricePaid })
+                .ToListAsync();
+
+            return new BrandOverviewDto
+            {
+                TotalStores = storeStats.Sum(s => s.Count),
+                ActiveStores = storeStats.FirstOrDefault(s => s.IsActive)?.Count ?? 0,
+                TotalMachines = machineStats.Sum(m => m.Count),
+                WasherCount = machineStats.FirstOrDefault(m => m.Type == MachineType.Washer)?.Count ?? 0,
+                DryerCount = machineStats.FirstOrDefault(m => m.Type == MachineType.Dryer)?.Count ?? 0,
+                ActiveSessionsNow = activeSessionsNow,
+                TodayRevenue = todaySessions.Sum(s => s.PricePaid),
+                TodaySessionCount = todaySessions.Count
+            };
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
         // 5. MACHINE UTILIZATION - Tỷ lệ & hiệu suất sử dụng từng máy
         //    Dùng để phát hiện máy quá tải hoặc máy không được dùng
         // ─────────────────────────────────────────────────────────────────────

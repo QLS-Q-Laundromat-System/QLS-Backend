@@ -40,7 +40,8 @@ public class MachineDetailService : IMachineDetailService
         }
 
         // 2. Gọi API lấy dữ liệu thô bằng ID phía LG (hiện tại storeId truyền vào cũng chính là mã này)
-        var rawJson = await _lgClient.GetRawStatusAsync(store.StoreId, cred.LgUserNo, cred.AccessToken);
+        var rawJson = await _lgClient.GetRawStatusAsync(store.StoreId!, cred.LgUserNo, cred.AccessToken);
+        
         
         // 2. Chế biến dữ liệu sang DTO
         var statusList = LgMapper.MapToDto(rawJson);
