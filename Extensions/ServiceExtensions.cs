@@ -44,13 +44,21 @@ public static class ServiceExtensions
 
         services.AddCors(options =>
         {
-            options.AddPolicy("AllowReactApp", policy =>
-            {
-                policy.WithOrigins(allowedOrigins)
-                      .AllowAnyHeader()
-                      .AllowAnyMethod()
-                      .AllowCredentials();
-            });
+                // Policy that allows only configured origins (recommended for production)
+                options.AddPolicy("AllowReactApp", policy =>
+                {
+                    policy.WithOrigins(allowedOrigins)
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials();
+                });
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.SetIsOriginAllowed((host) => true)
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials();
+                });
         });
 
         return services;

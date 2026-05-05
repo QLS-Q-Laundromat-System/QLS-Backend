@@ -8,5 +8,7 @@ namespace QLS.Backend.DTOs
         public string? Avatar { get; set; }
         public string Role { get; set; } = string.Empty;
         public string? BrandId { get; set; }
+        
+        public string? StoreId { get; set; }
     }
 }

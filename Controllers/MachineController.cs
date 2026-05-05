@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using QLS.Backend.Services;
 using QLS.Backend.DTOs;
+using QLS.Backend.DTOs.Machine;
 using QLS.Backend.Services.LgService;
 
 namespace QLS.Backend.Controllers;
@@ -28,11 +29,20 @@ public class MachineController : ControllerBase
     // API Cập nhật công suất (số kg) của máy
     [HttpPatch("{id}/capacity")]
     // [Authorize(Roles = "SystemAdmin,BrandAdmin,StoreAdmin")]
-    public async Task<IActionResult> UpdateCapacity(Guid id, [FromBody] QLS.Backend.DTOs.Machine.UpdateMachineCapacityDto dto)
+    public async Task<IActionResult> UpdateCapacity(Guid id, [FromBody] UpdateMachineCapacityDto dto)
     {
         var result = await _machineDetailService.UpdateMachineCapacityAsync(id, dto.Capacity);
         if (!result) return NotFound(new { message = "Không tìm thấy máy" });
         
         return Ok(new { message = "Cập nhật công suất máy thành công" });
+    }
+
+    // API lấy chi tiết máy với cấu hình + bảng giá
+    [HttpGet("{id}/detail")]
+    public async Task<IActionResult> GetMachineDetail(Guid id)
+    {
+        var result = await _machineDetailService.GetMachineDetailWithConfigAsync(id);
+
+        return Ok(ApiResponse<MachineDetailWithConfigDto>.Success(result, "Lấy chi tiết máy thành công"));
     }
 }

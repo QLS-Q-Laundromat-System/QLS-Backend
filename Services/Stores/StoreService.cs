@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Data;
+using QLS.Backend.DTOs;
 using QLS.Backend.DTOs.Store;
 using QLS.Backend.Interfaces.Stores;
 using QLS.Backend.Models;
@@ -226,6 +227,102 @@ namespace QLS.Backend.Services.Stores
             return await _context.Machines
                 .Where(m => m.StoreId == storeId)
                 .ToListAsync();
+        }
+
+        public async Task<List<StoreMachineStatusDto>> GetMachinesWithStatusByStoreIdAsync(Guid storeId)
+        {
+            var store = await _context.Stores
+                .Include(s => s.Machines)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == storeId);
+
+            if (store == null)
+            {
+                throw new KeyNotFoundException("Không tìm thấy cửa hàng.");
+            }
+
+            var machines = store.Machines
+                .OrderBy(m => m.Name)
+                .Select(machine => new StoreMachineStatusDto
+                {
+                    Id = machine.Id,
+                    Name = machine.Name,
+                    Type = machine.Type.ToString(),
+                    Capacity = machine.Capacity,
+                    LgDeviceId = machine.LgDeviceId,
+                    Online = false,
+                    StatusText = string.IsNullOrWhiteSpace(machine.LgDeviceId) ? "Chưa đồng bộ" : "Ngoại tuyến",
+                    CurState = null,
+                    Course = null,
+                    CourseNum = null,
+                    RemainHour = null,
+                    RemainMin = null,
+                    RemainTime = null,
+                    Process = null
+                })
+                .ToList();
+
+            if (string.IsNullOrWhiteSpace(store.StoreId))
+            {
+                return machines;
+            }
+
+            var lgCredential = await _brandLgService.GetValidCredentialAsync(store.BrandId);
+            if (lgCredential == null || string.IsNullOrWhiteSpace(lgCredential.LgUserNo) || string.IsNullOrWhiteSpace(lgCredential.AccessToken))
+            {
+                return machines;
+            }
+
+            var rawJson = await _lgApiClient.GetRawStatusAsync(store.StoreId, lgCredential.LgUserNo, lgCredential.AccessToken);
+            var liveStatuses = LgMapper.MapToDto(rawJson)
+                .ToDictionary(status => status.DeviceId, status => status);
+
+            foreach (var machine in machines)
+            {
+                if (string.IsNullOrWhiteSpace(machine.LgDeviceId))
+                {
+                    continue;
+                }
+
+                if (!liveStatuses.TryGetValue(machine.LgDeviceId, out var liveStatus))
+                {
+                    machine.StatusText = "Ngoại tuyến";
+                    continue;
+                }
+
+                machine.Online = liveStatus.Online;
+                machine.CurState = liveStatus.CurState;
+                machine.Course = liveStatus.Course;
+                machine.CourseNum = liveStatus.CourseNum;
+                machine.RemainHour = liveStatus.RemainHour;
+                machine.RemainMin = liveStatus.RemainMin;
+                machine.RemainTime = liveStatus.RemainTime;
+                machine.Process = liveStatus.Process;
+                machine.StatusText = ResolveStatusText(liveStatus);
+            }
+
+            return machines;
+        }
+
+        private static string ResolveStatusText(MachineDetailDto status)
+        {
+            if (!status.Online)
+            {
+                return "Ngoại tuyến";
+            }
+
+            var state = $"{status.CurState} {status.Process}".Trim().ToUpperInvariant();
+            if (state.Contains("ERR"))
+            {
+                return "Lỗi";
+            }
+
+            if (state.Contains("RUN"))
+            {
+                return "Đang chạy";
+            }
+
+            return "Sẵn sàng";
         }
 
         public async Task<bool> AssignStoreTypeAsync(Guid storeId, Guid storeTypeId)
