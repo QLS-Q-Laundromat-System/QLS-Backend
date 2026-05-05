@@ -68,11 +68,25 @@ public class StoreController : ControllerBase
     }
 
     [HttpGet("{id}/machines")]
-    [Authorize(Roles = "SystemAdmin,BrandAdmin,Manager,Staff")]
+    //[Authorize(Roles = "SystemAdmin,BrandAdmin,Manager,Staff")]
     public async Task<IActionResult> GetMachinesByStore(Guid id)
     {
         var machines = await _storeService.GetMachinesByStoreIdAsync(id);
         return Ok(ApiResponse<IEnumerable<Machine>>.Success(machines, "Lấy danh sách máy thành công"));
+    }
+
+    [HttpGet("me/machines")]
+    [Authorize(Roles = "Manager,Staff")]
+    public async Task<IActionResult> GetMyStoreMachines()
+    {
+        var storeIdStr = User.FindFirst("StoreId")?.Value;
+        if (!Guid.TryParse(storeIdStr, out var storeId))
+        {
+            return Unauthorized(ApiResponse<object>.Error(401, "Không tìm thấy thông tin cửa hàng trong phiên đăng nhập."));
+        }
+
+        var machines = await _storeService.GetMachinesWithStatusByStoreIdAsync(storeId);
+        return Ok(ApiResponse<IEnumerable<StoreMachineStatusDto>>.Success(machines, "Lấy danh sách máy của cửa hàng thành công"));
     }
 
     [HttpPatch("{id}/type")]

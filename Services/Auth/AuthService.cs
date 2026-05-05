@@ -93,6 +93,7 @@ namespace QLS.Backend.Services
                     FullName = profile?.FullName ?? account.Username,
                     Role = account.Role.ToString(),
                     BrandId = account.BrandId?.ToString(),
+                    StoreId = account.StoreId?.ToString(),
                     Avatar = "https://ui-avatars.com/api/?name=" + (profile?.FullName ?? account.Username) // Placeholder avatar
                 }
             };
