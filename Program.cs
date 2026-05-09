@@ -117,8 +117,8 @@ app.UseSwaggerUI(c =>
 // Health Check endpoint cho CI/CD pipeline
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
-// Kích hoạt Middleware CORS - sử dụng policy AllowAll để cho phép mọi host.
-app.UseCors("AllowAll");
+// Kích hoạt Middleware CORS - sử dụng policy AllowReactApp để cho phép mọi host.
+app.UseCors("AllowReactApp");
 
 // app.UseHttpsRedirection(); // Đã tắt do chỉ test HTTP nội bộ
 
