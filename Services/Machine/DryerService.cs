@@ -120,11 +120,14 @@ namespace QLS.Backend.Services
             if (machine == null) throw new Exception("Không tìm thấy máy");
 
             // 2. Lấy giá chuẩn từ PricingService
+            var capacityRaw = machine.Capacity ?? "0";
+            var capacityClean = new string(capacityRaw.Where(c => char.IsDigit(c) || c == '.').ToArray());
+            
             var priceResponse = await _pricingService.CalculatePriceAsync(new CalculatePriceRequestDto
             {
                 StoreId = dto.StoreId,
                 MachineType = machine.Type,
-                MachineCapacityKg = decimal.TryParse(machine.Capacity, out var cap) ? cap : 0,
+                MachineCapacityKg = decimal.TryParse(capacityClean, out var cap) ? cap : 0,
                 ClothingWeightKg = dto.WeightKg
             });
 

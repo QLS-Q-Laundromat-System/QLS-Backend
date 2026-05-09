@@ -44,52 +44,45 @@ public static class ServiceExtensions
 
         services.AddCors(options =>
         {
-                // Policy that allows only configured origins (recommended for production)
-                options.AddPolicy("AllowReactApp", policy =>
-                {
-                    policy.WithOrigins(allowedOrigins)
-                          .AllowAnyHeader()
-                          .AllowAnyMethod()
-                          .AllowCredentials();
-                });
-                options.AddPolicy("AllowAll", policy =>
-                {
-                    policy.SetIsOriginAllowed((host) => true)
-                          .AllowAnyHeader()
-                          .AllowAnyMethod()
-                          .AllowCredentials();
-                });
+            options.AddPolicy("AllowReactApp", policy =>
+            {
+                policy.WithOrigins(allowedOrigins)
+                      .SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost" || allowedOrigins.Contains(origin))
+                      .AllowAnyHeader()
+                      .AllowAnyMethod()
+                      .AllowCredentials();
+            });
         });
 
         return services;
     }
 
-   public static IServiceCollection AddConfigSwagger(this IServiceCollection services)
-{
-    services.AddSwaggerGen(options =>
+    public static IServiceCollection AddConfigSwagger(this IServiceCollection services)
     {
-        options.SwaggerDoc("v1", new OpenApiInfo { Title = "QLS Backend", Version = "v1" });
-        options.CustomSchemaIds(type => type.FullName ?? type.Name);
-
-        // Dùng ApiKey: Bắt buộc gửi chính xác những gì người dùng nhập
-        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        services.AddSwaggerGen(options =>
         {
-            Description = "⚠️ QUAN TRỌNG: Bạn PHẢI gõ tay chữ 'Bearer ' (có khoảng trắng) rồi mới dán token vào.\nVí dụ: Bearer eyJhbGci...",
-            Name = "Authorization",
-            In = ParameterLocation.Header,
-            Type = SecuritySchemeType.ApiKey, // Dùng lại ApiKey
-            Scheme = "Bearer"
-        });
+            options.SwaggerDoc("v1", new OpenApiInfo { Title = "QLS Backend", Version = "v1" });
+            options.CustomSchemaIds(type => type.FullName ?? type.Name);
 
-        options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-        {
+            // Dùng ApiKey: Bắt buộc gửi chính xác những gì người dùng nhập
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Description = "⚠️ QUAN TRỌNG: Bạn PHẢI gõ tay chữ 'Bearer ' (có khoảng trắng) rồi mới dán token vào.\nVí dụ: Bearer eyJhbGci...",
+                Name = "Authorization",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.ApiKey, // Dùng lại ApiKey
+                Scheme = "Bearer"
+            });
+
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+            {
             {
                 new OpenApiSecuritySchemeReference("Bearer"),
                 new List<string>()
             }
+            });
         });
-    });
-    
-    return services;
-}
+
+        return services;
+    }
 }
