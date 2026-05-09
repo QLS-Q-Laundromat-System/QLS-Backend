@@ -53,6 +53,7 @@ namespace QLS.Backend.Middlewares
                     break;
                 case ArgumentNullException _:
                 case ArgumentException _:
+                case InvalidOperationException _:
                     statusCode = (int)HttpStatusCode.BadRequest;
                     message = exception.Message;
                     break;

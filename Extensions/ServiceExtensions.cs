@@ -47,6 +47,7 @@ public static class ServiceExtensions
             options.AddPolicy("AllowReactApp", policy =>
             {
                 policy.WithOrigins(allowedOrigins)
+                      .SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost" || allowedOrigins.Contains(origin))
                       .AllowAnyHeader()
                       .AllowAnyMethod()
                       .AllowCredentials();
