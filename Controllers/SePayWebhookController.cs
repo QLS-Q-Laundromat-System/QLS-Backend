@@ -129,46 +129,49 @@ namespace QLS.Backend.Controllers
                     return Ok(new { success = true });
                 }
 
+                // Sử dụng ZigbeeNetworkId từ máy, nếu không có thì fallback về "QLS.Washer" như PaymentController
+                string zigbeeTopic = !string.IsNullOrEmpty(machine.ZigbeeNetworkId) 
+                    ? machine.ZigbeeNetworkId 
+                    : "QLS.Washer";
+
                 if (string.IsNullOrEmpty(machine.ZigbeeNetworkId))
                 {
-                    _logger.LogWarning("[SePay Webhook] Machine {MachineName} ({MachineId}) has no ZigbeeNetworkId. Cannot trigger coins!", machine.Name, machine.Id);
-                    transaction.Status = "Success (No Zigbee ID)";
+                    _logger.LogWarning("[SePay Webhook] Machine {MachineName} ({MachineId}) has no ZigbeeNetworkId. Falling back to default: {DefaultTopic}", 
+                        machine.Name, machine.Id, zigbeeTopic);
                 }
-                else
+                
+                // Tính toán số pulses
+                int pulses = 1;
+                if (machine.Type == MachineType.Dryer)
                 {
-                    // Tính toán số pulses
-                    int pulses = 1;
-                    if (machine.Type == MachineType.Dryer)
+                    var capacityClean = new string(machine.Capacity.Where(c => char.IsDigit(c) || c == '.').ToArray());
+                    decimal.TryParse(capacityClean, out var cap);
+
+                    var dryerPriceMode = await _context.PriceModePerSessions
+                        .OfType<DryerPriceMode>()
+                        .FirstOrDefaultAsync(m => m.PriceListId == paymentCodeMatch.PriceListId && 
+                                                m.MachineCapacityKg == cap);
+
+                    if (dryerPriceMode != null && dryerPriceMode.DurationMinutes > 0)
                     {
-                        var capacityClean = new string(machine.Capacity.Where(c => char.IsDigit(c) || c == '.').ToArray());
-                        decimal.TryParse(capacityClean, out var cap);
-
-                        var dryerPriceMode = await _context.PriceModePerSessions
-                            .OfType<DryerPriceMode>()
-                            .FirstOrDefaultAsync(m => m.PriceListId == paymentCodeMatch.PriceListId && 
-                                                    m.MachineCapacityKg == cap);
-
-                        if (dryerPriceMode != null && dryerPriceMode.DurationMinutes > 0)
-                        {
-                            pulses = paymentCodeMatch.TotalMinutes / dryerPriceMode.DurationMinutes;
-                            _logger.LogInformation("[SePay Webhook] Calculated {Pulses} pulses for Dryer ({TotalMin}/{StepMin})", 
-                                pulses, paymentCodeMatch.TotalMinutes, dryerPriceMode.DurationMinutes);
-                        }
-                        else
-                        {
-                            _logger.LogWarning("[SePay Webhook] Could not find DryerPriceMode for capacity {Cap}. Defaulting to 1 pulse.", cap);
-                        }
+                        pulses = paymentCodeMatch.TotalMinutes / dryerPriceMode.DurationMinutes;
+                        _logger.LogInformation("[SePay Webhook] Calculated {Pulses} pulses for Dryer ({TotalMin}/{StepMin})", 
+                            pulses, paymentCodeMatch.TotalMinutes, dryerPriceMode.DurationMinutes);
                     }
                     else
                     {
-                        _logger.LogInformation("[SePay Webhook] Machine is Washer, using default 1 pulse.");
+                        _logger.LogWarning("[SePay Webhook] Could not find DryerPriceMode for capacity {Cap}. Defaulting to 1 pulse.", cap);
                     }
-
-                    _logger.LogInformation("[SePay Webhook] TRIGGERING ZIGBEE: Topic={Topic}, Pulses={Pulses}", machine.ZigbeeNetworkId, pulses);
-                    await _zigbeeService.TriggerAsync(machine.ZigbeeNetworkId, pulses);
-                    _logger.LogInformation("[SePay Webhook] Zigbee trigger sent successfully.");
-                    transaction.Status = "Success";
                 }
+                else
+                {
+                    _logger.LogInformation("[SePay Webhook] Machine is Washer, using default 1 pulse.");
+                }
+
+                _logger.LogInformation("[SePay Webhook] TRIGGERING ZIGBEE: Topic={Topic}, Pulses={Pulses}", zigbeeTopic, pulses);
+                await _zigbeeService.TriggerAsync(zigbeeTopic, pulses);
+                _logger.LogInformation("[SePay Webhook] Zigbee trigger sent successfully.");
+                transaction.Status = "Success";
 
                 await _context.SaveChangesAsync();
                 return Ok(new { success = true });

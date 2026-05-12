@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using QLS.Backend.Models.Enums;
 using QLS.Backend.DTOs.Machine;
