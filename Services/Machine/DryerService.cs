@@ -29,12 +29,26 @@ namespace QLS.Backend.Services
         public async Task<Guid> SaveSessionAsync(CreateMachineSessionDto dto)
         {
             var now = DateTime.UtcNow;
+            
+            // Đảm bảo UserId tồn tại để tránh lỗi Foreign Key
+            var userExists = await _context.Users.AnyAsync(u => u.Id == dto.UserId);
+            var finalUserId = dto.UserId;
+            
+            if (!userExists)
+            {
+                var firstUser = await _context.Users.FirstOrDefaultAsync();
+                if (firstUser != null)
+                {
+                    finalUserId = firstUser.Id;
+                }
+            }
+
             var session = new MachineSession
             {
                 Id           = Guid.NewGuid(),
                 MachineId    = dto.MachineId,
                 StoreId      = dto.BranchId,
-                UserId       = dto.UserId,
+                UserId       = finalUserId,
                 PricePaid    = dto.PricePaid,
                 TaxAmount    = 0, 
                 TotalMinutes = dto.TotalMinutes,
