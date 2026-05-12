@@ -115,8 +115,21 @@ namespace QLS.Backend.Controllers
                     int pulses = 1;
                     if (machine.Type == MachineType.Dryer)
                     {
-                        // Giả sử mỗi 10 phút là 1 pulse
-                        pulses = Math.Max(1, paymentCodeMatch.TotalMinutes / 10);
+                        // Parse Capacity từ string "10kg" -> decimal 10.0
+                        var capacityClean = new string(machine.Capacity.Where(c => char.IsDigit(c) || c == '.').ToArray());
+                        decimal.TryParse(capacityClean, out var cap);
+
+                        // Tìm bảng giá sấy tương ứng
+                        var dryerPriceMode = await _context.PriceModePerSessions
+                            .OfType<DryerPriceMode>()
+                            .FirstOrDefaultAsync(m => m.PriceListId == paymentCodeMatch.PriceListId && 
+                                                    m.MachineCapacityKg == cap);
+
+                        if (dryerPriceMode != null && dryerPriceMode.DurationMinutes > 0)
+                        {
+                            // Số pulses = Tổng phút / Số phút mỗi bước
+                            pulses = paymentCodeMatch.TotalMinutes / dryerPriceMode.DurationMinutes;
+                        }
                     }
 
                     await _zigbeeService.TriggerAsync(machine.ZigbeeNetworkId, pulses);
