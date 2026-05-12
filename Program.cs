@@ -56,6 +56,10 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<AppDbContext>();
 
+        // Apply tất cả pending migrations vào database
+        await context.Database.MigrateAsync();
+        logger.LogInformation("✅ Migration hoàn tất!");
+
         await QLS.Backend.Data.DbSeeder.SeedAsync(context);
         logger.LogInformation("✅ Seed dữ liệu hoàn tất!");
     }
