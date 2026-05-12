@@ -15,5 +15,6 @@ namespace QLS.Backend.DTOs.Machine
         public decimal? WeightKg { get; set; }
         public string? CycleName { get; set; }
         public bool IsExtension { get; set; } = false;
+        public string? PaymentCode { get; set; }
     }
 }

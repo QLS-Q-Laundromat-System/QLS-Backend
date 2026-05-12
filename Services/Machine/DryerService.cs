@@ -48,7 +48,8 @@ namespace QLS.Backend.Services
                 PricingMode  = dto.PricingMode,
                 WeightKg     = dto.WeightKg,
                 CycleName    = dto.CycleName,
-                IsExtension  = dto.IsExtension
+                IsExtension  = dto.IsExtension,
+                PaymentCode  = dto.PaymentCode
             };
 
             _context.MachineSessions.Add(session);
@@ -156,18 +157,21 @@ namespace QLS.Backend.Services
             }
 
             // 4. LƯU DATABASE với trạng thái PendingPayment (chưa thu tiền, chưa chạy máy)
+            var paymentCode = $"QLS{Guid.NewGuid().ToString().Substring(0, 5).ToUpper()}";
+
             var sessionDto = new CreateMachineSessionDto
             {
-                BranchId    = dto.StoreId,
-                MachineId   = dto.MachineId,
-                UserId      = dto.UserId,
+                BranchId     = dto.StoreId,
+                MachineId    = dto.MachineId,
+                UserId       = dto.UserId,
                 TotalMinutes = totalMinutes,
-                PricePaid   = totalAmount,
-                PriceListId = priceResponse.PriceListId,
-                PricingMode = priceResponse.Mode == "PerKg" ? PricePerType.PerKg : PricePerType.Flat,
-                WeightKg    = dto.WeightKg,
-                CycleName   = priceResponse.CalculationDetail, 
-                IsExtension = false
+                PricePaid    = totalAmount,
+                PriceListId  = priceResponse.PriceListId,
+                PricingMode  = priceResponse.Mode == "PerKg" ? PricePerType.PerKg : PricePerType.Flat,
+                WeightKg     = dto.WeightKg,
+                CycleName    = priceResponse.CalculationDetail, 
+                IsExtension  = false,
+                PaymentCode  = paymentCode
             };
 
             var sessionId = await SaveSessionAsync(sessionDto);
@@ -179,6 +183,7 @@ namespace QLS.Backend.Services
                 ServerCalculatedAmount = totalAmount, 
                 TotalMinutes           = totalMinutes,
                 PaymentMethod          = dto.PaymentMethod,
+                PaymentCode            = paymentCode,
                 Message                = "Session đã tạo. Vui lòng hoàn tất thanh toán để khởi động máy."
             };
         }
