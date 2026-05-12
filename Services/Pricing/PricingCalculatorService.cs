@@ -18,7 +18,7 @@ public class PricingCalculatorService : IPricingCalculatorService
 
     public async Task<PriceCalculationResponseDto?> CalculatePriceAsync(CalculatePriceRequestDto dto)
     {
-        var calculateTime = dto.CalculateTime ?? DateTime.Now;
+        var calculateTime = dto.CalculateTime ?? DateTime.UtcNow.AddHours(7);
         var currentTime = TimeOnly.FromDateTime(calculateTime);
         var currentDate = DateOnly.FromDateTime(calculateTime);
         var currentDay = calculateTime.DayOfWeek;

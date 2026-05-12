@@ -396,7 +396,7 @@ public class PricingService : IPricingService
 
     public async Task<PriceCalculationResponseDto> CalculatePriceAsync(CalculatePriceRequestDto dto)
     {
-        var calculateTime = dto.CalculateTime ?? DateTime.Now;
+        var calculateTime = dto.CalculateTime ?? DateTime.UtcNow.AddHours(7);
 
         // 1. Lấy thông tin cửa hàng để biết BrandId và StoreTypeId
         var store = await _context.Stores
