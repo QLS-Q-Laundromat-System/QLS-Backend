@@ -29,7 +29,7 @@ namespace QLS.Backend.DTOs.Integrations
         [JsonPropertyName("transferAmount")]
         public decimal TransferAmount { get; set; }
 
-        [JsonPropertyName("accumulatedBalance")]
+        [JsonPropertyName("accumulated")]
         public decimal AccumulatedBalance { get; set; }
 
         [JsonPropertyName("subAccount")]

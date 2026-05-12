@@ -80,5 +80,26 @@ namespace QLS.Backend.Controllers
 
             return Ok(ApiResponse<object>.Success(new { }, "Cập nhật trạng thái thành công."));
         }
+
+        /// <summary>
+        /// Lấy chi tiết/trạng thái của một session để app có thể polling
+        /// [GET] /api/v1/sessions/{id}
+        /// </summary>
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetSessionStatus(Guid id, [FromServices] QLS.Backend.Data.AppDbContext context)
+        {
+            var session = await context.MachineSessions.FindAsync(id);
+            if (session == null)
+            {
+                return NotFound(new { message = "Không tìm thấy session." });
+            }
+
+            return Ok(ApiResponse<object>.Success(new 
+            { 
+                sessionId = session.Id,
+                status = session.Status,
+                machineId = session.MachineId
+            }));
+        }
     }
 }

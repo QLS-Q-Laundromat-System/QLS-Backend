@@ -36,6 +36,17 @@ namespace QLS.Backend.Controllers
         {
             _logger.LogInformation("[SePay Webhook] Received: {Content} | Amount: {Amount}", dto.Content, dto.TransferAmount);
 
+            // 0. Kiểm tra chống trùng lặp (Idempotency)
+            // Nếu webhook được gọi lại với cùng 1 ID giao dịch, ta bỏ qua và trả về thành công
+            bool isDuplicate = await _context.PaymentTransactions
+                .AnyAsync(t => t.GatewayTransactionId == dto.Id.ToString());
+
+            if (isDuplicate)
+            {
+                _logger.LogInformation("[SePay Webhook] Transaction {Id} already processed. Ignoring.", dto.Id);
+                return Ok(new { success = true });
+            }
+
             // 1. Tạo bản ghi giao dịch (Audit Log)
             var transaction = new PaymentTransaction
             {
@@ -58,7 +69,7 @@ namespace QLS.Backend.Controllers
                 {
                     transaction.Status = "Ignored (Not Inbound)";
                     await _context.SaveChangesAsync();
-                    return Ok();
+                    return Ok(new { success = true });
                 }
 
                 // 2. Tìm mã thanh toán trong nội dung chuyển khoản (VD: QLS12345)
@@ -74,7 +85,7 @@ namespace QLS.Backend.Controllers
                     _logger.LogWarning("[SePay Webhook] No matching PendingPayment session found for content: {Content}", content);
                     transaction.Status = "Failed (No Match)";
                     await _context.SaveChangesAsync();
-                    return Ok(); // Vẫn trả về 200 để SePay không gửi lại
+                    return Ok(new { success = true }); // Vẫn trả về success=true để SePay không gửi lại
                 }
 
                 // 3. Kiểm tra số tiền (Cho phép sai số nhỏ nếu cần, hoặc khớp chính xác)
@@ -84,7 +95,7 @@ namespace QLS.Backend.Controllers
                     transaction.Status = "MismatchAmount";
                     transaction.MachineSessionId = paymentCodeMatch.Id;
                     await _context.SaveChangesAsync();
-                    return Ok();
+                    return Ok(new { success = true });
                 }
 
                 // 4. Xác nhận thanh toán và kích hoạt máy
