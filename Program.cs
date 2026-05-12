@@ -121,6 +121,20 @@ app.UseSwaggerUI(c =>
 // Health Check endpoint cho CI/CD pipeline
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
+// Endpoint kiểm tra trạng thái migration
+app.MapGet("/db-status", async (AppDbContext db) =>
+{
+    var applied = (await db.Database.GetAppliedMigrationsAsync()).ToList();
+    var pending = (await db.Database.GetPendingMigrationsAsync()).ToList();
+    return Results.Ok(new
+    {
+        appliedCount = applied.Count,
+        pendingCount = pending.Count,
+        lastApplied = applied.LastOrDefault(),
+        pendingMigrations = pending
+    });
+});
+
 // Kích hoạt Middleware CORS - sử dụng policy AllowReactApp để cho phép mọi host.
 app.UseCors("AllowReactApp");
 
