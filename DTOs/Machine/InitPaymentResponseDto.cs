@@ -11,6 +11,7 @@ namespace QLS.Backend.DTOs.Machine
         public string PaymentMethod { get; set; } = string.Empty;
 
         public string? PaymentCode { get; set; }
+        public string? QrUrl { get; set; }
 
         public string Message { get; set; } = string.Empty;
     }

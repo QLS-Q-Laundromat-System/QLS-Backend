@@ -18,8 +18,7 @@ public class PricingCalculatorService : IPricingCalculatorService
 
     public async Task<PriceCalculationResponseDto?> CalculatePriceAsync(CalculatePriceRequestDto dto)
     {
-        // Chuyển múi giờ về giờ Việt Nam (UTC+7) để khớp với Admin Panel
-        var calculateTime = dto.CalculateTime ?? DateTime.UtcNow.AddHours(7);
+        var calculateTime = dto.CalculateTime ?? DateTime.Now;
         var currentTime = TimeOnly.FromDateTime(calculateTime);
         var currentDate = DateOnly.FromDateTime(calculateTime);
         var currentDay = calculateTime.DayOfWeek;

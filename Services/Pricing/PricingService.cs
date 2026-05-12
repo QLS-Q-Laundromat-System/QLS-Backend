@@ -396,8 +396,7 @@ public class PricingService : IPricingService
 
     public async Task<PriceCalculationResponseDto> CalculatePriceAsync(CalculatePriceRequestDto dto)
     {
-        // Chuyển múi giờ về giờ Việt Nam (UTC+7)
-        var calculateTime = dto.CalculateTime ?? DateTime.UtcNow.AddHours(7);
+        var calculateTime = dto.CalculateTime ?? DateTime.Now;
 
         // 1. Lấy thông tin cửa hàng để biết BrandId và StoreTypeId
         var store = await _context.Stores

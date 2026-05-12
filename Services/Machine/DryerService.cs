@@ -1,4 +1,4 @@
-using System;
+                using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +11,7 @@ using QLS.Backend.Interfaces;
 using QLS.Backend.Interfaces.Pricing;
 using QLS.Backend.DTOs.Pricing;
 using QLS.Backend.Models.Enums;
+using Microsoft.Extensions.Configuration;
 
 namespace QLS.Backend.Services
 {
@@ -18,11 +19,13 @@ namespace QLS.Backend.Services
     {
         private readonly AppDbContext _context;
         private readonly IPricingCalculatorService _pricingService;
+        private readonly IConfiguration _configuration;
 
-        public DryerService(AppDbContext context, IPricingCalculatorService pricingService)
+        public DryerService(AppDbContext context, IPricingCalculatorService pricingService, IConfiguration configuration)
         {
             _context = context;
             _pricingService = pricingService;
+            _configuration = configuration;
         }
 
         public async Task<Guid> SaveSessionAsync(CreateMachineSessionDto dto)
@@ -177,6 +180,10 @@ namespace QLS.Backend.Services
             var sessionId = await SaveSessionAsync(sessionDto);
 
             // 5. Trả về thông tin — client sẽ dùng SessionId này để confirm sau khi thanh toán
+            var acc = _configuration["SePay:AccountNumber"] ?? "123456789";
+            var bank = _configuration["SePay:Bank"] ?? "MBBank";
+            var qrUrl = $"https://qr.sepay.vn/img?acc={acc}&bank={bank}&amount={(int)totalAmount}&des={paymentCode}";
+
             return new InitPaymentResponseDto
             {
                 SessionId              = sessionId,
@@ -184,6 +191,7 @@ namespace QLS.Backend.Services
                 TotalMinutes           = totalMinutes,
                 PaymentMethod          = dto.PaymentMethod,
                 PaymentCode            = paymentCode,
+                QrUrl                  = qrUrl,
                 Message                = "Session đã tạo. Vui lòng hoàn tất thanh toán để khởi động máy."
             };
         }
