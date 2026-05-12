@@ -92,6 +92,12 @@ namespace QLS.Backend.Models
         // --- External References ---
         
         public string? TransactionId { get; set; }
+        
+        /// <summary>
+        /// Mã nội dung chuyển khoản (VD: QLS12345) dùng để đối soát tự động.
+        /// </summary>
+        [MaxLength(20)]
+        public string? PaymentCode { get; set; }
 
         // --- Refund Tracking ---
 

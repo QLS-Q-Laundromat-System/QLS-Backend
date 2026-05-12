@@ -27,6 +27,7 @@ namespace QLS.Backend.Data
         public DbSet<DiscountCode> DiscountCodes { get; set; }
         public DbSet<DiscountCodeStore> DiscountCodeStores { get; set; }
         public DbSet<DiscountCodeUsage> DiscountCodeUsages { get; set; }
+        public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
