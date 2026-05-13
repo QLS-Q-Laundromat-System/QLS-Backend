@@ -64,4 +64,11 @@ appsettings.Production.json
 
 # Docker environment (chỉ commit .env.example, không commit .env)
 .env
+<<<<<<< Updated upstream
 !.env.example
+=======
+.env.example
+
+# Local analysis docs
+PROJECT_SUMMARY_DETAILED.md
+>>>>>>> Stashed changes
