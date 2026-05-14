@@ -59,14 +59,13 @@ public class MachineDetailService : IMachineDetailService
         var existingLgIds = await _context.Machines.Select(m => m.LgDeviceId).ToHashSetAsync();
         var newMachines = statusList
             .Where(s => !existingLgIds.Contains(s.DeviceId))
-            .Select(s => new Machine
-            {
-                Id = Guid.NewGuid(),
-                LgDeviceId = s.DeviceId,
-                Name = !string.IsNullOrEmpty(s.Alias) ? s.Alias : s.DeviceId, // Dùng Alias từ LG nếu có
-                StoreId = store.Id, // Lưu ý: Liên kết ForeignKey dùng Guid
-                Type = s.DeviceType == "0" ? MachineType.Washer : MachineType.Dryer,
-                Capacity = "LG_COMMERCIAL"
+            .Select(s => new QLS.Backend.Models.Machine {
+                Id          = Guid.NewGuid(),
+                LgDeviceId  = s.DeviceId,
+                Name        = !string.IsNullOrEmpty(s.Alias) ? s.Alias : s.DeviceId, // Dùng Alias từ LG nếu có
+                StoreId     = store.Id, // Lưu ý: Liên kết ForeignKey dùng Guid
+                Type        = s.DeviceType == "0" ? MachineType.Washer : MachineType.Dryer,
+                Capacity    = "LG_COMMERCIAL"
             }).ToList();
 
         if (newMachines.Any())

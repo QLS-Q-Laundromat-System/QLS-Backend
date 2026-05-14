@@ -15,19 +15,21 @@ public static class ServiceExtensions
     {
         services.Scan(scan => scan
             .FromAssembliesOf(typeof(IMachineDetailService))
-            .AddClasses(classes => classes.InNamespaces(
-                "QLS.Backend.Services",
-                "QLS.Backend.Services.LgServices.authToken",
-                "QLS.Backend.Services.Brand",
-                "QLS.Backend.Services.MachineSettings",
-                "QLS.Backend.Services.Machine",
-                "QLS.Backend.Services.LgService",
-                "QLS.Backend.Services.Revenue",
-                "QLS.Backend.Services.Pricing",
-                "QLS.Backend.Services.Dashboard",
-                "QLS.Backend.Services.Stores",
-                "QLS.Backend.Services.DiscountCode"
-            ))
+            .AddClasses(classes => classes
+                .InNamespaces(
+                    "QLS.Backend.Services",
+                    "QLS.Backend.Services.LgServices.authToken",
+                    "QLS.Backend.Services.Brand",
+                    "QLS.Backend.Services.MachineSettings",
+                    "QLS.Backend.Services.Machine",
+                    "QLS.Backend.Services.LgService",
+                    "QLS.Backend.Services.Revenue",
+                    "QLS.Backend.Services.Pricing",
+                    "QLS.Backend.Services.Dashboard",
+                    "QLS.Backend.Services.Stores",
+                    "QLS.Backend.Services.DiscountCode"
+                )
+                .Where(type => !typeof(Microsoft.Extensions.Hosting.IHostedService).IsAssignableFrom(type))) // Loại trừ các BackgroundService
             .AsImplementedInterfaces()
             .WithScopedLifetime());
 
