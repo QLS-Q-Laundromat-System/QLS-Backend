@@ -75,7 +75,7 @@ namespace QLS.Backend.Models
 
         // --- Audit & Status ---
 
-        public MachineSessionStatus Status { get; set; } = MachineSessionStatus.Running;
+        public MachineSessionStatus Status { get; set; } = MachineSessionStatus.PendingPayment;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         

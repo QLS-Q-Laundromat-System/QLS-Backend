@@ -20,6 +20,9 @@ namespace QLS.Backend.Interfaces
         // 4. Tổng quan hệ thống (Super Admin)
         Task<SystemOverviewDto> GetSystemOverviewAsync();
 
+        // 4.1. Tổng quan Brand (Brand Admin)
+        Task<BrandOverviewDto> GetBrandOverviewAsync(Guid brandId);
+
         // 5. Tỷ lệ sử dụng máy
         Task<List<StoreUtilizationDto>> GetMachineUtilizationAsync(Guid? brandId, Guid? storeId, int days);
 

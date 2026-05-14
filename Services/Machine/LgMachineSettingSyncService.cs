@@ -58,11 +58,14 @@ public class LgMachineSettingSyncService : ILgMachineSettingSyncService
             .FirstOrDefaultAsync(s => s.Id == machine.StoreId)
             ?? throw new InvalidOperationException("Không tìm thấy cửa hàng liên kết với máy này.");
 
-        var cred = await _brandLgService.GetValidCredentialAsync(store.BrandId)
-            ?? throw new InvalidOperationException("Thương hiệu chưa được cấu hình tài khoản kết nối LG.");
+        var cred = await _brandLgService.GetValidCredentialAsync(store.BrandId);
+        if (cred == null || string.IsNullOrEmpty(cred.LgUserNo) || string.IsNullOrEmpty(cred.AccessToken))
+        {
+            throw new InvalidOperationException("Thương hiệu chưa được cấu hình tài khoản kết nối LG hoặc thiếu thông tin xác thực.");
+        }
 
         // 4. Gọi LG API lấy setting
-        var rawJson = await _lgClient.GetRawSettingsAsync(machine.LgDeviceId, cred.LgUserNo, cred.AccessToken);
+        var rawJson = await _lgClient.GetRawSettingsAsync(machine.LgDeviceId, cred.LgUserNo!, cred.AccessToken!);
 
         // 5. Parse JSON → UpsertMachineSettingDto (phân biệt Washer / Dryer theo machine.Type)
         var dto = ParseLgSettingJson(rawJson, machine.Type);
@@ -91,7 +94,7 @@ public class LgMachineSettingSyncService : ILgMachineSettingSyncService
             if (store != null)
             {
                 var cred = await _brandLgService.GetValidCredentialAsync(store.BrandId);
-                if (cred != null)
+                if (cred != null && !string.IsNullOrEmpty(cred.LgUserNo) && !string.IsNullOrEmpty(cred.AccessToken))
                 {
                     // 3. Chuẩn bị payload cho LG
                     object payload = machine.Type == Models.Enums.MachineType.Washer
@@ -123,7 +126,7 @@ public class LgMachineSettingSyncService : ILgMachineSettingSyncService
                         };
 
                     // 4. Đẩy lên LG
-                    await _lgClient.UpdateSettingsAsync(machine.LgDeviceId, payload, cred.LgUserNo, cred.AccessToken);
+                    await _lgClient.UpdateSettingsAsync(machine.LgDeviceId, payload, cred.LgUserNo!, cred.AccessToken!);
                 }
             }
         }

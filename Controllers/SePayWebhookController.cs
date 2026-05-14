@@ -48,9 +48,6 @@ namespace QLS.Backend.Controllers
         [HttpPost]
         public async Task<IActionResult> Receive()
         {
-<<<<<<< Updated upstream
-            _logger.LogInformation("[SePay Webhook] Received: {Content} | Amount: {Amount}", dto.Content, dto.TransferAmount);
-=======
             // Đọc raw body để verify signature và dùng cho deserialization
             Request.EnableBuffering();
             using var reader = new StreamReader(Request.Body, Encoding.UTF8, true, 1024, true);
@@ -71,7 +68,6 @@ namespace QLS.Backend.Controllers
             if (dto == null) return BadRequest();
 
             _logger.LogInformation("[SePay Webhook] Received: {Id} | Content: {Content} | Amount: {Amount}", dto.Id, dto.Content, dto.TransferAmount);
->>>>>>> Stashed changes
 
             // 1. Xác thực HMAC-SHA256 (Khuyến nghị từ SePay)
             var signatureHeader = Request.Headers["X-SePay-Signature"].ToString();
@@ -168,32 +164,18 @@ namespace QLS.Backend.Controllers
         private async Task<IActionResult> ProcessPaymentAsync(SePayWebhookDto dto, MachineSession paymentCodeMatch)
         {
             // 0. Kiểm tra chống trùng lặp (Idempotency)
-<<<<<<< Updated upstream
             // Nếu webhook được gọi lại với cùng 1 ID giao dịch, ta bỏ qua và trả về thành công
             bool isDuplicate = await _context.PaymentTransactions
                 .AnyAsync(t => t.GatewayTransactionId == dto.Id.ToString());
-=======
-            var existingTransaction = await _context.PaymentTransactions
-                .FirstOrDefaultAsync(t => t.GatewayTransactionId == dto.Id.ToString());
->>>>>>> Stashed changes
 
-            if (isDuplicate)
+            if (existingTransaction != null && existingTransaction.Status == "Success")
             {
-<<<<<<< Updated upstream
                 _logger.LogInformation("[SePay Webhook] Transaction {Id} already processed. Ignoring.", dto.Id);
                 return Ok(new { success = true });
             }
 
             // 1. Tạo bản ghi giao dịch (Audit Log)
             var transaction = new PaymentTransaction
-=======
-                return Ok(new { success = true });
-            }
-
-            // 1. Tạo hoặc lấy bản ghi giao dịch
-            var transaction = existingTransaction;
-            if (transaction == null)
->>>>>>> Stashed changes
             {
                 Id = Guid.NewGuid(),
                 Amount = dto.TransferAmount,
@@ -212,53 +194,49 @@ namespace QLS.Backend.Controllers
                 // Chỉ xử lý giao dịch tiền vào
                 if (dto.TransferType != "in")
                 {
+                    _logger.LogInformation("[SePay Webhook] Ignoring transaction {Id} because type is {Type}", dto.Id, dto.TransferType);
                     transaction.Status = "Ignored (Not Inbound)";
                     await _context.SaveChangesAsync();
                     return Ok(new { success = true });
                 }
 
-<<<<<<< Updated upstream
                 // 2. Tìm mã thanh toán trong nội dung chuyển khoản (VD: QLS12345)
-                // SePay thường để content chứa mã chúng ta yêu cầu khách nhập.
                 var content = dto.Content ?? "";
+                _logger.LogInformation("[SePay Webhook] Searching for session with payment code in content: {Content}", content);
+                
+                // Tìm session dựa trên PaymentCode. Chấp nhận cả PendingPayment và Running (để retry)
                 var paymentCodeMatch = _context.MachineSessions
-                    .Where(s => s.Status == MachineSessionStatus.PendingPayment)
-                    .AsEnumerable() // Chuyển sang xử lý trên memory để dùng string.Contains hoặc Regex nếu cần
+                    .Where(s => s.Status == MachineSessionStatus.PendingPayment || s.Status == MachineSessionStatus.Running)
+                    .AsEnumerable() 
                     .FirstOrDefault(s => !string.IsNullOrEmpty(s.PaymentCode) && content.ToUpper().Contains(s.PaymentCode.ToUpper()));
 
                 if (paymentCodeMatch == null)
                 {
-                    _logger.LogWarning("[SePay Webhook] No matching PendingPayment session found for content: {Content}", content);
+                    _logger.LogWarning("[SePay Webhook] No matching PendingPayment/Running session found for content: {Content}", content);
                     transaction.Status = "Failed (No Match)";
                     await _context.SaveChangesAsync();
-                    return Ok(new { success = true }); // Vẫn trả về success=true để SePay không gửi lại
+                    return Ok(new { success = true }); 
                 }
 
                 // 3. Kiểm tra số tiền (Cho phép sai số nhỏ nếu cần, hoặc khớp chính xác)
-=======
-                _logger.LogInformation("[Process] Found session {SessionId} for machine {MachineId}", paymentCodeMatch.Id, paymentCodeMatch.MachineId);
-
-                // 3. Kiểm tra số tiền
->>>>>>> Stashed changes
                 if (dto.TransferAmount < paymentCodeMatch.PricePaid)
                 {
-                    _logger.LogWarning("[SePay Webhook] Amount mismatch. Expected: {Expected}, Received: {Received}", paymentCodeMatch.PricePaid, dto.TransferAmount);
+                    _logger.LogWarning("[SePay Webhook] Amount mismatch for session {SessionId}. Expected: {Expected}, Received: {Received}", 
+                        paymentCodeMatch.Id, paymentCodeMatch.PricePaid, dto.TransferAmount);
                     transaction.Status = "MismatchAmount";
                     transaction.MachineSessionId = paymentCodeMatch.Id;
                     await _context.SaveChangesAsync();
                     return Ok(new { success = true });
                 }
 
-                // 4. Xác nhận thanh toán và kích hoạt máy
+                // 4. Xác nhận thanh toán (nếu chưa xác nhận)
                 transaction.MachineSessionId = paymentCodeMatch.Id;
-<<<<<<< Updated upstream
                 transaction.Status = "Success";
                 
                 // Cập nhật trạng thái session sang Running
                 await _dryerService.ConfirmPaymentAsync(paymentCodeMatch.Id, dto.Id.ToString());
 
-                // Kích hoạt ESP32 qua Zigbee
-                // Lấy topic từ Machine.ZigbeeNetworkId
+                // 5. Kích hoạt ESP32 qua Zigbee
                 var machine = await _context.Machines.FindAsync(paymentCodeMatch.MachineId);
                 if (machine != null && !string.IsNullOrEmpty(machine.ZigbeeNetworkId))
                 {
@@ -273,92 +251,6 @@ namespace QLS.Backend.Controllers
 
                     await _zigbeeService.TriggerAsync(machine.ZigbeeNetworkId, pulses);
                     _logger.LogInformation("[SePay Webhook] Triggered Zigbee machine: {Topic} with {Pulses} pulses", machine.ZigbeeNetworkId, pulses);
-=======
-                if (paymentCodeMatch.Status == MachineSessionStatus.PendingPayment)
-                {
-                    _logger.LogInformation("[SePay Webhook] Confirming payment for session {SessionId}", paymentCodeMatch.Id);
-                    await _machineService.ConfirmPaymentAsync(paymentCodeMatch.Id, dto.Id.ToString());
-                }
-                else
-                {
-                    _logger.LogInformation("[SePay Webhook] Session {SessionId} is already PaidWaitingForStart, proceeding to trigger machine.", paymentCodeMatch.Id);
-                }
-
-                // 5. Kích hoạt ESP32 qua Zigbee
-                var machine = await _context.Machines.FindAsync(paymentCodeMatch.MachineId);
-                if (machine == null)
-                {
-                    _logger.LogError("[SePay Webhook] Machine {MachineId} not found for session {SessionId}", paymentCodeMatch.MachineId, paymentCodeMatch.Id);
-                    transaction.Status = "Error (Machine Not Found)";
-                    await _context.SaveChangesAsync();
-                    return Ok(new { success = true });
-                }
-
-                // Sử dụng ZigbeeNetworkId từ máy, nếu không có thì fallback về "QLS.Washer" như PaymentController
-                string zigbeeTopic = !string.IsNullOrEmpty(machine.ZigbeeNetworkId) 
-                    ? machine.ZigbeeNetworkId 
-                    : "QLS.Washer";
-
-                if (string.IsNullOrEmpty(machine.ZigbeeNetworkId))
-                {
-                    _logger.LogWarning("[SePay Webhook] Machine {MachineName} ({MachineId}) has no ZigbeeNetworkId. Falling back to default: {DefaultTopic}", 
-                        machine.Name, machine.Id, zigbeeTopic);
-                }
-                
-                // Tính toán số pulses
-                int pulses = 1;
-                if (machine.Type == MachineType.Dryer)
-                {
-                    var capacityClean = new string(machine.Capacity.Where(c => char.IsDigit(c) || c == '.').ToArray());
-                    decimal.TryParse(capacityClean, out var cap);
-
-                    var dryerPriceMode = await _context.PriceModePerSessions
-                        .OfType<DryerPriceMode>()
-                        .FirstOrDefaultAsync(m => m.PriceListId == paymentCodeMatch.PriceListId && 
-                                                m.MachineCapacityKg == cap);
-
-                    if (dryerPriceMode != null && dryerPriceMode.DurationMinutes > 0)
-                    {
-                        pulses = paymentCodeMatch.TotalMinutes / dryerPriceMode.DurationMinutes;
-                        _logger.LogInformation("[SePay Webhook] Calculated {Pulses} pulses for Dryer ({TotalMin}/{StepMin})", 
-                            pulses, paymentCodeMatch.TotalMinutes, dryerPriceMode.DurationMinutes);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("[SePay Webhook] Could not find DryerPriceMode for capacity {Cap}. Defaulting to 1 pulse.", cap);
-                    }
-                }
-                else
-                {
-                    _logger.LogInformation("[SePay Webhook] Machine is Washer, using default 1 pulse.");
-                }
-
-                _logger.LogInformation("[SePay Webhook] TRIGGERING ZIGBEE: Topic={Topic}, Pulses={Pulses}", zigbeeTopic, pulses);
-                
-                try 
-                {
-                    // Gửi lệnh bắn xu
-                    var zigbeeId = string.IsNullOrEmpty(machine.ZigbeeNetworkId) ? "QLS.Washer" : machine.ZigbeeNetworkId;
-                    _logger.LogInformation("[SePay Webhook] Sending pulse to Zigbee ID: {ZigbeeId}", zigbeeId);
-                    
-                    _hardwareTracker.UpdateStatus(paymentCodeMatch.Id, $"Đang kết nối tới thiết bị {zigbeeId} ({pulses} lần bắn xu)...");
-                    await _zigbeeService.TriggerAsync(zigbeeId, pulses);
-                    _hardwareTracker.UpdateStatus(paymentCodeMatch.Id, "Đã gửi lệnh kích hoạt máy.");
-
-                    _logger.LogInformation("[SePay Webhook] Zigbee trigger sent successfully.");
-                    transaction.Status = "Success";
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "[SePay Webhook] FAILED to trigger Zigbee for session {SessionId}. Machine might be offline or MQTT Broker error.", paymentCodeMatch.Id);
-                    
-                    // Cập nhật trạng thái Session thành Error để thông báo cho người dùng
-                    await _machineService.UpdateSessionStatusAsync(paymentCodeMatch.Id, MachineSessionStatus.Error, "Lỗi kết nối thiết bị bắn xu. Vui lòng liên hệ quản lý.");
-                    
-                    transaction.Status = "Error (Trigger Failed)";
-                    await _context.SaveChangesAsync();
-                    return Ok(new { success = true }); // Trả về Ok cho SePay để không retry, nhưng máy đã lỗi
->>>>>>> Stashed changes
                 }
 
                 await _context.SaveChangesAsync();
@@ -366,9 +258,10 @@ namespace QLS.Backend.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[SePay Webhook] Error processing webhook");
+                _logger.LogError(ex, "[SePay Webhook] Error processing webhook for transaction {Id}", dto.Id);
                 transaction.Status = "Error";
                 await _context.SaveChangesAsync();
+                // Trả về 500 để SePay có thể retry nếu là lỗi tạm thời (như MQTT timeout)
                 return StatusCode(500);
             }
         }

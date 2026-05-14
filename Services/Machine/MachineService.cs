@@ -5,17 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Data;
 using QLS.Backend.Models;
 using QLS.Backend.DTOs.Machine;
-
 using QLS.Backend.Interfaces;
-
 using QLS.Backend.Interfaces.Pricing;
 using QLS.Backend.DTOs.Pricing;
 using QLS.Backend.Models.Enums;
-<<<<<<< Updated upstream:Services/Machine/DryerService.cs
-=======
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
->>>>>>> Stashed changes:Services/Machine/MachineService.cs
 
 namespace QLS.Backend.Services
 {
@@ -23,13 +18,6 @@ namespace QLS.Backend.Services
     {
         private readonly AppDbContext _context;
         private readonly IPricingCalculatorService _pricingService;
-<<<<<<< Updated upstream:Services/Machine/DryerService.cs
-
-        public DryerService(AppDbContext context, IPricingCalculatorService pricingService)
-        {
-            _context = context;
-            _pricingService = pricingService;
-=======
         private readonly IConfiguration _configuration;
         private readonly IHostEnvironment _env;
 
@@ -39,28 +27,39 @@ namespace QLS.Backend.Services
             _pricingService = pricingService;
             _configuration = configuration;
             _env = env;
->>>>>>> Stashed changes:Services/Machine/MachineService.cs
         }
 
         public async Task<Guid> SaveSessionAsync(CreateMachineSessionDto dto)
         {
             var now = DateTime.UtcNow;
+            
+            // Đảm bảo UserId tồn tại để tránh lỗi Foreign Key
+            var userExists = await _context.Users.AnyAsync(u => u.Id == dto.UserId);
+            var finalUserId = dto.UserId;
+            
+            if (!userExists)
+            {
+                var firstUser = await _context.Users.FirstOrDefaultAsync();
+                if (firstUser != null)
+                {
+                    finalUserId = firstUser.Id;
+                }
+            }
+
             var session = new MachineSession
             {
                 Id           = Guid.NewGuid(),
                 MachineId    = dto.MachineId,
                 StoreId      = dto.BranchId,
-                UserId       = dto.UserId,
+                UserId       = finalUserId,
                 PricePaid    = dto.PricePaid,
                 TaxAmount    = 0, 
                 TotalMinutes = dto.TotalMinutes,
                 StartTime    = now,
                 EndTime      = now.AddMinutes(dto.TotalMinutes),
-                Status       = MachineSessionStatus.PendingPayment, // 䌜ờ thanh toán - chưa chạy
+                Status       = MachineSessionStatus.PendingPayment,
                 CreatedAt    = now,
                 UpdatedAt    = now,
-                
-                // Các trường mới bổ sung
                 PriceListId  = dto.PriceListId,
                 PricingMode  = dto.PricingMode,
                 WeightKg     = dto.WeightKg,
@@ -85,19 +84,14 @@ namespace QLS.Backend.Services
             switch (status)
             {
                 case MachineSessionStatus.Completed:
-                    // Máy hoàn thành — ghi nhận thời gian kết thúc thực tế
                     session.ActualEndTime = DateTime.UtcNow;
                     break;
-
                 case MachineSessionStatus.Error:
-                    // Máy lỗi — đánh dấu cần xử lý hoàn tiền
                     session.ActualEndTime = DateTime.UtcNow;
                     session.RefundStatus  = "Pending";
                     session.RefundNote    = refundNote ?? "Máy gặp sự cố trong lúc vận hành.";
                     break;
-
                 case MachineSessionStatus.Cancelled:
-                    // Hủy trước khi chạy — session đã ở PendingPayment nên không cần hoàn tiền
                     session.ActualEndTime = DateTime.UtcNow;
                     break;
             }
@@ -106,23 +100,18 @@ namespace QLS.Backend.Services
             return true;
         }
 
-        /// <summary>
-        /// Xác nhận thanh toán thành công: chuyển session từ PendingPayment → Running.
-        /// Gọi sau khi payment gateway trả về thành công và máy bắt đầu chạy.
-        /// </summary>
         public async Task<bool> ConfirmPaymentAsync(Guid sessionId, string? transactionId = null)
         {
             var session = await _context.MachineSessions.FindAsync(sessionId);
             if (session == null) return false;
 
             if (session.Status != MachineSessionStatus.PendingPayment)
-                throw new InvalidOperationException(
-                    $"Session không thể xác nhận: trạng thái hiận tại là '{session.Status}', chỉ có thể confirm khi PendingPayment.");
+                throw new InvalidOperationException($"Session không thể xác nhận: trạng thái hiện tại là '{session.Status}'");
 
             var now = DateTime.UtcNow;
             session.Status             = MachineSessionStatus.PaidWaitingForStart;
             session.PaymentConfirmedAt = now;
-            session.StartTime          = now;                          // Máy bắt đầu chạy từ lúc này
+            session.StartTime          = now;
             session.EndTime            = now.AddMinutes(session.TotalMinutes);
             session.TransactionId      = transactionId;
             session.UpdatedAt          = now;
@@ -133,19 +122,13 @@ namespace QLS.Backend.Services
 
         public async Task<InitPaymentResponseDto> InitSessionAsync(InitPaymentRequestDto dto)
         {
-<<<<<<< Updated upstream:Services/Machine/DryerService.cs
-            // 1. Lấy thông tin máy từ DB
-            var machine = await _context.Machines.FindAsync(dto.MachineId);
-=======
             var machine = await _context.Machines
                 .Include(m => m.Store)
                     .ThenInclude(s => s!.Brand)
                         .ThenInclude(b => b.PaymentConfigs)
                 .FirstOrDefaultAsync(m => m.Id == dto.MachineId);
->>>>>>> Stashed changes:Services/Machine/MachineService.cs
             if (machine == null) throw new Exception("Không tìm thấy máy");
 
-            // 2. Lấy giá chuẩn từ PricingService
             var capacityRaw = machine.Capacity ?? "0";
             var capacityClean = new string(capacityRaw.Where(c => char.IsDigit(c) || c == '.').ToArray());
             
@@ -157,31 +140,24 @@ namespace QLS.Backend.Services
                 ClothingWeightKg = dto.WeightKg
             });
 
-            if (priceResponse == null) 
-                throw new Exception("Không tìm thấy bảng giá hoặc máy không hỗ trợ.");
+            if (priceResponse == null) throw new Exception("Không tìm thấy bảng giá.");
 
             decimal totalAmount = 0;
             int totalMinutes = 0;
 
-            // 3. TÍNH TOÁN THEO LOẠI MÁY
             if (machine.Type == MachineType.Dryer)
             {
                 if (!dto.RequestedSteps.HasValue || !priceResponse.MinInitialSteps.HasValue)
                     throw new Exception("Thiếu thông tin số bước sấy.");
-
-                if (dto.RequestedSteps.Value < priceResponse.MinInitialSteps.Value)
-                    throw new Exception($"Số bước tối thiểu là {priceResponse.MinInitialSteps.Value}");
-
                 totalAmount = dto.RequestedSteps.Value * priceResponse.FinalPrice;
                 totalMinutes = dto.RequestedSteps.Value * (priceResponse.DurationMinutes ?? 0);
             }
-            else // Washer
+            else
             {
                 totalAmount = priceResponse.FinalPrice;
                 totalMinutes = priceResponse.DurationMinutes ?? 0;
             }
 
-            // 4. LƯU DATABASE với trạng thái PendingPayment (chưa thu tiền, chưa chạy máy)
             var paymentCode = $"QLS{Guid.NewGuid().ToString().Substring(0, 5).ToUpper()}";
 
             var sessionDto = new CreateMachineSessionDto
@@ -200,7 +176,7 @@ namespace QLS.Backend.Services
             };
 
             var sessionId = await SaveSessionAsync(sessionDto);
-            
+
             // Ưu tiên lấy cấu hình SePay từ Brand, nếu không có thì lấy từ appsettings.json
             var brand = machine?.Store?.Brand;
             var sepayConfig = brand?.PaymentConfigs?.FirstOrDefault(p => p.Provider == "SEPAY" && p.IsActive);
@@ -208,15 +184,11 @@ namespace QLS.Backend.Services
             var brandAcc = sepayConfig?.AccountNumber;
             var brandBank = sepayConfig?.BankCode;
 
-<<<<<<< Updated upstream:Services/Machine/DryerService.cs
-            // 5. Trả về thông tin — client sẽ dùng SessionId này để confirm sau khi thanh toán
-=======
             var acc = _env.IsDevelopment() ? "12345678" : (brandAcc ?? _configuration["SePay:AccountNumber"]);
             var bank = _env.IsDevelopment() ? "MBBank" : (brandBank ?? _configuration["SePay:Bank"] ?? "MBBank");
             
             var qrUrl = $"https://qr.sepay.vn/img?acc={acc}&bank={bank}&amount={(int)totalAmount}&des={paymentCode}";
 
->>>>>>> Stashed changes:Services/Machine/MachineService.cs
             return new InitPaymentResponseDto
             {
                 SessionId              = sessionId,
@@ -224,15 +196,11 @@ namespace QLS.Backend.Services
                 TotalMinutes           = totalMinutes,
                 PaymentMethod          = dto.PaymentMethod,
                 PaymentCode            = paymentCode,
-<<<<<<< Updated upstream:Services/Machine/DryerService.cs
-                Message                = "Session đã tạo. Vui lòng hoàn tất thanh toán để khởi động máy."
-=======
                 QrUrl                  = qrUrl,
                 IsSandbox              = _env.IsDevelopment(),
                 Message                = _env.IsDevelopment() 
                                          ? "CHẾ ĐỘ THỬ NGHIỆM: Bạn có thể nhấn 'Gia lập thanh toán' để kích hoạt máy." 
                                          : "Session đã tạo. Vui lòng hoàn tất thanh toán để khởi động máy."
->>>>>>> Stashed changes:Services/Machine/MachineService.cs
             };
         }
     }

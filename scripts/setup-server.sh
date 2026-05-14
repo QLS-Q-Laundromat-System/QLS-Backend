@@ -79,6 +79,12 @@ CORS_ORIGIN_1=https://your-frontend-domain.com
 # MQTT
 MQTT_HOST=localhost
 MQTT_PORT=1883
+
+# pgAdmin (Database Web UI)
+PGADMIN_EMAIL=admin@qls.com
+PGADMIN_PASSWORD=admin123
+# Fix cho môi trường HTTP/IP trực tiếp
+PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=False
 ENV
   chmod 600 ${APP_DIR}/.env
   echo_green "Tạo file .env tại ${APP_DIR}/.env"
@@ -90,11 +96,13 @@ chown -R ubuntu:ubuntu ${APP_DIR}
 echo_green "Thư mục ${APP_DIR} xong!"
 
 # ─── 4. MỞ FIREWALL ─────────────────────────────────────────────────────────
-echo_yellow "4/4 Mở firewall port ${DOTNET_PORT}..."
+echo_yellow "4/4 Mở firewall port ${DOTNET_PORT}, 5050 (pgAdmin), 5432 (Postgres)..."
 iptables -I INPUT 6 -m state --state NEW -p tcp --dport ${DOTNET_PORT} -j ACCEPT
+iptables -I INPUT 6 -m state --state NEW -p tcp --dport 5050 -j ACCEPT
+iptables -I INPUT 6 -m state --state NEW -p tcp --dport 5432 -j ACCEPT
 apt-get install -y iptables-persistent 2>/dev/null || true
 netfilter-persistent save 2>/dev/null || true
-echo_green "Port ${DOTNET_PORT} đã mở!"
+echo_green "Các port đã mở!"
 
 echo ""
 echo "════════════════════════════════════════"
