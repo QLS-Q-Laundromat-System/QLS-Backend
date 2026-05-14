@@ -116,7 +116,7 @@ namespace QLS.Backend.Controllers
             // 0.1 Tìm mã thanh toán trong nội dung chuyển khoản
             var content = dto.Content ?? "";
             var paymentCodeMatch = _context.MachineSessions
-                .Where(s => s.Status == MachineSessionStatus.PendingPayment || s.Status == MachineSessionStatus.PaidWaitingForStart)
+                .Where(s => s.Status == MachineSessionStatus.PendingPayment || s.Status == MachineSessionStatus.PaidWaitingForStart || s.Status == MachineSessionStatus.Running)
                 .AsEnumerable() 
                 .FirstOrDefault(s => !string.IsNullOrEmpty(s.PaymentCode) && content.ToUpper().Contains(s.PaymentCode.ToUpper()));
 
@@ -146,7 +146,7 @@ namespace QLS.Backend.Controllers
 
             var session = await _context.MachineSessions
                 .FirstOrDefaultAsync(s => s.PaymentCode == request.PaymentCode && 
-                                        (s.Status == MachineSessionStatus.PendingPayment || s.Status == MachineSessionStatus.PaidWaitingForStart));
+                                        (s.Status == MachineSessionStatus.PendingPayment || s.Status == MachineSessionStatus.PaidWaitingForStart || s.Status == MachineSessionStatus.Running));
 
             if (session == null) return NotFound(new { message = "Khong tim thay session dang cho" });
 
@@ -168,7 +168,7 @@ namespace QLS.Backend.Controllers
             bool isDuplicate = await _context.PaymentTransactions
                 .AnyAsync(t => t.GatewayTransactionId == dto.Id.ToString());
 
-            if (existingTransaction != null && existingTransaction.Status == "Success")
+            if (isDuplicate)
             {
                 _logger.LogInformation("[SePay Webhook] Transaction {Id} already processed. Ignoring.", dto.Id);
                 return Ok(new { success = true });
@@ -200,23 +200,7 @@ namespace QLS.Backend.Controllers
                     return Ok(new { success = true });
                 }
 
-                // 2. Tìm mã thanh toán trong nội dung chuyển khoản (VD: QLS12345)
-                var content = dto.Content ?? "";
-                _logger.LogInformation("[SePay Webhook] Searching for session with payment code in content: {Content}", content);
-                
-                // Tìm session dựa trên PaymentCode. Chấp nhận cả PendingPayment và Running (để retry)
-                var paymentCodeMatch = _context.MachineSessions
-                    .Where(s => s.Status == MachineSessionStatus.PendingPayment || s.Status == MachineSessionStatus.Running)
-                    .AsEnumerable() 
-                    .FirstOrDefault(s => !string.IsNullOrEmpty(s.PaymentCode) && content.ToUpper().Contains(s.PaymentCode.ToUpper()));
-
-                if (paymentCodeMatch == null)
-                {
-                    _logger.LogWarning("[SePay Webhook] No matching PendingPayment/Running session found for content: {Content}", content);
-                    transaction.Status = "Failed (No Match)";
-                    await _context.SaveChangesAsync();
-                    return Ok(new { success = true }); 
-                }
+                _logger.LogInformation("[Process] Found session {SessionId} for machine {MachineId}", paymentCodeMatch.Id, paymentCodeMatch.MachineId);
 
                 // 3. Kiểm tra số tiền (Cho phép sai số nhỏ nếu cần, hoặc khớp chính xác)
                 if (dto.TransferAmount < paymentCodeMatch.PricePaid)
@@ -234,7 +218,7 @@ namespace QLS.Backend.Controllers
                 transaction.Status = "Success";
                 
                 // Cập nhật trạng thái session sang Running
-                await _dryerService.ConfirmPaymentAsync(paymentCodeMatch.Id, dto.Id.ToString());
+                await _machineService.ConfirmPaymentAsync(paymentCodeMatch.Id, dto.Id.ToString());
 
                 // 5. Kích hoạt ESP32 qua Zigbee
                 var machine = await _context.Machines.FindAsync(paymentCodeMatch.MachineId);
