@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace QLS.Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class AddPaymentIntegration : Migration
+    public partial class SyncDatabaseSchema : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

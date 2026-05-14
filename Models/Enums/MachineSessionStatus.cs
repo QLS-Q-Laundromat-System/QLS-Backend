@@ -6,6 +6,7 @@ namespace QLS.Backend.Models.Enums
         Running = 1,        
         Completed = 2,
         Cancelled = 3,
-        Error = 4
+        Error = 4,
+        PaidWaitingForStart = 5
     }
 }

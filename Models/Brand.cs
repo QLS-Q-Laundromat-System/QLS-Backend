@@ -20,5 +20,7 @@ namespace QLS.Backend.Models
         // Navigation: thông tin xác thực LG OAuth (1 Brand - 1 tài khoản LG)
         public BrandLgCredential? LgCredential { get; set; }
 
+        // --- Cấu hình Thanh toán ---
+        public ICollection<PaymentConfig> PaymentConfigs { get; set; } = new List<PaymentConfig>();
     }
 }

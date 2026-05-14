@@ -11,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddConfigSwagger();
+builder.Services.AddHostedService<QLS.Backend.Services.Machine.MachineStatusMonitoringService>();
+builder.Services.AddHostedService<QLS.Backend.Services.Ziggbee.MqttListenerService>();
 
 // Khai báo kết nối Database (Sử dụng PostgreSQL)
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -18,6 +20,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddApplicationServices();
 builder.Services.AddCustomCors(builder.Configuration);
+builder.Services.AddSingleton<QLS.Backend.Services.Machine.IHardwareTrackerService, QLS.Backend.Services.Machine.HardwareTrackerService>();
 
 // Cấu hình JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

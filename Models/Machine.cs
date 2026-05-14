@@ -13,6 +13,9 @@ public class Machine
     [Required]
     public Guid StoreId { get; set; }
 
+    [ForeignKey(nameof(StoreId))]
+    public Store? Store { get; set; }
+
     [Required]
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;

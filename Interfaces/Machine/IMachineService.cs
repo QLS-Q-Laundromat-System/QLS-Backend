@@ -5,7 +5,7 @@ using QLS.Backend.DTOs.Machine;
 
 namespace QLS.Backend.Interfaces
 {
-    public interface IDryerService
+    public interface IMachineService
     {
         /// <summary>Lưu session mới với status PendingPayment, trả về sessionId.</summary>
         Task<Guid> SaveSessionAsync(CreateMachineSessionDto dto);
