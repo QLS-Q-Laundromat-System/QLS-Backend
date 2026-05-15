@@ -69,11 +69,12 @@ public static class ServiceExtensions
             // Dùng ApiKey: Bắt buộc gửi chính xác những gì người dùng nhập
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                Description = "⚠️ QUAN TRỌNG: Bạn PHẢI gõ tay chữ 'Bearer ' (có khoảng trắng) rồi mới dán token vào.\nVí dụ: Bearer eyJhbGci...",
+                Description = "Dán JWT token vào đây. Swagger sẽ tự thêm tiền tố Bearer.",
                 Name = "Authorization",
                 In = ParameterLocation.Header,
-                Type = SecuritySchemeType.ApiKey, // Dùng lại ApiKey
-                Scheme = "Bearer"
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT"
             });
 
             options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
