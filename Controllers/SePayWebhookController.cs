@@ -69,10 +69,25 @@ namespace QLS.Backend.Controllers
 
             _logger.LogInformation("[SePay Webhook] Received: {Id} | Content: {Content} | Amount: {Amount}", dto.Id, dto.Content, dto.TransferAmount);
 
+            // Lấy cấu hình Secret/Token từ DB dựa trên AccountNumber
+            string? webhookSecret = _configuration["SePay:WebhookSecret"];
+            string? secretToken = _configuration["SePay:WebhookToken"];
+
+            if (!string.IsNullOrEmpty(dto.AccountNumber))
+            {
+                var paymentConfig = await _context.PaymentConfigs
+                    .FirstOrDefaultAsync(p => p.AccountNumber == dto.AccountNumber && p.IsActive && p.Provider == "SEPAY");
+                
+                if (paymentConfig != null)
+                {
+                    if (!string.IsNullOrEmpty(paymentConfig.SecretKey)) webhookSecret = paymentConfig.SecretKey;
+                    if (!string.IsNullOrEmpty(paymentConfig.ApiKey)) secretToken = paymentConfig.ApiKey;
+                }
+            }
+
             // 1. Xác thực HMAC-SHA256 (Khuyến nghị từ SePay)
             var signatureHeader = Request.Headers["X-SePay-Signature"].ToString();
             var timestampHeader = Request.Headers["X-SePay-Timestamp"].ToString();
-            var webhookSecret = _configuration["SePay:WebhookSecret"];
 
             if (!string.IsNullOrEmpty(webhookSecret) && !string.IsNullOrEmpty(signatureHeader))
             {
@@ -104,9 +119,8 @@ namespace QLS.Backend.Controllers
             {
                 // Fallback: Kiểm tra API Key Token nếu không dùng HMAC
                 var authHeader = Request.Headers["Authorization"].ToString();
-                var secretToken = _configuration["SePay:WebhookToken"];
 
-                if (string.IsNullOrEmpty(authHeader) || !authHeader.Contains(secretToken))
+                if (string.IsNullOrEmpty(authHeader) || (!string.IsNullOrEmpty(secretToken) && !authHeader.Contains(secretToken)))
                 {
                     _logger.LogWarning("[SePay Webhook] UNAUTHORIZED access attempt (API Key)! Header: {Header}", authHeader);
                     return Unauthorized(new { message = "Invalid API Token" });
