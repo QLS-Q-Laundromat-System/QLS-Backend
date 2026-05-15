@@ -27,12 +27,16 @@ public class ZigbeeService : IZigbeeService
 {
     private readonly string _mqttHost;
     private readonly int    _mqttPort;
+    private readonly string? _mqttUser;
+    private readonly string? _mqttPass;
     private readonly ILogger<ZigbeeService> _logger;
 
     public ZigbeeService(IConfiguration configuration, ILogger<ZigbeeService> logger)
     {
         _mqttHost = configuration["Zigbee2Mqtt:Host"] ?? "localhost";
         _mqttPort = int.TryParse(configuration["Zigbee2Mqtt:Port"], out var port) ? port : 1883;
+        _mqttUser = configuration["Zigbee2Mqtt:Username"];
+        _mqttPass = configuration["Zigbee2Mqtt:Password"];
         _logger   = logger;
     }
 
@@ -65,11 +69,17 @@ public class ZigbeeService : IZigbeeService
         var factory = new MqttFactory();
         using var client = factory.CreateMqttClient();
 
-        var options = new MqttClientOptionsBuilder()
+        var optionsBuilder = new MqttClientOptionsBuilder()
             .WithTcpServer(_mqttHost, _mqttPort)
             .WithClientId($"QLS-Backend-{Guid.NewGuid():N}")
-            .WithCleanSession()
-            .Build();
+            .WithCleanSession();
+
+        if (!string.IsNullOrEmpty(_mqttUser))
+        {
+            optionsBuilder.WithCredentials(_mqttUser, _mqttPass);
+        }
+
+        var options = optionsBuilder.Build();
 
         await client.ConnectAsync(options, CancellationToken.None);
 

@@ -141,8 +141,8 @@ Interfaces/
  IZigbeeService.cs
  LG/ILgAuthTokenService.cs
  Machine/
-  IDryerService.cs
   ILgMachineSettingSyncService.cs
+  IMachineService.cs
   IMachineSettingService.cs
  Pricing/
   IPricingCalculatorService.cs
@@ -198,8 +198,8 @@ Migrations/
  20260425141136_AddRatingMoneyToMachineSetting.Designer.cs
  20260427030452_AddDiscountCodeTables.cs
  20260427030452_AddDiscountCodeTables.Designer.cs
- 20260512032419_AddPaymentIntegration.cs
- 20260512032419_AddPaymentIntegration.Designer.cs
+ 20260513083640_SyncDatabaseSchema.cs
+ 20260513083640_SyncDatabaseSchema.Designer.cs
  AppDbContextModelSnapshot.cs
 Models/
  Account.cs
@@ -220,6 +220,7 @@ Models/
  Machine.cs
  MachineSession.cs
  MachineSetting.cs
+ PaymentConfig.cs
  PaymentTransaction.cs
  PriceList.cs
  PriceListStoreType.cs
@@ -247,15 +248,19 @@ Services/
   LgMapper.cs
   MachineDetailService.cs
  Machine/
-  DryerService.cs
+  HardwareTrackerService.cs
   LgMachineSettingSyncService.cs
+  MachineService.cs
   MachineSettingService.cs
+  MachineStatusMonitoringService.cs
  Pricing/
   PricingCalculatorService.cs
   PricingService.cs
  Revenue/RevenueService.cs
  Stores/StoreService.cs
- Ziggbee/ZigbeeService.cs
+ Ziggbee/
+  MqttListenerService.cs
+  ZigbeeService.cs
 WeatherForecast.cs
 
 [metadataReferences]

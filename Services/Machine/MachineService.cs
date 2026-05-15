@@ -10,20 +10,23 @@ using QLS.Backend.Interfaces.Pricing;
 using QLS.Backend.DTOs.Pricing;
 using QLS.Backend.Models.Enums;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace QLS.Backend.Services
 {
-    public class DryerService : IDryerService
+    public class MachineService : IMachineService
     {
         private readonly AppDbContext _context;
         private readonly IPricingCalculatorService _pricingService;
         private readonly IConfiguration _configuration;
+        private readonly IHostEnvironment _env;
 
-        public DryerService(AppDbContext context, IPricingCalculatorService pricingService, IConfiguration configuration)
+        public MachineService(AppDbContext context, IPricingCalculatorService pricingService, IConfiguration configuration, IHostEnvironment env)
         {
             _context = context;
             _pricingService = pricingService;
             _configuration = configuration;
+            _env = env;
         }
 
         public async Task<Guid> SaveSessionAsync(CreateMachineSessionDto dto)
@@ -106,7 +109,7 @@ namespace QLS.Backend.Services
                 throw new InvalidOperationException($"Session không thể xác nhận: trạng thái hiện tại là '{session.Status}'");
 
             var now = DateTime.UtcNow;
-            session.Status             = MachineSessionStatus.Running;
+            session.Status             = MachineSessionStatus.PaidWaitingForStart;
             session.PaymentConfirmedAt = now;
             session.StartTime          = now;
             session.EndTime            = now.AddMinutes(session.TotalMinutes);
@@ -119,7 +122,11 @@ namespace QLS.Backend.Services
 
         public async Task<InitPaymentResponseDto> InitSessionAsync(InitPaymentRequestDto dto)
         {
-            var machine = await _context.Machines.FindAsync(dto.MachineId);
+            var machine = await _context.Machines
+                .Include(m => m.Store)
+                    .ThenInclude(s => s!.Brand)
+                        .ThenInclude(b => b.PaymentConfigs)
+                .FirstOrDefaultAsync(m => m.Id == dto.MachineId);
             if (machine == null) throw new Exception("Không tìm thấy máy");
 
             var capacityRaw = machine.Capacity ?? "0";
@@ -170,8 +177,16 @@ namespace QLS.Backend.Services
 
             var sessionId = await SaveSessionAsync(sessionDto);
 
-            var acc = _configuration["SePay:AccountNumber"];
-            var bank = _configuration["SePay:Bank"] ?? "MBBank";
+            // Ưu tiên lấy cấu hình SePay từ Brand, nếu không có thì lấy từ appsettings.json
+            var brand = machine?.Store?.Brand;
+            var sepayConfig = brand?.PaymentConfigs?.FirstOrDefault(p => p.Provider == "SEPAY" && p.IsActive);
+            
+            var brandAcc = sepayConfig?.AccountNumber;
+            var brandBank = sepayConfig?.BankCode;
+
+            var acc = _env.IsDevelopment() ? "12345678" : (brandAcc ?? _configuration["SePay:AccountNumber"]);
+            var bank = _env.IsDevelopment() ? "MBBank" : (brandBank ?? _configuration["SePay:Bank"] ?? "MBBank");
+            
             var qrUrl = $"https://qr.sepay.vn/img?acc={acc}&bank={bank}&amount={(int)totalAmount}&des={paymentCode}";
 
             return new InitPaymentResponseDto
@@ -182,7 +197,10 @@ namespace QLS.Backend.Services
                 PaymentMethod          = dto.PaymentMethod,
                 PaymentCode            = paymentCode,
                 QrUrl                  = qrUrl,
-                Message                = "Session đã tạo. Vui lòng hoàn tất thanh toán để khởi động máy."
+                IsSandbox              = _env.IsDevelopment(),
+                Message                = _env.IsDevelopment() 
+                                         ? "CHẾ ĐỘ THỬ NGHIỆM: Bạn có thể nhấn 'Gia lập thanh toán' để kích hoạt máy." 
+                                         : "Session đã tạo. Vui lòng hoàn tất thanh toán để khởi động máy."
             };
         }
     }

@@ -222,7 +222,7 @@ namespace QLS.Backend.Services.Stores
             return accounts;
         }
 
-        public async Task<List<Machine>> GetMachinesByStoreIdAsync(Guid storeId)
+        public async Task<List<QLS.Backend.Models.Machine>> GetMachinesByStoreIdAsync(Guid storeId)
         {
             return await _context.Machines
                 .Where(m => m.StoreId == storeId)

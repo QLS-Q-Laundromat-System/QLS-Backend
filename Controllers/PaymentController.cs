@@ -14,12 +14,12 @@ namespace QLS.Backend.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly IZigbeeService _zigbeeService;
-        private readonly IDryerService _dryerService;
+        private readonly IMachineService _machineService;
 
-        public PaymentController(IZigbeeService zigbeeService, IDryerService dryerService)
+        public PaymentController(IZigbeeService zigbeeService, IMachineService machineService)
         {
             _zigbeeService = zigbeeService;
-            _dryerService = dryerService;
+            _machineService = machineService;
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace QLS.Backend.Controllers
                     IsExtension = isExtension
                 };
 
-                await _dryerService.SaveSessionAsync(sessionDto);
+                await _machineService.SaveSessionAsync(sessionDto);
                     
                 Console.WriteLine($"[DB] Đã lưu lịch sử sấy: User {userId}, {minutes} phút, Giá: {pricePaid}.");
             }

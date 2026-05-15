@@ -28,6 +28,7 @@ namespace QLS.Backend.Data
         public DbSet<DiscountCodeStore> DiscountCodeStores { get; set; }
         public DbSet<DiscountCodeUsage> DiscountCodeUsages { get; set; }
         public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
+        public DbSet<PaymentConfig> PaymentConfigs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -68,7 +69,7 @@ namespace QLS.Backend.Data
 
             // --- Cấu hình quan hệ cho Machine ---
             modelBuilder.Entity<Machine>()
-                .HasOne<Store>()
+                .HasOne(m => m.Store)
                 .WithMany(s => s.Machines)
                 .HasForeignKey(m => m.StoreId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -101,6 +102,13 @@ namespace QLS.Backend.Data
                 .HasOne(c => c.Brand)
                 .WithOne(b => b.LgCredential)
                 .HasForeignKey<BrandLgCredential>(c => c.BrandId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // --- Cấu hình quan hệ cho PaymentConfig ---
+            modelBuilder.Entity<PaymentConfig>()
+                .HasOne(p => p.Brand)
+                .WithMany(b => b.PaymentConfigs)
+                .HasForeignKey(p => p.BrandId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // --- Cấu hình Inheritance cho PriceModePerSession (TPH) ---

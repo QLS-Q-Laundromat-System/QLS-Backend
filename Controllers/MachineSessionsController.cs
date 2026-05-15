@@ -11,11 +11,13 @@ namespace QLS.Backend.Controllers
     [Route("api/v1/sessions")]
     public class MachineSessionsController : ControllerBase
     {
-        private readonly IDryerService _dryerService;
+        private readonly IMachineService _machineService;
+        private readonly QLS.Backend.Services.Machine.IHardwareTrackerService _hardwareTracker;
 
-        public MachineSessionsController(IDryerService dryerService)
+        public MachineSessionsController(IMachineService machineService, QLS.Backend.Services.Machine.IHardwareTrackerService hardwareTracker)
         {
-            _dryerService = dryerService;
+            _machineService = machineService;
+            _hardwareTracker = hardwareTracker;
         }
 
         /// <summary>
@@ -29,7 +31,7 @@ namespace QLS.Backend.Controllers
         {
             try
             {
-                var result = await _dryerService.InitSessionAsync(dto);
+                var result = await _machineService.InitSessionAsync(dto);
                 return Ok(ApiResponse<InitPaymentResponseDto>.Success(result));
             }
             catch (Exception ex)
@@ -49,7 +51,7 @@ namespace QLS.Backend.Controllers
         {
             try
             {
-                var result = await _dryerService.ConfirmPaymentAsync(id, dto.TransactionId);
+                var result = await _machineService.ConfirmPaymentAsync(id, dto.TransactionId);
                 if (!result)
                     return NotFound(new { message = "Không tìm thấy session." });
 
@@ -74,7 +76,7 @@ namespace QLS.Backend.Controllers
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateSessionStatusDto dto)
         {
-            var result = await _dryerService.UpdateSessionStatusAsync(id, dto.Status, dto.RefundNote);
+            var result = await _machineService.UpdateSessionStatusAsync(id, dto.Status, dto.RefundNote);
             if (!result)
                 return NotFound(new { message = "Không tìm thấy session." });
 
@@ -98,7 +100,8 @@ namespace QLS.Backend.Controllers
             { 
                 sessionId = session.Id,
                 status = session.Status,
-                machineId = session.MachineId
+                machineId = session.MachineId,
+                hardwareStatus = _hardwareTracker.GetStatus(session.Id) ?? "Đang chờ thiết bị..."
             }));
         }
     }

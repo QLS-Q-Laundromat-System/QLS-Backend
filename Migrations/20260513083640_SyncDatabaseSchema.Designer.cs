@@ -12,8 +12,8 @@ using QLS.Backend.Data;
 namespace QLS.Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260512032419_AddPaymentIntegration")]
-    partial class AddPaymentIntegration
+    [Migration("20260513083640_SyncDatabaseSchema")]
+    partial class SyncDatabaseSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

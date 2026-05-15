@@ -15,19 +15,21 @@ public static class ServiceExtensions
     {
         services.Scan(scan => scan
             .FromAssembliesOf(typeof(IMachineDetailService))
-            .AddClasses(classes => classes.InNamespaces(
-                "QLS.Backend.Services",
-                "QLS.Backend.Services.LgServices.authToken",
-                "QLS.Backend.Services.Brand",
-                "QLS.Backend.Services.MachineSettings",
-                "QLS.Backend.Services.Machine",
-                "QLS.Backend.Services.LgService",
-                "QLS.Backend.Services.Revenue",
-                "QLS.Backend.Services.Pricing",
-                "QLS.Backend.Services.Dashboard",
-                "QLS.Backend.Services.Stores",
-                "QLS.Backend.Services.DiscountCode"
-            ))
+            .AddClasses(classes => classes
+                .InNamespaces(
+                    "QLS.Backend.Services",
+                    "QLS.Backend.Services.LgServices.authToken",
+                    "QLS.Backend.Services.Brand",
+                    "QLS.Backend.Services.MachineSettings",
+                    "QLS.Backend.Services.Machine",
+                    "QLS.Backend.Services.LgService",
+                    "QLS.Backend.Services.Revenue",
+                    "QLS.Backend.Services.Pricing",
+                    "QLS.Backend.Services.Dashboard",
+                    "QLS.Backend.Services.Stores",
+                    "QLS.Backend.Services.DiscountCode"
+                )
+                .Where(type => !typeof(Microsoft.Extensions.Hosting.IHostedService).IsAssignableFrom(type))) // Loại trừ các BackgroundService
             .AsImplementedInterfaces()
             .WithScopedLifetime());
 
@@ -67,11 +69,12 @@ public static class ServiceExtensions
             // Dùng ApiKey: Bắt buộc gửi chính xác những gì người dùng nhập
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                Description = "⚠️ QUAN TRỌNG: Bạn PHẢI gõ tay chữ 'Bearer ' (có khoảng trắng) rồi mới dán token vào.\nVí dụ: Bearer eyJhbGci...",
+                Description = "Dán JWT token vào đây. Swagger sẽ tự thêm tiền tố Bearer.",
                 Name = "Authorization",
                 In = ParameterLocation.Header,
-                Type = SecuritySchemeType.ApiKey, // Dùng lại ApiKey
-                Scheme = "Bearer"
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT"
             });
 
             options.AddSecurityRequirement(document => new OpenApiSecurityRequirement

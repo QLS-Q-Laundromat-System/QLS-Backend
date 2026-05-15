@@ -12,6 +12,7 @@ namespace QLS.Backend.DTOs.Machine
 
         public string? PaymentCode { get; set; }
         public string? QrUrl { get; set; }
+        public bool IsSandbox { get; set; }
 
         public string Message { get; set; } = string.Empty;
     }
