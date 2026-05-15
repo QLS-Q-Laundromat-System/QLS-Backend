@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi;
 using QLS.Backend.Services;
 using QLS.Backend.Services.LgServices.authToken;
-using Microsoft.OpenApi;
 using QLS.Backend.Services.LgService;
 // IMachineDetailService lives here
 
@@ -65,24 +65,22 @@ public static class ServiceExtensions
         {
             options.SwaggerDoc("v1", new OpenApiInfo { Title = "QLS Backend", Version = "v1" });
             options.CustomSchemaIds(type => type.FullName ?? type.Name);
+            options.OperationFilter<AuthorizeOperationFilter>();
 
-            // Dùng ApiKey: Bắt buộc gửi chính xác những gì người dùng nhập
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Description = "Dán JWT token vào đây. Swagger sẽ tự thêm tiền tố Bearer.",
-                Name = "Authorization",
-                In = ParameterLocation.Header,
                 Type = SecuritySchemeType.Http,
                 Scheme = "bearer",
                 BearerFormat = "JWT"
             });
 
-            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+            options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
             {
-            {
-                new OpenApiSecuritySchemeReference("Bearer"),
-                new List<string>()
-            }
+                {
+                    new OpenApiSecuritySchemeReference("Bearer"),
+                    new List<string>()
+                }
             });
         });
 

@@ -128,7 +128,9 @@ DTOs/
   UpdateStoreTypeInfoDto.cs
  Zigbee/TriggerWasherDto.cs
 Exceptions/ApiException.cs
-Extensions/ServiceExtensions.cs
+Extensions/
+ AuthorizeOperationFilter.cs
+ ServiceExtensions.cs
 Interfaces/
  Auth/IAuthService.cs
  Brand/
