@@ -1,0 +1,5499 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "QLS Backend",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/Auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.LoginRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.LoginRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.RegisterRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.RegisterRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Auth/create-account": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.CreateAccountRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.CreateAccountRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.CreateAccountRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/Brand": {
+      "get": {
+        "tags": [
+          "Brand"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Brand"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Brand.CreateBrandDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Brand.CreateBrandDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Brand.CreateBrandDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/Brand/{id}": {
+      "get": {
+        "tags": [
+          "Brand"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Brand"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Brand.UpdateBrandDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Brand.UpdateBrandDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Brand.UpdateBrandDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/Brand/{id}/has-account": {
+      "get": {
+        "tags": [
+          "Brand"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/Brand/admins": {
+      "get": {
+        "tags": [
+          "Brand"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/Brand/{id}/stores": {
+      "get": {
+        "tags": [
+          "Brand"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/Brand/{id}/accounts": {
+      "get": {
+        "tags": [
+          "Brand"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/Brand/{id}/store-types": {
+      "get": {
+        "tags": [
+          "Brand"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Brand"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.CreateStoreTypeDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.CreateStoreTypeDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.CreateStoreTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/Brand/store-types/{storeTypeId}": {
+      "put": {
+        "tags": [
+          "Brand"
+        ],
+        "parameters": [
+          {
+            "name": "storeTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.UpdateStoreTypeInfoDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.UpdateStoreTypeInfoDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.UpdateStoreTypeInfoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Brand"
+        ],
+        "parameters": [
+          {
+            "name": "storeTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/brands/{brandId}/lg-auth/link": {
+      "post": {
+        "tags": [
+          "BrandLg"
+        ],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Lg.LgLoginRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Lg.LgLoginRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Lg.LgLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/brands/{brandId}/lg-auth/refresh": {
+      "post": {
+        "tags": [
+          "BrandLg"
+        ],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/brands/{brandId}/lg-auth/sync-stores": {
+      "post": {
+        "tags": [
+          "BrandLg"
+        ],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/Dashboard/wash-count/summary": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 30
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.WashCountSummaryDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.WashCountSummaryDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.WashCountSummaryDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Dashboard/wash-count/daily": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 30
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.DailyWashCountDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.DailyWashCountDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.DailyWashCountDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Dashboard/transaction-volume": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "granularity",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "hourly"
+            }
+          },
+          {
+            "name": "rangeHours",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 24
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.TransactionVolumeResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.TransactionVolumeResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.TransactionVolumeResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Dashboard/brand-growth": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "parameters": [
+          {
+            "name": "months",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 12
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.BrandGrowthResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.BrandGrowthResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.BrandGrowthResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Dashboard/system-overview": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.SystemOverviewDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.SystemOverviewDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.SystemOverviewDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Dashboard/brand-overview/{brandId}": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.BrandOverviewDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.BrandOverviewDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.BrandOverviewDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Dashboard/machine-utilization": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 30
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.StoreUtilizationDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.StoreUtilizationDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.StoreUtilizationDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Dashboard/peak-hours": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 30
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.PeakHourDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.PeakHourDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.PeakHourDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Dashboard/revenue-trend": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 30
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.RevenueTrendResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.RevenueTrendResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.RevenueTrendResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Dashboard/machine-status-summary": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.MachineStatusSummaryDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.MachineStatusSummaryDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.MachineStatusSummaryDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Dashboard/leaderboard": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "brand"
+            }
+          },
+          {
+            "name": "top",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 5
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.LeaderboardEntryDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.LeaderboardEntryDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.LeaderboardEntryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Dashboard/user-growth": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "parameters": [
+          {
+            "name": "months",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 12
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.UserGrowthPointDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.UserGrowthPointDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.UserGrowthPointDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/DiscountCodes": {
+      "post": {
+        "tags": [
+          "DiscountCodes"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.DiscountCode.DiscountCodeCreateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.DiscountCode.DiscountCodeCreateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.DiscountCode.DiscountCodeCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "get": {
+        "tags": [
+          "DiscountCodes"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/DiscountCodes/{id}": {
+      "get": {
+        "tags": [
+          "DiscountCodes"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "put": {
+        "tags": [
+          "DiscountCodes"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.DiscountCode.DiscountCodeUpdateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.DiscountCode.DiscountCodeUpdateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.DiscountCode.DiscountCodeUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/DiscountCodes/overview": {
+      "get": {
+        "tags": [
+          "DiscountCodes"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/DiscountCodes/{id}/usages": {
+      "get": {
+        "tags": [
+          "DiscountCodes"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/DiscountCodes/validate": {
+      "post": {
+        "tags": [
+          "DiscountCodes"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.DiscountCode.ValidateDiscountRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.DiscountCode.ValidateDiscountRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.DiscountCode.ValidateDiscountRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/lg/auth/token": {
+      "post": {
+        "tags": [
+          "LgAuth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Lg.LgLoginRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Lg.LgLoginRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Lg.LgLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.ApiResponse`1[[QLS.Backend.DTOs.Lg.LgAuthTokenResult, QLS.Backend, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.ApiResponse`1[[QLS.Backend.DTOs.Lg.LgAuthTokenResult, QLS.Backend, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.ApiResponse`1[[QLS.Backend.DTOs.Lg.LgAuthTokenResult, QLS.Backend, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/lg/auth/refresh": {
+      "post": {
+        "tags": [
+          "LgAuth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Lg.LgRefreshRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Lg.LgRefreshRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Lg.LgRefreshRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.ApiResponse`1[[QLS.Backend.DTOs.Lg.LgAuthTokenResult, QLS.Backend, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.ApiResponse`1[[QLS.Backend.DTOs.Lg.LgAuthTokenResult, QLS.Backend, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.ApiResponse`1[[QLS.Backend.DTOs.Lg.LgAuthTokenResult, QLS.Backend, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/lg/auth/hash-check": {
+      "get": {
+        "tags": [
+          "LgAuth"
+        ],
+        "parameters": [
+          {
+            "name": "password",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/Machine/status/{storeId}": {
+      "get": {
+        "tags": [
+          "Machine"
+        ],
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Machine/{id}/capacity": {
+      "patch": {
+        "tags": [
+          "Machine"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.UpdateMachineCapacityDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.UpdateMachineCapacityDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.UpdateMachineCapacityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Machine/{id}/detail": {
+      "get": {
+        "tags": [
+          "Machine"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/init": {
+      "post": {
+        "tags": [
+          "MachineSessions"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.InitPaymentRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.InitPaymentRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.InitPaymentRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}/confirm-payment": {
+      "post": {
+        "tags": [
+          "MachineSessions"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.ConfirmPaymentRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.ConfirmPaymentRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.ConfirmPaymentRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}/status": {
+      "patch": {
+        "tags": [
+          "MachineSessions"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.UpdateSessionStatusDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.UpdateSessionStatusDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.UpdateSessionStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{id}": {
+      "get": {
+        "tags": [
+          "MachineSessions"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/machines/{machineId}/setting": {
+      "get": {
+        "tags": [
+          "MachineSetting"
+        ],
+        "parameters": [
+          {
+            "name": "machineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "MachineSetting"
+        ],
+        "parameters": [
+          {
+            "name": "machineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.UpsertMachineSettingDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.UpsertMachineSettingDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Machine.UpsertMachineSettingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "MachineSetting"
+        ],
+        "parameters": [
+          {
+            "name": "machineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/pulse/{count}": {
+      "get": {
+        "tags": [
+          "Payment"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "topic",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "QLS.Washer"
+            }
+          },
+          {
+            "name": "branchId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "machineId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "minutes",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pricePaid",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "default": 0
+            }
+          },
+          {
+            "name": "priceListId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "pricingMode",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/QLS.Backend.Models.Enums.PricePerType"
+            }
+          },
+          {
+            "name": "weightKg",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "cycleName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isExtension",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Zigbee.TriggerWasherResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Zigbee.TriggerWasherResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Zigbee.TriggerWasherResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pricelists": {
+      "get": {
+        "tags": [
+          "PriceLists"
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/QLS.Backend.Models.Enums.PriceListStatus"
+            }
+          },
+          {
+            "name": "validFrom",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "post": {
+        "tags": [
+          "PriceLists"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CreatePriceListDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CreatePriceListDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CreatePriceListDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/v1/pricelists/{id}": {
+      "get": {
+        "tags": [
+          "PriceLists"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/v1/pricelists/{id}/status": {
+      "patch": {
+        "tags": [
+          "PriceLists"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.UpdatePriceListStatusDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.UpdatePriceListStatusDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.UpdatePriceListStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/v1/pricelists/{id}/store-types": {
+      "post": {
+        "tags": [
+          "PriceLists"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.AssignPriceListStoreTypesDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.AssignPriceListStoreTypesDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.AssignPriceListStoreTypesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/v1/pricelists/{id}/modes/per-kg": {
+      "put": {
+        "tags": [
+          "PriceLists"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.PriceModePerKgItemDto"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.PriceModePerKgItemDto"
+                }
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.PriceModePerKgItemDto"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/v1/pricelists/{id}/modes/per-session": {
+      "put": {
+        "tags": [
+          "PriceLists"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.PriceModePerSessionItemDto"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.PriceModePerSessionItemDto"
+                }
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.PriceModePerSessionItemDto"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/v1/pricelists/calculate": {
+      "post": {
+        "tags": [
+          "PriceLists"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CalculatePriceRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CalculatePriceRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CalculatePriceRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/v1/pricing/calculate": {
+      "post": {
+        "tags": [
+          "Pricing"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CalculatePriceRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CalculatePriceRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CalculatePriceRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "QLS.Backend"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/db-status": {
+      "get": {
+        "tags": [
+          "QLS.Backend"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Revenue/summary": {
+      "get": {
+        "tags": [
+          "Revenue"
+        ],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Revenue.RevenueSummaryDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Revenue.RevenueSummaryDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Revenue.RevenueSummaryDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Revenue/daily": {
+      "get": {
+        "tags": [
+          "Revenue"
+        ],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 7
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Revenue.DailyRevenueDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Revenue.DailyRevenueDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Revenue.DailyRevenueDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Revenue/brand/{brandId}/stores": {
+      "get": {
+        "tags": [
+          "Revenue"
+        ],
+        "parameters": [
+          {
+            "name": "brandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Revenue.StoreRevenueDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Revenue.StoreRevenueDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Revenue.StoreRevenueDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Revenue/store/{storeId}/machines": {
+      "get": {
+        "tags": [
+          "Revenue"
+        ],
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Revenue.MachineRevenueRankingDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Revenue.MachineRevenueRankingDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.DTOs.Revenue.MachineRevenueRankingDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/webhooks/sepay": {
+      "post": {
+        "tags": [
+          "SePayWebhook"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/webhooks/sepay/test-pay": {
+      "post": {
+        "tags": [
+          "SePayWebhook"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.Controllers.SePayWebhookController+SePayTestRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.Controllers.SePayWebhookController+SePayTestRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.Controllers.SePayWebhookController+SePayTestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Store": {
+      "get": {
+        "tags": [
+          "Store"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.Models.Store"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.Models.Store"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QLS.Backend.Models.Store"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Store"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.CreateStoreDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.CreateStoreDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.CreateStoreDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/Store/count": {
+      "get": {
+        "tags": [
+          "Store"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Store/{id}": {
+      "get": {
+        "tags": [
+          "Store"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.StoreResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.StoreResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.StoreResponseDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Store"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.UpdateStoreDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.UpdateStoreDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.UpdateStoreDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/Store/{id}/accounts": {
+      "get": {
+        "tags": [
+          "Store"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/Store/{id}/machines": {
+      "get": {
+        "tags": [
+          "Store"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Store/me/machines": {
+      "get": {
+        "tags": [
+          "Store"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/Store/{id}/type": {
+      "patch": {
+        "tags": [
+          "Store"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.UpdateStoreTypeDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.UpdateStoreTypeDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Store.UpdateStoreTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/v1/timeslots": {
+      "get": {
+        "tags": [
+          "TimeSlots"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "post": {
+        "tags": [
+          "TimeSlots"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CreateTimeSlotDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CreateTimeSlotDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CreateTimeSlotDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/v1/timeslots/{id}": {
+      "put": {
+        "tags": [
+          "TimeSlots"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CreateTimeSlotDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CreateTimeSlotDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.CreateTimeSlotDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "TimeSlots"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "QLS.Backend.Controllers.SePayWebhookController+SePayTestRequest": {
+        "type": "object",
+        "properties": {
+          "paymentCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.ApiResponse`1[[QLS.Backend.DTOs.Lg.LgAuthTokenResult, QLS.Backend, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/QLS.Backend.DTOs.Lg.LgAuthTokenResult"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Brand.CreateBrandDto": {
+        "required": [
+          "email",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "email": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          },
+          "contactPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Brand.UpdateBrandDto": {
+        "required": [
+          "email",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "email": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          },
+          "contactPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.CreateAccountRequest": {
+        "required": [
+          "fullName",
+          "password",
+          "role",
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "password": {
+            "minLength": 6,
+            "type": "string"
+          },
+          "fullName": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.UserRole"
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.BrandGrowthPointDto": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "nullable": true
+          },
+          "newBrands": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cumulativeTotal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeTotal": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.BrandGrowthResponseDto": {
+        "type": "object",
+        "properties": {
+          "dataPoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.BrandGrowthPointDto"
+            },
+            "nullable": true
+          },
+          "totalBrands": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeBrands": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "inactiveBrands": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.BrandOverviewDto": {
+        "type": "object",
+        "properties": {
+          "totalStores": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeStores": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalMachines": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "washerCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dryerCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeSessionsNow": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "todayRevenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "todaySessionCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.DailyWashCountDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "washCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dryCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.LeaderboardEntryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          },
+          "rank": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.MachineStatusSummaryDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ready": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "running": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "error": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offline": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maintenance": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.MachineUtilizationDto": {
+        "type": "object",
+        "properties": {
+          "machineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "machineName": {
+            "type": "string",
+            "nullable": true
+          },
+          "machineType": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.MachineType"
+          },
+          "sessionCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalMinutesRunning": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "revenue": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.PeakHourDto": {
+        "type": "object",
+        "properties": {
+          "hour": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "sessionCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "avgRevenue": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.RevenueTrendPointDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "sessionCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.RevenueTrendResponseDto": {
+        "type": "object",
+        "properties": {
+          "dataPoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.RevenueTrendPointDto"
+            },
+            "nullable": true
+          },
+          "totalRevenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "growthRate": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.StoreUtilizationDto": {
+        "type": "object",
+        "properties": {
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeName": {
+            "type": "string",
+            "nullable": true
+          },
+          "machines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.MachineUtilizationDto"
+            },
+            "nullable": true
+          },
+          "totalSessions": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.SystemOverviewDto": {
+        "type": "object",
+        "properties": {
+          "totalBrands": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeBrands": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalStores": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeStores": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalMachines": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "washerCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dryerCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalUsers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeSessionsNow": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "todayRevenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "todaySessionCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.TransactionVolumePointDto": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "running": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          },
+          "successRate": {
+            "type": "number",
+            "format": "double",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.TransactionVolumeResponseDto": {
+        "type": "object",
+        "properties": {
+          "dataPoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.DTOs.Dashboard.TransactionVolumePointDto"
+            },
+            "nullable": true
+          },
+          "granularity": {
+            "type": "string",
+            "nullable": true
+          },
+          "totalCompleted": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalFailed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "overallFailureRate": {
+            "type": "number",
+            "format": "double",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.UserGrowthPointDto": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "nullable": true
+          },
+          "newUsers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalUsers": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Dashboard.WashCountSummaryDto": {
+        "type": "object",
+        "properties": {
+          "totalWashSessions": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalDrySessions": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalSessions": {
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
+          },
+          "daysRange": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.DiscountCode.DiscountCodeCreateDto": {
+        "required": [
+          "code",
+          "discountValue"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string"
+          },
+          "discountType": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.DiscountType"
+          },
+          "discountValue": {
+            "maximum": 1.7976931348623157E+308,
+            "minimum": 0,
+            "type": "number",
+            "format": "double"
+          },
+          "maxDiscountAmount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "minOrderValue": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "usageLimit": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "userUsageLimit": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "description": {
+            "maxLength": 500,
+            "type": "string",
+            "nullable": true
+          },
+          "isApplyAllStores": {
+            "type": "boolean"
+          },
+          "storeIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.DiscountCode.DiscountCodeUpdateDto": {
+        "type": "object",
+        "properties": {
+          "discountType": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.DiscountType"
+          },
+          "discountValue": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "maxDiscountAmount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "minOrderValue": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "usageLimit": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "userUsageLimit": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "isApplyAllStores": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "storeIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.DiscountCode.ValidateDiscountRequestDto": {
+        "required": [
+          "code",
+          "orderTotal",
+          "storeId"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderTotal": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Lg.LgAuthTokenResult": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "refreshToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "userNo": {
+            "type": "string",
+            "nullable": true
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
+          },
+          "userCountry": {
+            "type": "string",
+            "nullable": true
+          },
+          "oauth2BackendUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "expiresIn": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Lg.LgLoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          },
+          "country": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Lg.LgRefreshRequest": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "oauth2BackendUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.LoginRequest": {
+        "required": [
+          "password",
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "password": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Machine.ConfirmPaymentRequestDto": {
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Machine.InitPaymentRequestDto": {
+        "type": "object",
+        "properties": {
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "machineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "nullable": true
+          },
+          "requestedSteps": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "weightKg": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Machine.UpdateMachineCapacityDto": {
+        "required": [
+          "capacity"
+        ],
+        "type": "object",
+        "properties": {
+          "capacity": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Machine.UpdateSessionStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.MachineSessionStatus"
+          },
+          "refundNote": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Machine.UpsertMachineSettingDto": {
+        "type": "object",
+        "properties": {
+          "coin": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "price": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "washingTime": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "waterLevel": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "rinsingTime": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "rinsingCount": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "spinSpeed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "twinSpray": {
+            "type": "string",
+            "nullable": true
+          },
+          "dropCount": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "nonStopRinsing": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "addSuperWash": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dryCycleTime": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "topOffTime": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "topOff": {
+            "type": "string",
+            "nullable": true
+          },
+          "sensingDry": {
+            "type": "string",
+            "nullable": true
+          },
+          "topOffPrice": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "ratingMoney": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Pricing.AssignPriceListStoreTypesDto": {
+        "type": "object",
+        "properties": {
+          "storeTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.DTOs.Pricing.PriceListStoreTypeItemDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Pricing.CalculatePriceRequestDto": {
+        "type": "object",
+        "properties": {
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "machineType": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.MachineType"
+          },
+          "machineCapacityKg": {
+            "type": "number",
+            "format": "double"
+          },
+          "clothingWeightKg": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "calculateTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Pricing.CreatePriceListDto": {
+        "required": [
+          "code",
+          "name",
+          "validFrom"
+        ],
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "validTo": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.Currency"
+          },
+          "taxPercentage": {
+            "type": "number",
+            "format": "double"
+          },
+          "promotionLabel": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Pricing.CreateTimeSlotDto": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "startTime": {
+            "type": "string",
+            "format": "time",
+            "nullable": true
+          },
+          "endTime": {
+            "type": "string",
+            "format": "time",
+            "nullable": true
+          },
+          "dayMask": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.DayOfWeekMask"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Pricing.PriceListStoreTypeItemDto": {
+        "type": "object",
+        "properties": {
+          "storeTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeTypeName": {
+            "type": "string",
+            "nullable": true
+          },
+          "overridePriority": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Pricing.PriceModePerKgItemDto": {
+        "type": "object",
+        "properties": {
+          "machineType": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.MachineType"
+          },
+          "minKg": {
+            "type": "number",
+            "format": "double"
+          },
+          "maxKg": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "minimumPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "pricePer": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.PricePerType"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Pricing.PriceModePerSessionItemDto": {
+        "type": "object",
+        "properties": {
+          "machineType": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.MachineType"
+          },
+          "machineCapacityKg": {
+            "type": "number",
+            "format": "double"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "timeSlotId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "timeSlotName": {
+            "type": "string",
+            "nullable": true
+          },
+          "cycleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "minInitialSteps": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "extensionTimeoutMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Pricing.UpdatePriceListStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.PriceListStatus"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.RegisterRequest": {
+        "required": [
+          "fullName",
+          "password",
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "password": {
+            "minLength": 6,
+            "type": "string"
+          },
+          "fullName": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Revenue.DailyRevenueDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "sessionCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Revenue.MachineRevenueRankingDto": {
+        "type": "object",
+        "properties": {
+          "machineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "machineName": {
+            "type": "string",
+            "nullable": true
+          },
+          "revenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "sessionCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Revenue.RevenueSummaryDto": {
+        "type": "object",
+        "properties": {
+          "totalRevenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalSessions": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "averageRevenuePerSession": {
+            "type": "number",
+            "format": "double",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Revenue.StoreRevenueDto": {
+        "type": "object",
+        "properties": {
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeName": {
+            "type": "string",
+            "nullable": true
+          },
+          "totalRevenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "sessionCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Store.CreateStoreDto": {
+        "required": [
+          "address",
+          "brandId",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "address": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "storeId": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "zipcode": {
+            "type": "string",
+            "nullable": true
+          },
+          "states": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "string",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "string",
+            "nullable": true
+          },
+          "lTime": {
+            "type": "string",
+            "nullable": true
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeTypeId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Store.CreateStoreTypeDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Store.StoreResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "storeId": {
+            "type": "string",
+            "nullable": true
+          },
+          "lgPinCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeTypeId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Store.UpdateStoreDto": {
+        "required": [
+          "address",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "address": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "storeId": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "storeTypeId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Store.UpdateStoreTypeDto": {
+        "required": [
+          "storeTypeId"
+        ],
+        "type": "object",
+        "properties": {
+          "storeTypeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Store.UpdateStoreTypeInfoDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.DTOs.Zigbee.TriggerWasherResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "zigbeeDeviceTopic": {
+            "type": "string",
+            "nullable": true
+          },
+          "bagCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.Models.Account": {
+        "required": [
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string",
+            "nullable": true
+          },
+          "passwordHash": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.UserRole"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "brand": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Brand"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "store": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Store"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.Models.Brand": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "stores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.Models.Store"
+            },
+            "nullable": true
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.Models.Account"
+            },
+            "nullable": true
+          },
+          "storeTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.Models.StoreType"
+            },
+            "nullable": true
+          },
+          "lgCredential": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.BrandLgCredential"
+          },
+          "paymentConfigs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.Models.PaymentConfig"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.Models.BrandLgCredential": {
+        "required": [
+          "lgEmail",
+          "userAuthHash"
+        ],
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lgEmail": {
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string"
+          },
+          "userAuthHash": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "lgUserNo": {
+            "maxLength": 50,
+            "type": "string",
+            "nullable": true
+          },
+          "accessToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "refreshToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "tokenExpiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "oauth2BackendUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Brand"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.Models.Enums.Currency": {
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "QLS.Backend.Models.Enums.DayOfWeekMask": {
+        "enum": [
+          0,
+          1,
+          2,
+          4,
+          8,
+          16,
+          31,
+          32,
+          64,
+          96,
+          127
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "QLS.Backend.Models.Enums.DiscountType": {
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "QLS.Backend.Models.Enums.MachineSessionStatus": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "QLS.Backend.Models.Enums.MachineType": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "QLS.Backend.Models.Enums.PriceListStatus": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "QLS.Backend.Models.Enums.PricePerType": {
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "QLS.Backend.Models.Enums.UserRole": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "QLS.Backend.Models.Machine": {
+        "required": [
+          "name",
+          "storeId",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "store": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Store"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "lgDeviceId": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "esp32MacAddress": {
+            "maxLength": 17,
+            "type": "string",
+            "nullable": true
+          },
+          "zigbeeNetworkId": {
+            "maxLength": 50,
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.MachineType"
+          },
+          "capacity": {
+            "maxLength": 50,
+            "type": "string",
+            "nullable": true
+          },
+          "setting": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.MachineSetting"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.Models.MachineSetting": {
+        "required": [
+          "machineId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "machineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "machine": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Machine"
+          },
+          "coin": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "price": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "washingTime": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "waterLevel": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "rinsingTime": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "rinsingCount": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "spinSpeed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "twinSpray": {
+            "type": "string",
+            "nullable": true
+          },
+          "dropCount": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "nonStopRinsing": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "addSuperWash": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dryCycleTime": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "topOffTime": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "topOff": {
+            "type": "string",
+            "nullable": true
+          },
+          "sensingDry": {
+            "type": "string",
+            "nullable": true
+          },
+          "topOffPrice": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "ratingMoney": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.Models.PaymentConfig": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Brand"
+          },
+          "provider": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "bankCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "accountNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "accountName": {
+            "type": "string",
+            "nullable": true
+          },
+          "apiKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "secretKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.Models.PriceList": {
+        "required": [
+          "code",
+          "name",
+          "validFrom"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "maxLength": 50,
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "maxLength": 200,
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "validTo": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.PriceListStatus"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.Currency"
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Brand"
+          },
+          "isDeleted": {
+            "type": "boolean"
+          },
+          "taxPercentage": {
+            "type": "number",
+            "format": "double"
+          },
+          "promotionLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdBy": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "priceListStoreTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.Models.PriceListStoreType"
+            },
+            "nullable": true
+          },
+          "priceModePerKgs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.Models.PriceModePerKg"
+            },
+            "nullable": true
+          },
+          "priceModePerSessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.Models.PriceModePerSession"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.Models.PriceListStoreType": {
+        "required": [
+          "priceListId",
+          "storeTypeId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "priceListId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "priceList": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.PriceList"
+          },
+          "storeTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "storeType": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.StoreType"
+          },
+          "overridePriority": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.Models.PriceModePerKg": {
+        "required": [
+          "minKg",
+          "priceListId",
+          "unitPrice"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "priceListId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "priceList": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.PriceList"
+          },
+          "machineType": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.MachineType"
+          },
+          "minKg": {
+            "type": "number",
+            "format": "double"
+          },
+          "maxKg": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "minimumPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "pricePer": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.PricePerType"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.Models.PriceModePerSession": {
+        "required": [
+          "durationMinutes",
+          "machineCapacityKg",
+          "price",
+          "priceListId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "priceListId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "priceList": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.PriceList"
+          },
+          "machineCapacityKg": {
+            "type": "number",
+            "format": "double"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "timeSlotId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "timeSlot": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.TimeSlot"
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.Models.Store": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "storeId": {
+            "type": "string",
+            "nullable": true
+          },
+          "lgPinCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Brand"
+          },
+          "storeTypeId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "storeType": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.StoreType"
+          },
+          "machines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.Models.Machine"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.Models.StoreType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Brand"
+          },
+          "stores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.Models.Store"
+            },
+            "nullable": true
+          },
+          "priceListStoreTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.Models.PriceListStoreType"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QLS.Backend.Models.TimeSlot": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "startTime": {
+            "type": "string",
+            "format": "time",
+            "nullable": true
+          },
+          "endTime": {
+            "type": "string",
+            "format": "time",
+            "nullable": true
+          },
+          "dayMask": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Enums.DayOfWeekMask"
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/QLS.Backend.Models.Brand"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "priceModesPerSession": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QLS.Backend.Models.PriceModePerSession"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Dán JWT token vào đây. Swagger sẽ tự thêm tiền tố Bearer.",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    { }
+  ],
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Brand"
+    },
+    {
+      "name": "BrandLg"
+    },
+    {
+      "name": "Dashboard"
+    },
+    {
+      "name": "DiscountCodes"
+    },
+    {
+      "name": "LgAuth"
+    },
+    {
+      "name": "Machine"
+    },
+    {
+      "name": "MachineSessions"
+    },
+    {
+      "name": "MachineSetting"
+    },
+    {
+      "name": "Payment"
+    },
+    {
+      "name": "PriceLists"
+    },
+    {
+      "name": "Pricing"
+    },
+    {
+      "name": "QLS.Backend"
+    },
+    {
+      "name": "Revenue"
+    },
+    {
+      "name": "SePayWebhook"
+    },
+    {
+      "name": "Store"
+    },
+    {
+      "name": "TimeSlots"
+    }
+  ]
+}

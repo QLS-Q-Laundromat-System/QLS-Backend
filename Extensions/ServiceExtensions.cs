@@ -65,7 +65,6 @@ public static class ServiceExtensions
         {
             options.SwaggerDoc("v1", new OpenApiInfo { Title = "QLS Backend", Version = "v1" });
             options.CustomSchemaIds(type => type.FullName ?? type.Name);
-            options.OperationFilter<AuthorizeOperationFilter>();
 
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
@@ -75,10 +74,10 @@ public static class ServiceExtensions
                 BearerFormat = "JWT"
             });
 
-            options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
                 {
-                    new OpenApiSecuritySchemeReference("Bearer"),
+                    new OpenApiSecuritySchemeReference("Bearer", document),
                     new List<string>()
                 }
             });
