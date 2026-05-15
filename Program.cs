@@ -36,6 +36,25 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var authHeader = context.Request.Headers["Authorization"].ToString();
+                if (string.IsNullOrWhiteSpace(authHeader))
+                {
+                    return Task.CompletedTask;
+                }
+
+                const string bearerPrefix = "Bearer ";
+                context.Token = authHeader.StartsWith(bearerPrefix, StringComparison.OrdinalIgnoreCase)
+                    ? authHeader[bearerPrefix.Length..].Trim()
+                    : authHeader.Trim();
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
