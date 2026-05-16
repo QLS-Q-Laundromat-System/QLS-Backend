@@ -59,7 +59,8 @@ namespace QLS.Backend.Controllers
             if (User.IsInRole("LoyaltyCustomer"))
             {
                 var now = DateTime.UtcNow;
-                results = results.Where(c => c.IsActive && c.EndDate > now);
+                var filtered = results.Where(c => c.IsActive && c.EndDate > now).ToList();
+                return Ok(filtered);
             }
 
             return Ok(results);
@@ -118,6 +119,14 @@ namespace QLS.Backend.Controllers
                 return BadRequest(result);
             }
             return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("debug-all")]
+        public IActionResult DebugAll([FromServices] QLS.Backend.Data.AppDbContext context)
+        {
+            var codes = context.DiscountCodes.Select(c => new { c.Id, c.Code, c.BrandId, c.IsActive, c.EndDate }).ToList();
+            return Ok(codes);
         }
     }
 }
