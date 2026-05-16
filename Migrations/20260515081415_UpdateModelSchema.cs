@@ -11,36 +11,27 @@ namespace QLS.Backend.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "PaymentConfigs",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    BrandId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Provider = table.Column<string>(type: "text", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    BankCode = table.Column<string>(type: "text", nullable: true),
-                    AccountNumber = table.Column<string>(type: "text", nullable: true),
-                    AccountName = table.Column<string>(type: "text", nullable: true),
-                    ApiKey = table.Column<string>(type: "text", nullable: true),
-                    SecretKey = table.Column<string>(type: "text", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PaymentConfigs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_PaymentConfigs_Brands_BrandId",
-                        column: x => x.BrandId,
-                        principalTable: "Brands",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+            migrationBuilder.Sql(@"
+                CREATE TABLE IF NOT EXISTS ""PaymentConfigs"" (
+                    ""Id"" uuid NOT NULL,
+                    ""BrandId"" uuid NOT NULL,
+                    ""Provider"" text NOT NULL,
+                    ""IsActive"" boolean NOT NULL,
+                    ""BankCode"" text,
+                    ""AccountNumber"" text,
+                    ""AccountName"" text,
+                    ""ApiKey"" text,
+                    ""SecretKey"" text,
+                    ""UpdatedAt"" timestamp with time zone NOT NULL,
+                    CONSTRAINT ""PK_PaymentConfigs"" PRIMARY KEY (""Id""),
+                    CONSTRAINT ""FK_PaymentConfigs_Brands_BrandId"" FOREIGN KEY (""BrandId"") REFERENCES ""Brands"" (""Id"") ON DELETE CASCADE
+                );
+            ");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_PaymentConfigs_BrandId",
-                table: "PaymentConfigs",
-                column: "BrandId");
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS ""IX_PaymentConfigs_BrandId""
+                ON ""PaymentConfigs"" (""BrandId"");
+            ");
         }
 
         /// <inheritdoc />

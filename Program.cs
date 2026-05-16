@@ -13,6 +13,7 @@ builder.Services.AddControllers();
 builder.Services.AddConfigSwagger();
 builder.Services.AddHostedService<QLS.Backend.Services.Machine.MachineStatusMonitoringService>();
 builder.Services.AddHostedService<QLS.Backend.Services.Ziggbee.MqttListenerService>();
+builder.Services.AddHostedService<QLS.Backend.Services.Loyalty.LoyaltyPointExpiryService>();
 
 // Khai báo kết nối Database (Sử dụng PostgreSQL)
 builder.Services.AddDbContext<AppDbContext>(options =>

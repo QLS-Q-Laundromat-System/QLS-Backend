@@ -29,6 +29,9 @@ namespace QLS.Backend.Data
         public DbSet<DiscountCodeUsage> DiscountCodeUsages { get; set; }
         public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
         public DbSet<PaymentConfig> PaymentConfigs { get; set; }
+        public DbSet<LoyaltyCustomer> LoyaltyCustomers { get; set; }
+        public DbSet<PointClaimToken> PointClaimTokens { get; set; }
+        public DbSet<LoyaltyPointTransaction> LoyaltyPointTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -110,6 +113,75 @@ namespace QLS.Backend.Data
                 .WithMany(b => b.PaymentConfigs)
                 .HasForeignKey(p => p.BrandId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // --- Cấu hình quan hệ cho LoyaltyCustomer ---
+            modelBuilder.Entity<LoyaltyCustomer>()
+                .HasOne(c => c.Brand)
+                .WithMany()
+                .HasForeignKey(c => c.BrandId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<LoyaltyCustomer>()
+                .HasIndex(c => new { c.BrandId, c.ZaloUserId })
+                .IsUnique();
+
+            // --- Cấu hình quan hệ cho PointClaimToken ---
+            modelBuilder.Entity<PointClaimToken>()
+                .HasOne(t => t.Brand)
+                .WithMany()
+                .HasForeignKey(t => t.BrandId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PointClaimToken>()
+                .HasOne(t => t.MachineSession)
+                .WithMany()
+                .HasForeignKey(t => t.MachineSessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PointClaimToken>()
+                .HasOne(t => t.PaymentTransaction)
+                .WithMany()
+                .HasForeignKey(t => t.PaymentTransactionId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<PointClaimToken>()
+                .HasOne(t => t.ClaimedByCustomer)
+                .WithMany()
+                .HasForeignKey(t => t.ClaimedByCustomerId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<PointClaimToken>()
+                .HasIndex(t => t.Token)
+                .IsUnique();
+
+            modelBuilder.Entity<PointClaimToken>()
+                .HasIndex(t => t.MachineSessionId)
+                .IsUnique();
+
+            // --- Cấu hình quan hệ cho LoyaltyPointTransaction ---
+            modelBuilder.Entity<LoyaltyPointTransaction>()
+                .HasOne(t => t.Brand)
+                .WithMany()
+                .HasForeignKey(t => t.BrandId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<LoyaltyPointTransaction>()
+                .HasOne(t => t.Customer)
+                .WithMany(c => c.PointTransactions)
+                .HasForeignKey(t => t.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<LoyaltyPointTransaction>()
+                .HasOne(t => t.MachineSession)
+                .WithMany()
+                .HasForeignKey(t => t.MachineSessionId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Earn cho mỗi session chỉ được phép 1 lần.
+            modelBuilder.Entity<LoyaltyPointTransaction>()
+                .HasIndex(t => new { t.MachineSessionId, t.Type })
+                .IsUnique()
+                .HasFilter("\"MachineSessionId\" IS NOT NULL AND \"Type\" = 0");
 
             // --- Cấu hình Inheritance cho PriceModePerSession (TPH) ---
             modelBuilder.Entity<PriceModePerSession>()

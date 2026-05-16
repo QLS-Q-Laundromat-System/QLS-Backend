@@ -11,6 +11,7 @@ using QLS.Backend.DTOs.Pricing;
 using QLS.Backend.Models.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using QLS.Backend.Interfaces.Loyalty;
 
 namespace QLS.Backend.Services
 {
@@ -20,13 +21,20 @@ namespace QLS.Backend.Services
         private readonly IPricingCalculatorService _pricingService;
         private readonly IConfiguration _configuration;
         private readonly IHostEnvironment _env;
+        private readonly ILoyaltyService _loyaltyService;
 
-        public MachineService(AppDbContext context, IPricingCalculatorService pricingService, IConfiguration configuration, IHostEnvironment env)
+        public MachineService(
+            AppDbContext context,
+            IPricingCalculatorService pricingService,
+            IConfiguration configuration,
+            IHostEnvironment env,
+            ILoyaltyService loyaltyService)
         {
             _context = context;
             _pricingService = pricingService;
             _configuration = configuration;
             _env = env;
+            _loyaltyService = loyaltyService;
         }
 
         public async Task<Guid> SaveSessionAsync(CreateMachineSessionDto dto)
@@ -97,6 +105,14 @@ namespace QLS.Backend.Services
             }
 
             await _context.SaveChangesAsync();
+
+            if (status == MachineSessionStatus.Error || status == MachineSessionStatus.Cancelled)
+            {
+                await _loyaltyService.RollbackEarnedPointsForSessionAsync(
+                    session.Id,
+                    refundNote ?? $"Session chuyển trạng thái {status}");
+            }
+
             return true;
         }
 

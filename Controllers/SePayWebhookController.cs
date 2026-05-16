@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Hosting;
 using QLS.Backend.Services.Machine;
+using QLS.Backend.Interfaces.Loyalty;
 
 namespace QLS.Backend.Controllers
 {
@@ -25,6 +26,7 @@ namespace QLS.Backend.Controllers
         private readonly IConfiguration _configuration;
         private readonly IHostEnvironment _env;
         private readonly IHardwareTrackerService _hardwareTracker;
+        private readonly ILoyaltyService _loyaltyService;
         private readonly ILogger<SePayWebhookController> _logger;
 
         public SePayWebhookController(
@@ -34,6 +36,7 @@ namespace QLS.Backend.Controllers
             IConfiguration configuration,
             IHostEnvironment env,
             IHardwareTrackerService hardwareTracker,
+            ILoyaltyService loyaltyService,
             ILogger<SePayWebhookController> logger)
         {
             _context = context;
@@ -42,6 +45,7 @@ namespace QLS.Backend.Controllers
             _configuration = configuration;
             _env = env;
             _hardwareTracker = hardwareTracker;
+            _loyaltyService = loyaltyService;
             _logger = logger;
         }
 
@@ -219,6 +223,7 @@ namespace QLS.Backend.Controllers
                 
                 // Cập nhật trạng thái session sang Running
                 await _machineService.ConfirmPaymentAsync(paymentCodeMatch.Id, dto.Id.ToString());
+                await _loyaltyService.EnsureClaimTokenForPaymentAsync(paymentCodeMatch, transaction);
 
                 // 5. Kích hoạt ESP32 qua Zigbee
                 var machine = await _context.Machines.FindAsync(paymentCodeMatch.MachineId);

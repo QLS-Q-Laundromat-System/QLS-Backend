@@ -196,3 +196,286 @@ Nếu pass:
 - QR chỉ chứa claim token (không chứa dữ liệu nhạy cảm).
 - Nên dùng token ngắn hạn và một lần dùng (one-time token).
 
+# QLS Loyalty + Zalo Mini App Specification
+
+## Mục tiêu
+
+Triển khai hệ thống Loyalty/Tích điểm cho Q-Laundry Station thông qua Zalo Mini App.
+
+Luồng chính:
+
+User thanh toán tại kiosk bằng ngân hàng  
+→ SePay xác nhận thanh toán  
+→ Backend trigger máy chạy  
+→ Backend tạo QR nhận điểm  
+→ User quét QR bằng Zalo Mini App  
+→ Backend cộng điểm cho tài khoản Zalo
+
+---
+
+# Auth Zalo Flow
+
+## Nghiệp vụ
+
+1. User mở Zalo Mini App
+2. FE gọi Zalo API: `getUserInfo()`
+3. FE nhận:
+
+- id
+- idByOA
+- name
+- avatar
+
+4. FE gọi:
+
+POST /api/zalo/auth/login
+
+5. Backend tìm theo `ZaloUserId`
+6. Nếu chưa tồn tại → tạo LoyaltyCustomer
+7. Nếu đã tồn tại → update thông tin
+8. Backend trả JWT riêng
+
+Request:
+
+```json
+{
+  "zaloUserId": "123456789",
+  "zaloOAUserId": "oa_user_id",
+  "fullName": "Nguyen Van A",
+  "avatarUrl": "https://..."
+}
+```
+
+Response:
+
+```json
+{
+  "accessToken": "jwt_backend",
+  "customerId": "uuid",
+  "customerType": "Member",
+  "studentVerificationStatus": "None",
+  "totalPoints": 0
+}
+```
+
+---
+
+# Loyalty Flow
+
+1. User thanh toán tại kiosk
+2. SePay webhook gọi backend
+3. Backend xác nhận thanh toán
+4. Trigger máy chạy
+5. Tạo PointClaimToken
+6. Kiosk hiển thị QR
+7. User quét QR bằng Mini App
+8. FE gọi:
+
+POST /api/loyalty/claim
+
+9. Backend validate token
+10. Cộng điểm
+11. Đánh dấu token đã dùng
+
+---
+
+# Rule nghiệp vụ
+
+- QR sống 10 phút
+- Mỗi QR chỉ dùng 1 lần
+- Mỗi MachineSession chỉ cộng điểm 1 lần
+- Điểm hết hạn sau 3 tháng
+- 10.000 VNĐ = 1 điểm
+- Điểm không có số lẻ
+- Sinh viên giảm giá theo %
+- Voucher loyalty tách riêng DiscountCode
+
+Ví dụ:
+
+19000đ => 1 điểm
+
+25000đ => 2 điểm
+
+50000đ => 5 điểm
+
+Công thức:
+
+```csharp
+points = floor(amount / 10000)
+```
+
+---
+
+# Entity: LoyaltyCustomer
+
+```csharp
+public class LoyaltyCustomer
+{
+    public Guid Id { get; set; }
+
+    public string ZaloUserId { get; set; }
+
+    public string? ZaloOAUserId { get; set; }
+
+    public string? FullName { get; set; }
+
+    public string? AvatarUrl { get; set; }
+
+    public int TotalPoints { get; set; }
+
+    public CustomerType CustomerType { get; set; }
+
+    public StudentVerificationStatus StudentVerificationStatus { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+}
+```
+
+---
+
+# Entity: PointClaimToken
+
+```csharp
+public class PointClaimToken
+{
+    public Guid Id { get; set; }
+
+    public string Token { get; set; }
+
+    public Guid MachineSessionId { get; set; }
+
+    public Guid? PaymentTransactionId { get; set; }
+
+    public decimal PaidAmount { get; set; }
+
+    public int PointsToEarn { get; set; }
+
+    public bool IsClaimed { get; set; }
+
+    public DateTime ExpiredAt { get; set; }
+
+    public Guid? ClaimedByCustomerId { get; set; }
+
+    public DateTime? ClaimedAt { get; set; }
+}
+```
+
+---
+
+# Entity: LoyaltyPointTransaction
+
+```csharp
+public class LoyaltyPointTransaction
+{
+    public Guid Id { get; set; }
+
+    public Guid CustomerId { get; set; }
+
+    public Guid? MachineSessionId { get; set; }
+
+    public PointTransactionType Type { get; set; }
+
+    public int Points { get; set; }
+
+    public int RemainingPoints { get; set; }
+
+    public DateTime? ExpiredAt { get; set; }
+
+    public string? Note { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+}
+```
+
+---
+
+# APIs
+
+## Auth
+
+POST /api/zalo/auth/login
+
+---
+
+## Loyalty
+
+POST /api/loyalty/claim
+
+GET /api/loyalty/me
+
+GET /api/loyalty/points/history
+
+---
+
+# Kiosk Session Response
+
+GET /api/v1/sessions/{id}
+
+```json
+{
+  "id": "session-id",
+  "status": "Running",
+  "loyalty": {
+    "claimQrUrl": "https://zalo.me/s/miniapp?claimToken=ABC123XYZ",
+    "expiredAt": "2026-05-12T10:30:00Z",
+    "pointsToEarn": 5
+  }
+}
+```
+
+---
+
+# Validation
+
+Reject nếu:
+
+- token không tồn tại
+- token hết hạn
+- token đã dùng
+- session chưa thanh toán
+- session cancelled
+- session error
+- customer không tồn tại
+- giao dịch đã cộng điểm
+- points = 0
+
+---
+
+# Database Constraint
+
+```csharp
+PointClaimToken.Token UNIQUE
+
+MachineSessionId + Earn UNIQUE
+```
+
+Mục tiêu:
+
+1 MachineSession chỉ được cộng điểm 1 lần
+
+---
+
+# Background Job
+
+Mỗi ngày chạy:
+
+- tìm điểm hết hạn
+- tạo transaction Expire
+- trừ TotalPoints
+
+---
+
+# TODO For AI Agent
+
+- Create entities
+- Create migrations
+- Add DbSet
+- Configure relations
+- Create DTOs
+- Create services
+- Create APIs
+- Create JWT auth
+- Create claim flow
+- Add background job
+- Add unique index
+- Add validations

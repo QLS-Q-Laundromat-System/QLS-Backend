@@ -200,6 +200,8 @@ Migrations/
  20260427030452_AddDiscountCodeTables.Designer.cs
  20260513083640_SyncDatabaseSchema.cs
  20260513083640_SyncDatabaseSchema.Designer.cs
+ 20260515081415_UpdateModelSchema.cs
+ 20260515081415_UpdateModelSchema.Designer.cs
  AppDbContextModelSnapshot.cs
 Models/
  Account.cs

@@ -22,4 +22,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="QLS.Backend.Tests\\**\\*.cs" />
+    <None Remove="QLS.Backend.Tests\\**\\*" />
+  </ItemGroup>
+
 </Project>

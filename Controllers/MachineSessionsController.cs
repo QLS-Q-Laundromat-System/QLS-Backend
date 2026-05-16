@@ -4,6 +4,7 @@ using QLS.Backend.DTOs.Machine;
 using QLS.Backend.DTOs;
 using System;
 using System.Threading.Tasks;
+using QLS.Backend.Interfaces.Loyalty;
 
 namespace QLS.Backend.Controllers
 {
@@ -88,7 +89,10 @@ namespace QLS.Backend.Controllers
         /// [GET] /api/v1/sessions/{id}
         /// </summary>
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetSessionStatus(Guid id, [FromServices] QLS.Backend.Data.AppDbContext context)
+        public async Task<IActionResult> GetSessionStatus(
+            Guid id,
+            [FromServices] QLS.Backend.Data.AppDbContext context,
+            [FromServices] ILoyaltyService loyaltyService)
         {
             var session = await context.MachineSessions.FindAsync(id);
             if (session == null)
@@ -96,12 +100,16 @@ namespace QLS.Backend.Controllers
                 return NotFound(new { message = "Không tìm thấy session." });
             }
 
+            var claimLinkBaseUrl = $"{Request.Scheme}://{Request.Host}/api/loyalty/claim-link";
+            var loyalty = await loyaltyService.GetSessionLoyaltyInfoAsync(session.Id, claimLinkBaseUrl);
+
             return Ok(ApiResponse<object>.Success(new 
             { 
                 sessionId = session.Id,
                 status = session.Status,
                 machineId = session.MachineId,
-                hardwareStatus = _hardwareTracker.GetStatus(session.Id) ?? "Đang chờ thiết bị..."
+                hardwareStatus = _hardwareTracker.GetStatus(session.Id) ?? "Đang chờ thiết bị...",
+                loyalty
             }));
         }
     }
