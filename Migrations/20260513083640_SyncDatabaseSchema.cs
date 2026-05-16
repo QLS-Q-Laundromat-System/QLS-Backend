@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,41 +11,31 @@ namespace QLS.Backend.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "PaymentCode",
-                table: "MachineSessions",
-                type: "character varying(20)",
-                maxLength: 20,
-                nullable: true);
+            migrationBuilder.Sql(@"
+                ALTER TABLE ""MachineSessions"" 
+                ADD COLUMN IF NOT EXISTS ""PaymentCode"" character varying(20) NULL;
+            ");
 
-            migrationBuilder.CreateTable(
-                name: "PaymentTransactions",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    MachineSessionId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    PaymentMethod = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    GatewayTransactionId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    TransactionContent = table.Column<string>(type: "text", nullable: true),
-                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    RawData = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PaymentTransactions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_PaymentTransactions_MachineSessions_MachineSessionId",
-                        column: x => x.MachineSessionId,
-                        principalTable: "MachineSessions",
-                        principalColumn: "Id");
-                });
+            migrationBuilder.Sql(@"
+                CREATE TABLE IF NOT EXISTS ""PaymentTransactions"" (
+                    ""Id"" uuid NOT NULL,
+                    ""MachineSessionId"" uuid NULL,
+                    ""Amount"" numeric(18,2) NOT NULL,
+                    ""PaymentMethod"" character varying(50) NOT NULL,
+                    ""GatewayTransactionId"" character varying(100) NULL,
+                    ""TransactionContent"" text NULL,
+                    ""Status"" character varying(20) NOT NULL,
+                    ""RawData"" text NULL,
+                    ""CreatedAt"" timestamp with time zone NOT NULL,
+                    CONSTRAINT ""PK_PaymentTransactions"" PRIMARY KEY (""Id""),
+                    CONSTRAINT ""FK_PaymentTransactions_MachineSessions_MachineSessionId"" FOREIGN KEY (""MachineSessionId"") REFERENCES ""MachineSessions"" (""Id"")
+                );
+            ");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_PaymentTransactions_MachineSessionId",
-                table: "PaymentTransactions",
-                column: "MachineSessionId");
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS ""IX_PaymentTransactions_MachineSessionId""
+                ON ""PaymentTransactions"" (""MachineSessionId"");
+            ");
         }
 
         /// <inheritdoc />
