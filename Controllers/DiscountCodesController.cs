@@ -48,21 +48,35 @@ namespace QLS.Backend.Controllers
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
-        [Authorize(Roles = "BrandAdmin")]
+        [Authorize(Roles = "BrandAdmin,LoyaltyCustomer")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var brandId = GetBrandId();
             var results = await _discountCodeService.GetAllByBrandAsync(brandId);
+
+            // Nếu là LoyaltyCustomer thì chỉ trả về các mã giảm giá đang active và còn hạn
+            if (User.IsInRole("LoyaltyCustomer"))
+            {
+                var now = DateTime.UtcNow;
+                results = results.Where(c => c.IsActive && c.EndDate > now);
+            }
+
             return Ok(results);
         }
 
-        [Authorize(Roles = "BrandAdmin")]
+        [Authorize(Roles = "BrandAdmin,LoyaltyCustomer")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var brandId = GetBrandId();
             var result = await _discountCodeService.GetByIdAsync(brandId, id);
+
+            if (User.IsInRole("LoyaltyCustomer") && (!result.IsActive || result.EndDate < DateTime.UtcNow))
+            {
+                return NotFound("Mã giảm giá không tồn tại hoặc đã hết hạn.");
+            }
+
             return Ok(result);
         }
 
