@@ -5,23 +5,20 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Data;
 using QLS.Backend.DTOs.Brand;
-using QLS.Backend.Interfaces.Brand;
+using QLS.Backend.Interfaces.Payment;
 using QLS.Backend.Models;
 
-using System.Net.Http;
-using System.Net.Http.Headers;
-
-namespace QLS.Backend.Services.Brand
+namespace QLS.Backend.Services.Payment
 {
     public class PaymentConfigService : IPaymentConfigService
     {
         private readonly AppDbContext _context;
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IEnumerable<IPaymentProviderValidator> _validators;
 
-        public PaymentConfigService(AppDbContext context, IHttpClientFactory httpClientFactory)
+        public PaymentConfigService(AppDbContext context, IEnumerable<IPaymentProviderValidator> validators)
         {
             _context = context;
-            _httpClientFactory = httpClientFactory;
+            _validators = validators;
         }
 
         public async Task<PaymentConfigResponseDto> CreateConfigAsync(CreatePaymentConfigDto dto)
@@ -29,10 +26,9 @@ namespace QLS.Backend.Services.Brand
             var brandExists = await _context.Brands.AnyAsync(b => b.Id == dto.BrandId);
             if (!brandExists) throw new Exception("Thương hiệu không tồn tại.");
 
-            if (dto.Provider?.ToUpper() == "SEPAY")
+            if (!string.IsNullOrEmpty(dto.Provider))
             {
-                var isValid = await VerifySePayCredentialsAsync(dto.ApiKey);
-                if (!isValid) throw new Exception("API Key không hợp lệ hoặc không thể kết nối đến SePay. Vui lòng kiểm tra lại thông tin.");
+                await ValidatePaymentProviderAsync(dto.Provider, dto.ApiKey ?? "", dto.AccountNumber ?? "");
             }
 
             if (dto.IsActive)
@@ -74,11 +70,11 @@ namespace QLS.Backend.Services.Brand
 
             var newProvider = dto.Provider ?? config.Provider;
             var newApiKey = dto.ApiKey ?? config.ApiKey;
+            var newAccountNumber = dto.AccountNumber ?? config.AccountNumber;
 
-            if (newProvider?.ToUpper() == "SEPAY" && (dto.ApiKey != null || dto.Provider != null))
+            if (!string.IsNullOrEmpty(newProvider) && (dto.ApiKey != null || dto.Provider != null || dto.AccountNumber != null))
             {
-                var isValid = await VerifySePayCredentialsAsync(newApiKey);
-                if (!isValid) throw new Exception("API Key không hợp lệ hoặc không thể kết nối đến SePay. Vui lòng kiểm tra lại thông tin.");
+                await ValidatePaymentProviderAsync(newProvider, newApiKey ?? "", newAccountNumber ?? "");
             }
 
             config.Provider = newProvider;
@@ -189,38 +185,36 @@ namespace QLS.Backend.Services.Brand
             var config = await _context.PaymentConfigs.FindAsync(id);
             if (config == null) return false;
 
-            if (config.Provider.ToUpper() == "SEPAY")
+            var validator = _validators.FirstOrDefault(v => v.ProviderName.Equals(config.Provider, StringComparison.OrdinalIgnoreCase));
+            if (validator != null)
             {
-                return await VerifySePayCredentialsAsync(config.ApiKey);
+                var isKeyValid = await validator.VerifyCredentialsAsync(config.ApiKey ?? "");
+                if (!isKeyValid) return false;
+
+                return await validator.VerifyBankAccountAsync(config.ApiKey ?? "", config.AccountNumber ?? "");
             }
 
             return true; // Mặc định true cho các provider chưa implement logic verify
         }
 
-        private async Task<bool> VerifySePayCredentialsAsync(string apiKey)
+        private async Task ValidatePaymentProviderAsync(string provider, string apiKey, string accountNumber)
         {
-            if (string.IsNullOrEmpty(apiKey)) return false;
+            if (string.IsNullOrEmpty(provider)) return;
 
-            try
+            var validator = _validators.FirstOrDefault(v => v.ProviderName.Equals(provider, StringComparison.OrdinalIgnoreCase));
+            if (validator != null)
             {
-                var client = _httpClientFactory.CreateClient();
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-                
-                // 1. Thử endpoint v2 Production của SePay
-                var response = await client.GetAsync("https://userapi.sepay.vn/v2/transactions?per_page=1");
-                if (response.IsSuccessStatusCode) return true;
+                var isKeyValid = await validator.VerifyCredentialsAsync(apiKey);
+                if (!isKeyValid)
+                {
+                    throw new Exception($"API Key không hợp lệ hoặc không thể kết nối đến {validator.ProviderName}. Vui lòng kiểm tra lại thông tin.");
+                }
 
-                // 2. Thử endpoint v2 Sandbox của SePay (Kiểm thử)
-                var responseSandbox = await client.GetAsync("https://userapi-sandbox.sepay.vn/v2/transactions?per_page=1");
-                if (responseSandbox.IsSuccessStatusCode) return true;
-
-                // 3. Dự phòng: Thử endpoint v1 cũ
-                var responseV1 = await client.GetAsync("https://my.sepay.vn/api/transactions/list?limit=1");
-                return responseV1.IsSuccessStatusCode;
-            }
-            catch
-            {
-                return false;
+                var isBankValid = await validator.VerifyBankAccountAsync(apiKey, accountNumber);
+                if (!isBankValid)
+                {
+                    throw new Exception($"Không tìm thấy số tài khoản '{accountNumber}' được liên kết trên tài khoản {validator.ProviderName} của bạn. Vui lòng kiểm tra lại số tài khoản ngân hàng.");
+                }
             }
         }
 

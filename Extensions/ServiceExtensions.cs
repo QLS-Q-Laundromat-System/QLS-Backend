@@ -29,6 +29,7 @@ public static class ServiceExtensions
                     "QLS.Backend.Services.Stores",
                     "QLS.Backend.Services.DiscountCode",
                     "QLS.Backend.Services.Loyalty",
+                    "QLS.Backend.Services.Payment",
                     "QLS.Backend.Services.Zalo"
                 )
                 .Where(type => !typeof(Microsoft.Extensions.Hosting.IHostedService).IsAssignableFrom(type))) // Loại trừ các BackgroundService

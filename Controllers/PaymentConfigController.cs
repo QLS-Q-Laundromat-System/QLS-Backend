@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using QLS.Backend.DTOs.Brand;
-using QLS.Backend.Interfaces.Brand;
+using QLS.Backend.Interfaces.Payment;
 using System;
 using System.Threading.Tasks;
 

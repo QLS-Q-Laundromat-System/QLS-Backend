@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using QLS.Backend.DTOs.Brand;
 
-namespace QLS.Backend.Interfaces.Brand
+namespace QLS.Backend.Interfaces.Payment
 {
     public interface IPaymentConfigService
     {

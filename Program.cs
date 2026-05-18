@@ -17,7 +17,7 @@ builder.Services.AddHostedService<QLS.Backend.Services.Loyalty.LoyaltyPointExpir
 builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
-    options.KnownNetworks.Clear();
+    options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
 });
 
