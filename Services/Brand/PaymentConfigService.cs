@@ -206,8 +206,17 @@ namespace QLS.Backend.Services.Brand
                 var client = _httpClientFactory.CreateClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
                 
-                var response = await client.GetAsync("https://my.sepay.vn/api/transactions/list?limit=1");
-                return response.IsSuccessStatusCode;
+                // 1. Thử endpoint v2 Production của SePay
+                var response = await client.GetAsync("https://userapi.sepay.vn/v2/transactions?per_page=1");
+                if (response.IsSuccessStatusCode) return true;
+
+                // 2. Thử endpoint v2 Sandbox của SePay (Kiểm thử)
+                var responseSandbox = await client.GetAsync("https://userapi-sandbox.sepay.vn/v2/transactions?per_page=1");
+                if (responseSandbox.IsSuccessStatusCode) return true;
+
+                // 3. Dự phòng: Thử endpoint v1 cũ
+                var responseV1 = await client.GetAsync("https://my.sepay.vn/api/transactions/list?limit=1");
+                return responseV1.IsSuccessStatusCode;
             }
             catch
             {
