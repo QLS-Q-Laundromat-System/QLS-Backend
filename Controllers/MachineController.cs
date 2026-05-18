@@ -42,6 +42,7 @@ public class MachineController : ControllerBase
     public async Task<IActionResult> GetMachineDetail(Guid id)
     {
         var result = await _machineDetailService.GetMachineDetailWithConfigAsync(id);
+        if (result == null) return NotFound(new { message = "Không tìm thấy máy" });
 
         return Ok(ApiResponse<MachineDetailWithConfigDto>.Success(result, "Lấy chi tiết máy thành công"));
     }

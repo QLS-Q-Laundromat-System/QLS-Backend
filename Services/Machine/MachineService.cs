@@ -141,7 +141,7 @@ namespace QLS.Backend.Services
             var machine = await _context.Machines
                 .Include(m => m.Store)
                     .ThenInclude(s => s!.Brand)
-                        .ThenInclude(b => b.PaymentConfigs)
+                        .ThenInclude(b => b!.PaymentConfigs)
                 .FirstOrDefaultAsync(m => m.Id == dto.MachineId);
             if (machine == null) throw new Exception("Không tìm thấy máy");
 

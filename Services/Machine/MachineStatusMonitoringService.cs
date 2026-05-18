@@ -53,7 +53,7 @@ public class MachineStatusMonitoringService : BackgroundService
             .Where(s => s.Status == MachineSessionStatus.PaidWaitingForStart || 
                        (s.Status == MachineSessionStatus.Running && 
                         (s.UpdatedAt < now.AddMinutes(-5) || s.EndTime < now.AddMinutes(2))))
-            .Select(s => s.Machine.StoreId)
+            .Select(s => s.Machine!.StoreId)
             .Distinct()
             .ToListAsync(stoppingToken);
 
@@ -62,7 +62,7 @@ public class MachineStatusMonitoringService : BackgroundService
         // 2. Lấy TOÀN BỘ session đang hoạt động (1 hoặc 5) của các Store này để quét đồng bộ
         var sessions = await context.MachineSessions
             .Where(s => (s.Status == MachineSessionStatus.PaidWaitingForStart || s.Status == MachineSessionStatus.Running) &&
-                        storesToScan.Contains(s.Machine.StoreId))
+                        storesToScan.Contains(s.Machine!.StoreId))
             .Include(s => s.Machine)
             .Include(s => s.Store)
             .ToListAsync(stoppingToken);
@@ -79,7 +79,7 @@ public class MachineStatusMonitoringService : BackgroundService
         }
 
         // 2. Group theo Store để gọi LG API
-        var storeGroups = sessions.GroupBy(s => s.Machine.StoreId);
+        var storeGroups = sessions.GroupBy(s => s.Machine!.StoreId);
 
         foreach (var group in storeGroups)
         {
@@ -92,7 +92,7 @@ public class MachineStatusMonitoringService : BackgroundService
                 
                 foreach (var session in group)
                 {
-                    var status = machineStatuses.FirstOrDefault(m => m.DeviceId == session.Machine.LgDeviceId);
+                    var status = machineStatuses.FirstOrDefault(m => m.DeviceId == session.Machine!.LgDeviceId);
                     if (status == null) continue;
 
                     var curState = status.CurState?.ToUpper();
