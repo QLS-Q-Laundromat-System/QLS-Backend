@@ -17,6 +17,14 @@ namespace QLS.Backend.Controllers
             _service = service;
         }
 
+        [HttpGet("instructions/{provider}")]
+        public async Task<IActionResult> GetInstructions(string provider)
+        {
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var result = await _service.GetInstructionsAsync(provider, baseUrl);
+            return Ok(new { success = true, data = result });
+        }
+
         [HttpPost("brand/{brandId}")]
         public async Task<IActionResult> Create(Guid brandId, [FromBody] CreatePaymentConfigDto dto)
         {
@@ -73,6 +81,14 @@ namespace QLS.Backend.Controllers
             var result = await _service.ActivateConfigAsync(id);
             if (!result) return NotFound(new { success = false, message = "Không tìm thấy cấu hình." });
             return Ok(new { success = true, message = "Đã kích hoạt cấu hình thành công." });
+        }
+
+        [HttpPost("{id}/verify")]
+        public async Task<IActionResult> Verify(Guid id)
+        {
+            var result = await _service.VerifyConfigAsync(id);
+            if (!result) return BadRequest(new { success = false, message = "Xác thực cấu hình thất bại. Vui lòng kiểm tra lại API Key hoặc cấu hình." });
+            return Ok(new { success = true, message = "Xác thực cấu hình thành công." });
         }
 
         [HttpDelete("{id}")]

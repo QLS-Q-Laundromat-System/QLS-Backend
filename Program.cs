@@ -13,6 +13,12 @@ builder.Services.AddControllers();
 builder.Services.AddConfigSwagger();
 builder.Services.AddHostedService<QLS.Backend.Services.Machine.MachineStatusMonitoringService>();
 builder.Services.AddHostedService<QLS.Backend.Services.Ziggbee.MqttListenerService>();
+builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Khai báo kết nối Database (Sử dụng PostgreSQL)
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -42,7 +48,7 @@ builder.Services.AddAuthorization();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-
+builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<LgApiClient>();
 
 var app = builder.Build();
@@ -139,6 +145,7 @@ app.MapGet("/db-status", async (AppDbContext db) =>
 });
 
 // Kích hoạt Middleware CORS - sử dụng policy AllowReactApp để cho phép mọi host.
+app.UseForwardedHeaders();
 app.UseCors("AllowReactApp");
 
 // app.UseHttpsRedirection(); // Đã tắt do chỉ test HTTP nội bộ

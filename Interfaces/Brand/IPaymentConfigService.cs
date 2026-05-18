@@ -13,5 +13,7 @@ namespace QLS.Backend.Interfaces.Brand
         Task<PaymentConfigResponseDto> GetConfigByIdAsync(Guid id);
         Task<bool> DeleteConfigAsync(Guid id);
         Task<bool> ActivateConfigAsync(Guid id);
+        Task<PaymentProviderInstructionsDto> GetInstructionsAsync(string provider, string baseUrl);
+        Task<bool> VerifyConfigAsync(Guid id);
     }
 }
