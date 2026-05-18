@@ -193,15 +193,17 @@ namespace QLS.Backend.Services
 
             var sessionId = await SaveSessionAsync(sessionDto);
 
-            // Ưu tiên lấy cấu hình SePay từ Brand, nếu không có thì lấy từ appsettings.json
+            // Lấy cấu hình SePay từ Brand của Store, từ chối tạo session nếu chưa liên kết tài khoản
             var brand = machine?.Store?.Brand;
             var sepayConfig = brand?.PaymentConfigs?.FirstOrDefault(p => p.Provider == "SEPAY" && p.IsActive);
             
-            var brandAcc = sepayConfig?.AccountNumber;
-            var brandBank = sepayConfig?.BankCode;
+            if (sepayConfig == null || string.IsNullOrEmpty(sepayConfig.AccountNumber) || string.IsNullOrEmpty(sepayConfig.BankCode))
+            {
+                throw new Exception("Cửa hàng này chưa liên kết hoặc kích hoạt tài khoản thanh toán SePay. Vui lòng liên hệ quản lý cửa hàng để thiết lập cấu hình nhận tiền.");
+            }
 
-            var acc = _env.IsDevelopment() ? "12345678" : (brandAcc ?? _configuration["SePay:AccountNumber"]);
-            var bank = _env.IsDevelopment() ? "MBBank" : (brandBank ?? _configuration["SePay:Bank"] ?? "MBBank");
+            var acc = sepayConfig.AccountNumber;
+            var bank = sepayConfig.BankCode;
             
             var qrUrl = $"https://qr.sepay.vn/img?acc={acc}&bank={bank}&amount={(int)totalAmount}&des={paymentCode}";
 
