@@ -19,25 +19,6 @@ services:
       timeout: 5s
       retries: 5
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: ${STACK_NAME:-qls}-pgadmin
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@qls.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
-      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
-      PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: 10
-    ports:
-      - "${PGADMIN_PORT:-5050}:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      - qls-network
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   qls-backend:
     image: ${BACKEND_IMAGE:-qls-backend:latest}
     container_name: ${STACK_NAME:-qls}-backend
@@ -73,8 +54,6 @@ services:
 volumes:
   postgres_data:
     name: ${STACK_NAME:-qls}-postgres-data
-  pgadmin_data:
-    name: ${STACK_NAME:-qls}-pgadmin-data
 
 networks:
   qls-network:

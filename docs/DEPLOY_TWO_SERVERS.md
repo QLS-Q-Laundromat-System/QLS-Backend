@@ -22,7 +22,6 @@ Co the bo qua, workflow da co default. Neu set thi them:
 - `STACK_NAME`
 - `BACKEND_PORT`
 - `POSTGRES_PORT`
-- `PGADMIN_PORT`
 - `ASPNETCORE_ENVIRONMENT`
 
 Suggested values:
@@ -32,7 +31,6 @@ DEV:
 - `STACK_NAME=qls-dev`
 - `BACKEND_PORT=5079`
 - `POSTGRES_PORT=5433`
-- `PGADMIN_PORT=5051`
 - `ASPNETCORE_ENVIRONMENT=Development`
 
 MAIN:
@@ -40,7 +38,6 @@ MAIN:
 - `STACK_NAME=qls-main`
 - `BACKEND_PORT=5078`
 - `POSTGRES_PORT=5432`
-- `PGADMIN_PORT=5050`
 - `ASPNETCORE_ENVIRONMENT=Production`
 
 ## 5) File `.env` tren moi server
