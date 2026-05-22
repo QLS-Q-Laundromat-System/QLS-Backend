@@ -77,6 +77,8 @@ jobs:
             cd "$APP_DIR"
             export BACKEND_IMAGE="qls-backend:dev-${{ github.sha }}"
             export STACK_NAME BACKEND_PORT POSTGRES_PORT ASPNETCORE_ENVIRONMENT
+            # Cleanup legacy pgAdmin container from old compose definitions.
+            docker rm -f "${STACK_NAME}-pgadmin" >/dev/null 2>&1 || true
             docker compose up -d --remove-orphans
 
             rm -rf "$DEPLOY_TMP"
@@ -160,6 +162,8 @@ jobs:
             cd "$APP_DIR"
             export BACKEND_IMAGE="qls-backend:main-${{ github.sha }}"
             export STACK_NAME BACKEND_PORT POSTGRES_PORT ASPNETCORE_ENVIRONMENT
+            # Cleanup legacy pgAdmin container from old compose definitions.
+            docker rm -f "${STACK_NAME}-pgadmin" >/dev/null 2>&1 || true
             docker compose up -d --remove-orphans
 
             rm -rf "$DEPLOY_TMP"
