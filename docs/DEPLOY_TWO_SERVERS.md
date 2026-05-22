@@ -49,3 +49,21 @@ Tai `APP_DIR`, tao file `.env` (co the copy tu `.env.example`) voi DB/JWT/CORS t
 ## 6) Chay thu
 - Push len `dev` de test tren DEV
 - Khi on dinh, merge/push `main` de deploy MAIN
+
+## 7) Nginx reverse proxy (api + api-dev)
+- File mau trong repo: `docs/nginx/qls-api-reverse-proxy.example.conf`
+- Khong sua truc tiep file he thong trong repo. Chi dung file nay de copy len server.
+
+Tren server:
+```bash
+sudo cp /home/ubuntu/qls-backend-dev/docs/nginx/qls-api-reverse-proxy.example.conf /etc/nginx/sites-available/qls-api-reverse-proxy.conf
+sudo ln -sfn /etc/nginx/sites-available/qls-api-reverse-proxy.conf /etc/nginx/sites-enabled/qls-api-reverse-proxy.conf
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Neu ban dat source code o path khac, doi lai duong dan trong lenh `cp`.
+
+## 8) DNS can co
+- `api.qlaundrystation.com` -> IP server MAIN
+- `api-dev.qlaundrystation.com` -> IP server DEV
