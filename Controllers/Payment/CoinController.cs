@@ -11,12 +11,12 @@ namespace QLS.Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class PaymentController : ControllerBase
+    public class CoinController : ControllerBase
     {
         private readonly IZigbeeService _zigbeeService;
         private readonly IMachineService _machineService;
 
-        public PaymentController(IZigbeeService zigbeeService, IMachineService machineService)
+        public CoinController(IZigbeeService zigbeeService, IMachineService machineService)
         {
             _zigbeeService = zigbeeService;
             _machineService = machineService;
@@ -24,7 +24,8 @@ namespace QLS.Backend.Controllers
 
         /// <summary>
         /// [GET] /pulse/{count}
-        /// API test siêu tốc. Vừa nhả xu, vừa hỗ trợ lưu DB nếu truyền thêm param.
+        /// API bắn xu / kích hoạt nhả xu vật lý cho máy giặt/sấy qua Zigbee/MQTT.
+        /// Hỗ trợ lưu thông tin phiên giặt xuống DB nếu FE truyền đầy đủ param.
         /// </summary>
         [HttpGet("/pulse/{count}")]
         public async Task<ActionResult<TriggerWasherResponseDto>> TriggerPulse(
@@ -41,9 +42,9 @@ namespace QLS.Backend.Controllers
             [FromQuery] string? cycleName = null,
             [FromQuery] bool isExtension = false)
         {
-            Console.WriteLine($"[DIAGNOSTIC] EXECUTING TRIGGER: topic={topic}, count={count}");
+            Console.WriteLine($"[DIAGNOSTIC] EXECUTING TRIGGER (BẮN XU): topic={topic}, count={count}");
 
-            // 1. LƯU DATABASE (Chỉ chạy khi FE truyền đủ thông tin)
+            // 1. LƯU DATABASE (Chỉ chạy khi FE truyền đủ thông tin phiên giặt)
             if (branchId.HasValue && machineId.HasValue && userId.HasValue && minutes.HasValue)
             {
                 var sessionDto = new CreateMachineSessionDto
@@ -65,7 +66,7 @@ namespace QLS.Backend.Controllers
                 Console.WriteLine($"[DB] Đã lưu lịch sử sấy: User {userId}, {minutes} phút, Giá: {pricePaid}.");
             }
 
-            // 2. KÍCH HOẠT ESP32 NHẢ XU
+            // 2. KÍCH HOẠT ESP32 NHẢ XU (BẮN XU)
             await _zigbeeService.TriggerAsync(topic, count);
 
             return Ok(new TriggerWasherResponseDto
@@ -78,3 +79,4 @@ namespace QLS.Backend.Controllers
         }
     }
 }
+

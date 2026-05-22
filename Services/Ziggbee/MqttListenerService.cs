@@ -117,25 +117,51 @@ public class MqttListenerService : BackgroundService
             using var doc = JsonDocument.Parse(payload);
             var root = doc.RootElement;
 
-            // Kiểm tra thuộc tính 'brightness' (đây là cách ESP32 báo cáo trạng thái hoàn thành)
-            if (root.TryGetProperty("brightness", out var brightnessProp))
+            // 1. Kiểm tra thuộc tính Custom 'coin_status' (mới)
+            if (root.TryGetProperty("coin_status", out var coinStatusProp))
+            {
+                var coinStatus = coinStatusProp.GetInt32();
+                _logger.LogInformation("ℹ️ Nhận trạng thái coin_status={Status} từ thiết bị {ZigbeeId} cho Session {SessionId}", coinStatus, zigbeeId, session.Id);
+                
+                switch (coinStatus)
+                {
+                    case 0:
+                        _hardwareTracker.UpdateStatus(session.Id, "Thiết bị sẵn sàng.");
+                        break;
+                    case 1:
+                        _hardwareTracker.UpdateStatus(session.Id, "Đang nhả xu...");
+                        break;
+                    case 2:
+                        _logger.LogInformation("💎 XÁC NHẬN: Thiết bị {ZigbeeId} đã hoàn thành nhả xu (coin_status=2) cho Session {SessionId}", zigbeeId, session.Id);
+                        _hardwareTracker.UpdateStatus(session.Id, "Thiết bị đã nhả xu thành công.");
+                        break;
+                    case 3:
+                        _logger.LogError("❌ THIẾT BỊ BÁO LỖI/BẬN (coin_status=3) trên {ZigbeeId}", zigbeeId);
+                        _hardwareTracker.UpdateStatus(session.Id, "Lỗi thiết bị hoặc đang bận.");
+                        await machineService.UpdateSessionStatusAsync(session.Id, MachineSessionStatus.Error, "Thiết bị báo lỗi hoặc đang bận bắn xu.");
+                        break;
+                }
+            }
+            // 2. Fallback: Kiểm tra thuộc tính 'brightness' (cho các thiết bị dùng firmware cũ)
+            else if (root.TryGetProperty("brightness", out var brightnessProp))
             {
                 var brightness = brightnessProp.GetByte();
                 
                 // Nếu brightness về 0, nghĩa là ESP32 đã kết thúc Task nhả xu
                 if (brightness == 0)
                 {
-                    _logger.LogInformation("💎 XÁC NHẬN: Thiết bị {ZigbeeId} đã hoàn thành nhả xu (Brightness=0) for Session {SessionId}", zigbeeId, session.Id);
+                    _logger.LogInformation("💎 XÁC NHẬN (Legacy): Thiết bị {ZigbeeId} đã hoàn thành nhả xu (Brightness=0) cho Session {SessionId}", zigbeeId, session.Id);
                     _hardwareTracker.UpdateStatus(session.Id, "Thiết bị đã nhả xu thành công.");
                 }
             }
-            // Hỗ trợ thêm trường 'result' nếu sau này bạn nâng cấp ESP32
+            // 3. Fallback: Hỗ trợ thêm trường 'result'
             else if (root.TryGetProperty("result", out var resultProp))
             {
                 var result = resultProp.GetString();
                 if (result == "success")
                 {
                     _logger.LogInformation("💎 XÁC NHẬN (Explicit): Máy {ZigbeeId} đã báo thành công cho Session {SessionId}", zigbeeId, session.Id);
+                    _hardwareTracker.UpdateStatus(session.Id, "Thiết bị đã nhả xu thành công.");
                 }
                 else if (result == "error")
                 {
