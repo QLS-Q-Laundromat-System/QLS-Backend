@@ -64,3 +64,9 @@ Neu ban dat source code o path khac, doi lai duong dan trong lenh `cp`.
 ## 8) DNS can co
 - `api.qlaundrystation.com` -> IP server MAIN
 - `api-dev.qlaundrystation.com` -> IP server DEV
+
+## 9) Swagger route
+- Swagger duoc map tai `/swagger` (khong phai `/`).
+- Kiem tra nhanh:
+  - `http://api.qlaundrystation.com/swagger`
+  - `http://api-dev.qlaundrystation.com/swagger`
