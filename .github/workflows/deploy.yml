@@ -1,82 +1,190 @@
-name: 🐳 Deploy QLS Backend (Docker) to Oracle Cloud
+name: Deploy QLS Backend (Docker) to Dev/Main Servers
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - dev
+      - develop
+      - main
   workflow_dispatch:
+    inputs:
+      target:
+        description: "Deploy target"
+        type: choice
+        required: true
+        default: dev
+        options:
+          - dev
+          - main
+          - both
 
 jobs:
-  deploy:
-    name: Build Docker & Deploy
+  deploy-dev:
+    name: Deploy to DEV
+    if: |
+      (github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/develop')) ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.target == 'dev' || github.event.inputs.target == 'both'))
     runs-on: ubuntu-latest
+    environment: dev
 
     steps:
-      # ─── 1. CHECKOUT ─────────────────────────────────────────────────────────
-      - name: 📥 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # ─── 2. BUILD DOCKER IMAGE ───────────────────────────────────────────────
-      - name: 🐳 Build Docker image
+      - name: Build Docker image (dev)
         run: |
-          docker build -t qls-backend:latest .
-          docker save qls-backend:latest | gzip > qls-backend.tar.gz
-          echo "✅ Docker image built: $(du -sh qls-backend.tar.gz | cut -f1)"
+          docker build -t qls-backend:dev-${{ github.sha }} -t qls-backend:dev-latest .
+          docker save qls-backend:dev-${{ github.sha }} | gzip > qls-backend-dev.tar.gz
+          echo "Image archive size: $(du -sh qls-backend-dev.tar.gz | cut -f1)"
 
-      # ─── 3. COPY IMAGE LÊN SERVER ────────────────────────────────────────────
-      - name: 📤 Copy image to Oracle Cloud VM
+      - name: Copy deploy package to DEV server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USER }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
-          source: "qls-backend.tar.gz,docker-compose.yml"
-          target: "/tmp/qls-deploy"
+          source: "qls-backend-dev.tar.gz,docker-compose.yml"
+          target: "/tmp/qls-deploy-dev"
 
-      # ─── 4. DEPLOY TRÊN SERVER ───────────────────────────────────────────────
-      - name: 🚀 Deploy Docker containers
+      - name: Deploy on DEV server
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          APP_DIR: ${{ vars.APP_DIR }}
+          STACK_NAME: ${{ vars.STACK_NAME }}
+          BACKEND_PORT: ${{ vars.BACKEND_PORT }}
+          POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+          PGADMIN_PORT: ${{ vars.PGADMIN_PORT }}
+          ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
         with:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USER }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
+          envs: APP_DIR,STACK_NAME,BACKEND_PORT,POSTGRES_PORT,PGADMIN_PORT,ASPNETCORE_ENVIRONMENT
           script: |
             set -e
 
-            echo "📦 Load Docker image..."
-            docker load < /tmp/qls-deploy/qls-backend.tar.gz
-            echo "✅ Image loaded"
+            DEPLOY_TMP="/tmp/qls-deploy-dev"
+            APP_DIR="${APP_DIR:-$HOME/qls-backend-dev}"
+            STACK_NAME="${STACK_NAME:-qls-dev}"
+            BACKEND_PORT="${BACKEND_PORT:-5079}"
+            POSTGRES_PORT="${POSTGRES_PORT:-5433}"
+            PGADMIN_PORT="${PGADMIN_PORT:-5051}"
+            ASPNETCORE_ENVIRONMENT="${ASPNETCORE_ENVIRONMENT:-Development}"
 
-            echo "📂 Copy docker-compose.yml..."
-            cp /tmp/qls-deploy/docker-compose.yml ~/qls-backend/docker-compose.yml
+            mkdir -p "$APP_DIR"
+            cp "$DEPLOY_TMP/docker-compose.yml" "$APP_DIR/docker-compose.yml"
 
-            echo "🔄 Restart containers..."
-            cd ~/qls-backend
+            docker load < "$DEPLOY_TMP/qls-backend-dev.tar.gz"
+
+            cd "$APP_DIR"
+            export BACKEND_IMAGE="qls-backend:dev-${{ github.sha }}"
+            export STACK_NAME BACKEND_PORT POSTGRES_PORT PGADMIN_PORT ASPNETCORE_ENVIRONMENT
             docker compose up -d --remove-orphans
 
-            echo "🧹 Cleanup temp files..."
-            rm -rf /tmp/qls-deploy
-
-            echo "⏳ Chờ container khởi động..."
+            rm -rf "$DEPLOY_TMP"
             sleep 10
 
-            # Kiểm tra container
-            if docker ps | grep -q "qls-backend"; then
-              echo "✅ CONTAINER ĐANG CHẠY!"
-              docker ps --filter "name=qls"
+            if docker ps --filter "name=${STACK_NAME}-backend" --format '{{.Names}}' | grep -q "${STACK_NAME}-backend"; then
+              echo "DEV deploy success"
+              docker ps --filter "name=${STACK_NAME}"
             else
-              echo "❌ CONTAINER LỖI! Xem logs:"
-              docker logs qls-backend --tail=50
+              echo "DEV deploy failed"
+              docker logs "${STACK_NAME}-backend" --tail=100 || true
               exit 1
             fi
 
-      # ─── 5. HEALTH CHECK ─────────────────────────────────────────────────────
-      - name: 🏥 Health Check
+      - name: DEV health check
+        env:
+          BACKEND_PORT: ${{ vars.BACKEND_PORT }}
         run: |
-          sleep 5
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.ORACLE_HOST }}:5078/health || echo "000")
-          echo "Health check: $HTTP_CODE"
-          if [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ API hoạt động bình thường!"
-          else
-            echo "⚠️ Health check trả về code $HTTP_CODE (có thể /health chưa được implement)"
+          PORT="${BACKEND_PORT:-5079}"
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.ORACLE_HOST }}:${PORT}/health" || echo "000")
+          echo "DEV health check: $HTTP_CODE"
+          if [ "$HTTP_CODE" != "200" ]; then
+            exit 1
+          fi
+
+  deploy-main:
+    name: Deploy to MAIN
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.target == 'main' || github.event.inputs.target == 'both'))
+    runs-on: ubuntu-latest
+    environment: main
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image (main)
+        run: |
+          docker build -t qls-backend:main-${{ github.sha }} -t qls-backend:latest .
+          docker save qls-backend:main-${{ github.sha }} | gzip > qls-backend-main.tar.gz
+          echo "Image archive size: $(du -sh qls-backend-main.tar.gz | cut -f1)"
+
+      - name: Copy deploy package to MAIN server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USER }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          source: "qls-backend-main.tar.gz,docker-compose.yml"
+          target: "/tmp/qls-deploy-main"
+
+      - name: Deploy on MAIN server
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          APP_DIR: ${{ vars.APP_DIR }}
+          STACK_NAME: ${{ vars.STACK_NAME }}
+          BACKEND_PORT: ${{ vars.BACKEND_PORT }}
+          POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+          PGADMIN_PORT: ${{ vars.PGADMIN_PORT }}
+          ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USER }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          envs: APP_DIR,STACK_NAME,BACKEND_PORT,POSTGRES_PORT,PGADMIN_PORT,ASPNETCORE_ENVIRONMENT
+          script: |
+            set -e
+
+            DEPLOY_TMP="/tmp/qls-deploy-main"
+            APP_DIR="${APP_DIR:-$HOME/qls-backend}"
+            STACK_NAME="${STACK_NAME:-qls-main}"
+            BACKEND_PORT="${BACKEND_PORT:-5078}"
+            POSTGRES_PORT="${POSTGRES_PORT:-5432}"
+            PGADMIN_PORT="${PGADMIN_PORT:-5050}"
+            ASPNETCORE_ENVIRONMENT="${ASPNETCORE_ENVIRONMENT:-Production}"
+
+            mkdir -p "$APP_DIR"
+            cp "$DEPLOY_TMP/docker-compose.yml" "$APP_DIR/docker-compose.yml"
+
+            docker load < "$DEPLOY_TMP/qls-backend-main.tar.gz"
+
+            cd "$APP_DIR"
+            export BACKEND_IMAGE="qls-backend:main-${{ github.sha }}"
+            export STACK_NAME BACKEND_PORT POSTGRES_PORT PGADMIN_PORT ASPNETCORE_ENVIRONMENT
+            docker compose up -d --remove-orphans
+
+            rm -rf "$DEPLOY_TMP"
+            sleep 10
+
+            if docker ps --filter "name=${STACK_NAME}-backend" --format '{{.Names}}' | grep -q "${STACK_NAME}-backend"; then
+              echo "MAIN deploy success"
+              docker ps --filter "name=${STACK_NAME}"
+            else
+              echo "MAIN deploy failed"
+              docker logs "${STACK_NAME}-backend" --tail=100 || true
+              exit 1
+            fi
+
+      - name: MAIN health check
+        env:
+          BACKEND_PORT: ${{ vars.BACKEND_PORT }}
+        run: |
+          PORT="${BACKEND_PORT:-5078}"
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.ORACLE_HOST }}:${PORT}/health" || echo "000")
+          echo "MAIN health check: $HTTP_CODE"
+          if [ "$HTTP_CODE" != "200" ]; then
+            exit 1
           fi

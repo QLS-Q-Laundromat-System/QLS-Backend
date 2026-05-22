@@ -1,10 +1,7 @@
-version: "3.9"
-
 services:
-  # ─── PostgreSQL Database ────────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
-    container_name: qls-postgres
+    container_name: ${STACK_NAME:-qls}-postgres
     restart: always
     environment:
       POSTGRES_DB: ${DB_NAME:-QLS}
@@ -13,7 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "127.0.0.1:5432:5432"   # chỉ bind localhost, SSH tunnel dùng được, không expose public
+      - "${POSTGRES_BIND_IP:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
     networks:
       - qls-network
     healthcheck:
@@ -22,38 +19,33 @@ services:
       timeout: 5s
       retries: 5
 
-  # ─── pgAdmin (Quản lý Database trên Web) ───────────────────────────────────
   pgadmin:
     image: dpage/pgadmin4
-    container_name: qls-pgadmin
+    container_name: ${STACK_NAME:-qls}-pgadmin
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@qls.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
-      # Fix cho môi trường HTTP/IP trực tiếp
       PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
       PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: 10
-      PGADMIN_SERVER_JSON_FILE: '/pgadmin4/servers.json'
     ports:
-      - "5050:80"
+      - "${PGADMIN_PORT:-5050}:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
-      - ./servers.json:/pgadmin4/servers.json
     networks:
       - qls-network
     depends_on:
       postgres:
         condition: service_healthy
 
-  # ─── QLS Backend API ────────────────────────────────────────────────────────
   qls-backend:
-    image: qls-backend:latest
-    container_name: qls-backend
+    image: ${BACKEND_IMAGE:-qls-backend:latest}
+    container_name: ${STACK_NAME:-qls}-backend
     restart: always
     ports:
-      - "5078:5078"
+      - "${BACKEND_PORT:-5078}:5078"
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:5078
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${DB_NAME:-QLS};Username=${DB_USER:-qls_user};Password=${DB_PASSWORD:-QLS@Oracle2026!};Minimum Pool Size=1;Maximum Pool Size=20;Connection Idle Lifetime=300"
       Jwt__Key: ${JWT_KEY:-QLaundromatSystem123456789@@2026!}
@@ -80,11 +72,12 @@ services:
 
 volumes:
   postgres_data:
-    name: qls-postgres-data
+    name: ${STACK_NAME:-qls}-postgres-data
   pgadmin_data:
-    name: qls-pgadmin-data
+    name: ${STACK_NAME:-qls}-pgadmin-data
 
 networks:
   qls-network:
-    name: qls-network
+    name: ${STACK_NAME:-qls}-network
     driver: bridge
+
