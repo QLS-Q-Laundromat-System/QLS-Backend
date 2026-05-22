@@ -62,11 +62,13 @@ public static class ServiceExtensions
         return services;
     }
 
-    public static IServiceCollection AddConfigSwagger(this IServiceCollection services)
+    public static IServiceCollection AddConfigSwagger(this IServiceCollection services, IWebHostEnvironment environment)
     {
+        var swaggerTitle = environment.IsDevelopment() ? "QLS Backend dev" : "QLS Backend";
+
         services.AddSwaggerGen(options =>
         {
-            options.SwaggerDoc("v1", new OpenApiInfo { Title = "QLS Backend", Version = "v1" });
+            options.SwaggerDoc("v1", new OpenApiInfo { Title = swaggerTitle, Version = "v1" });
             options.CustomSchemaIds(type => type.FullName ?? type.Name);
 
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

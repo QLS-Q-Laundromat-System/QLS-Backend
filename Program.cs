@@ -10,7 +10,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
-builder.Services.AddConfigSwagger();
+builder.Services.AddConfigSwagger(builder.Environment);
 builder.Services.AddHostedService<QLS.Backend.Services.Machine.MachineStatusMonitoringService>();
 builder.Services.AddHostedService<QLS.Backend.Services.Ziggbee.MqttListenerService>();
 builder.Services.AddHostedService<QLS.Backend.Services.Loyalty.LoyaltyPointExpiryService>();
@@ -143,7 +143,8 @@ app.UseMiddleware<QLS.Backend.Middlewares.GlobalExceptionMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "QLS Backend API v1");
+    var swaggerUiTitle = app.Environment.IsDevelopment() ? "QLS Backend dev v1" : "QLS Backend API v1";
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", swaggerUiTitle);
     c.RoutePrefix = string.Empty;
 });
 
