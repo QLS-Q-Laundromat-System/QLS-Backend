@@ -145,8 +145,11 @@ app.UseSwaggerUI(c =>
 {
     var swaggerUiTitle = app.Environment.IsDevelopment() ? "QLS Backend dev v1" : "QLS Backend API v1";
     c.SwaggerEndpoint("/swagger/v1/swagger.json", swaggerUiTitle);
-    c.RoutePrefix = string.Empty;
+    c.RoutePrefix = "swagger";
 });
+
+// Redirect root to Swagger to avoid 404 when probing "/"
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 // Health Check endpoint cho CI/CD pipeline
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
