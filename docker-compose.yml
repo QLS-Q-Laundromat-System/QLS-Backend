@@ -4,7 +4,7 @@ services:
     container_name: ${STACK_NAME:-qls}-postgres
     restart: always
     environment:
-      POSTGRES_DB: ${DB_NAME:-QLS}
+      POSTGRES_DB: ${DB_NAME:-QLS_PROD}
       POSTGRES_USER: ${DB_USER:-qls_user}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-QLS@Oracle2026!}
     volumes:
@@ -14,7 +14,7 @@ services:
     networks:
       - qls-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-qls_user} -d ${DB_NAME:-QLS}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-qls_user} -d ${DB_NAME:-QLS_PROD}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -47,7 +47,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:5078
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${DB_NAME:-QLS};Username=${DB_USER:-qls_user};Password=${DB_PASSWORD:-QLS@Oracle2026!};Minimum Pool Size=1;Maximum Pool Size=20;Connection Idle Lifetime=300"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${DB_NAME:-QLS_PROD};Username=${DB_USER:-qls_user};Password=${DB_PASSWORD:-QLS@Oracle2026!};Minimum Pool Size=1;Maximum Pool Size=20;Connection Idle Lifetime=300"
       Jwt__Key: ${JWT_KEY:-QLaundromatSystem123456789@@2026!}
       Jwt__Issuer: QLS_Backend
       Jwt__Audience: QLS_Web

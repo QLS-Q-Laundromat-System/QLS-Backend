@@ -65,7 +65,7 @@ if [ ! -f "${APP_DIR}/.env" ]; then
 # ⚠️ Đổi các giá trị này trước khi chạy!
 
 # Database
-DB_NAME=QLS
+DB_NAME=QLS_PROD
 DB_USER=qls_user
 DB_PASSWORD=QLS@Oracle2026!
 
