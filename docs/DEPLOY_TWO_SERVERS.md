@@ -23,6 +23,7 @@ Co the bo qua, workflow da co default. Neu set thi them:
 - `BACKEND_PORT`
 - `POSTGRES_PORT`
 - `ASPNETCORE_ENVIRONMENT`
+- `DB_NAME`
 
 Suggested values:
 
@@ -32,6 +33,7 @@ DEV:
 - `BACKEND_PORT=5079`
 - `POSTGRES_PORT=5433`
 - `ASPNETCORE_ENVIRONMENT=Development`
+- `DB_NAME=QLS_DEV`
 
 MAIN:
 - `APP_DIR=/home/ubuntu/qls-backend`
@@ -39,6 +41,7 @@ MAIN:
 - `BACKEND_PORT=5078`
 - `POSTGRES_PORT=5432`
 - `ASPNETCORE_ENVIRONMENT=Production`
+- `DB_NAME=QLS_PROD`
 
 ## 5) File `.env` tren moi server
 Tai `APP_DIR`, tao file `.env` (co the copy tu `.env.example`) voi DB/JWT/CORS theo tung moi truong.

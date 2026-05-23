@@ -54,11 +54,12 @@ jobs:
           BACKEND_PORT: ${{ vars.BACKEND_PORT }}
           POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
           ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
+          DB_NAME: ${{ vars.DB_NAME }}
         with:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USER }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
-          envs: APP_DIR,STACK_NAME,BACKEND_PORT,POSTGRES_PORT,ASPNETCORE_ENVIRONMENT
+          envs: APP_DIR,STACK_NAME,BACKEND_PORT,POSTGRES_PORT,PGADMIN_PORT,ASPNETCORE_ENVIRONMENT,DB_NAME
           script: |
             set -e
 
@@ -68,6 +69,7 @@ jobs:
             BACKEND_PORT="${BACKEND_PORT:-5079}"
             POSTGRES_PORT="${POSTGRES_PORT:-5433}"
             ASPNETCORE_ENVIRONMENT="${ASPNETCORE_ENVIRONMENT:-Development}"
+            DB_NAME="${DB_NAME:-QLS_DEV}"
 
             mkdir -p "$APP_DIR"
             cp "$DEPLOY_TMP/docker-compose.yml" "$APP_DIR/docker-compose.yml"
@@ -76,9 +78,7 @@ jobs:
 
             cd "$APP_DIR"
             export BACKEND_IMAGE="qls-backend:dev-${{ github.sha }}"
-            export STACK_NAME BACKEND_PORT POSTGRES_PORT ASPNETCORE_ENVIRONMENT
-            # Cleanup legacy pgAdmin container from old compose definitions.
-            docker rm -f "${STACK_NAME}-pgadmin" >/dev/null 2>&1 || true
+            export STACK_NAME BACKEND_PORT POSTGRES_PORT PGADMIN_PORT ASPNETCORE_ENVIRONMENT DB_NAME
             docker compose up -d --remove-orphans
 
             rm -rf "$DEPLOY_TMP"
@@ -139,11 +139,12 @@ jobs:
           BACKEND_PORT: ${{ vars.BACKEND_PORT }}
           POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
           ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
+          DB_NAME: ${{ vars.DB_NAME }}
         with:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USER }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
-          envs: APP_DIR,STACK_NAME,BACKEND_PORT,POSTGRES_PORT,ASPNETCORE_ENVIRONMENT
+          envs: APP_DIR,STACK_NAME,BACKEND_PORT,POSTGRES_PORT,PGADMIN_PORT,ASPNETCORE_ENVIRONMENT,DB_NAME
           script: |
             set -e
 
@@ -153,6 +154,7 @@ jobs:
             BACKEND_PORT="${BACKEND_PORT:-5078}"
             POSTGRES_PORT="${POSTGRES_PORT:-5432}"
             ASPNETCORE_ENVIRONMENT="${ASPNETCORE_ENVIRONMENT:-Production}"
+            DB_NAME="${DB_NAME:-QLS_PROD}"
 
             mkdir -p "$APP_DIR"
             cp "$DEPLOY_TMP/docker-compose.yml" "$APP_DIR/docker-compose.yml"
@@ -161,9 +163,7 @@ jobs:
 
             cd "$APP_DIR"
             export BACKEND_IMAGE="qls-backend:main-${{ github.sha }}"
-            export STACK_NAME BACKEND_PORT POSTGRES_PORT ASPNETCORE_ENVIRONMENT
-            # Cleanup legacy pgAdmin container from old compose definitions.
-            docker rm -f "${STACK_NAME}-pgadmin" >/dev/null 2>&1 || true
+            export STACK_NAME BACKEND_PORT POSTGRES_PORT PGADMIN_PORT ASPNETCORE_ENVIRONMENT DB_NAME
             docker compose up -d --remove-orphans
 
             rm -rf "$DEPLOY_TMP"
