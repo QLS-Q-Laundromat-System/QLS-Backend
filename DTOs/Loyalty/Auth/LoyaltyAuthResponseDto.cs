@@ -1,6 +1,6 @@
-namespace QLS.Backend.DTOs.Zalo
+namespace QLS.Backend.DTOs.Loyalty.Auth
 {
-    public class ZaloLoginResponseDto
+    public class LoyaltyAuthResponseDto
     {
         public string AccessToken { get; set; } = string.Empty;
         public Guid CustomerId { get; set; }
