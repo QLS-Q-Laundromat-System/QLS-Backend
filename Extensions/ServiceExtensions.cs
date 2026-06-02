@@ -29,7 +29,8 @@ public static class ServiceExtensions
                     "QLS.Backend.Services.Stores",
                     "QLS.Backend.Services.DiscountCode",
                     "QLS.Backend.Services.Loyalty",
-                    "QLS.Backend.Services.Payment"
+                    "QLS.Backend.Services.Payment",
+                    "QLS.Backend.Services.Zalo"
                 )
                 .Where(type =>
                     !type.IsNested &&
@@ -40,6 +41,7 @@ public static class ServiceExtensions
         // Đăng ký HttpClient cho LgAuthTokenService và LgApiClient
         services.AddHttpClient<LgAuthTokenService>();
         services.AddHttpClient<LgApiClient>();
+        services.AddHttpClient<QLS.Backend.Interfaces.Zalo.IZaloGraphApiClient, QLS.Backend.Services.Zalo.ZaloGraphApiClient>();
     }
 
     // 2. Thêm hàm cấu hình CORS ngay bên dưới

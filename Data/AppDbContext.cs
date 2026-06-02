@@ -30,7 +30,6 @@ namespace QLS.Backend.Data
         public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
         public DbSet<PaymentConfig> PaymentConfigs { get; set; }
         public DbSet<LoyaltyCustomer> LoyaltyCustomers { get; set; }
-        public DbSet<LoyaltyOtpChallenge> LoyaltyOtpChallenges { get; set; }
         public DbSet<PointClaimToken> PointClaimTokens { get; set; }
         public DbSet<LoyaltyPointTransaction> LoyaltyPointTransactions { get; set; }
 
@@ -123,23 +122,8 @@ namespace QLS.Backend.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<LoyaltyCustomer>()
-                .HasIndex(c => new { c.BrandId, c.Email })
-                .IsUnique()
-                .HasFilter("\"Email\" IS NOT NULL");
-
-            modelBuilder.Entity<LoyaltyCustomer>()
-                .HasIndex(c => new { c.BrandId, c.PhoneNumber })
-                .IsUnique()
-                .HasFilter("\"PhoneNumber\" IS NOT NULL");
-
-            modelBuilder.Entity<LoyaltyOtpChallenge>()
-                .HasOne(c => c.Brand)
-                .WithMany()
-                .HasForeignKey(c => c.BrandId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<LoyaltyOtpChallenge>()
-                .HasIndex(c => new { c.BrandId, c.Identifier, c.Purpose, c.CreatedAt });
+                .HasIndex(c => new { c.BrandId, c.ZaloUserId })
+                .IsUnique();
 
             // --- Cấu hình quan hệ cho PointClaimToken ---
             modelBuilder.Entity<PointClaimToken>()

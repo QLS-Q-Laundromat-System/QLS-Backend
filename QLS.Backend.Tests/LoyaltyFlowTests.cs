@@ -1,14 +1,15 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging.Abstractions;
 using QLS.Backend.Data;
 using QLS.Backend.DTOs.Loyalty;
-using QLS.Backend.DTOs.Loyalty.Auth;
+using QLS.Backend.DTOs.Zalo;
 using QLS.Backend.Exceptions;
+using QLS.Backend.Interfaces.Zalo;
 using QLS.Backend.Models;
 using QLS.Backend.Models.Enums;
 using QLS.Backend.Services.Loyalty;
+using QLS.Backend.Services.Zalo;
 using Xunit;
 
 namespace QLS.Backend.Tests;
@@ -22,7 +23,7 @@ public class LoyaltyFlowTests
 
         var paymentSession = await fixture.SeedPaidSessionAsync(amount: 25000m);
         var loyaltyService = fixture.CreateLoyaltyService();
-        var loyaltyAuthService = fixture.CreateLoyaltyAuthService();
+        var zaloAuthService = fixture.CreateZaloAuthService();
 
         var token = await loyaltyService.EnsureClaimTokenForPaymentAsync(paymentSession.Session, paymentSession.Transaction);
 
@@ -30,10 +31,10 @@ public class LoyaltyFlowTests
         Assert.Equal(2, token!.PointsToEarn);
         Assert.False(token.IsClaimed);
 
-        var login = await fixture.RegisterCustomerAsync(
-            loyaltyAuthService,
+        var login = await fixture.LoginCustomerAsync(
+            zaloAuthService,
             paymentSession.Brand.Id,
-            "customer001@example.com",
+            "zalo-user-001",
             "Test Customer");
 
         Assert.False(string.IsNullOrWhiteSpace(login.AccessToken));
@@ -64,15 +65,15 @@ public class LoyaltyFlowTests
 
         var paymentSession = await fixture.SeedPaidSessionAsync(amount: 50000m);
         var loyaltyService = fixture.CreateLoyaltyService();
-        var loyaltyAuthService = fixture.CreateLoyaltyAuthService();
+        var zaloAuthService = fixture.CreateZaloAuthService();
 
         var token = await loyaltyService.EnsureClaimTokenForPaymentAsync(paymentSession.Session, paymentSession.Transaction);
         Assert.NotNull(token);
 
-        var login = await fixture.RegisterCustomerAsync(
-            loyaltyAuthService,
+        var login = await fixture.LoginCustomerAsync(
+            zaloAuthService,
             paymentSession.Brand.Id,
-            "customer.rollback@example.com",
+            "zalo-user-rollback",
             "Rollback User");
 
         await loyaltyService.ClaimPointsAsync(login.CustomerId, new LoyaltyClaimRequestDto { ClaimToken = token!.Token });
@@ -97,13 +98,13 @@ public class LoyaltyFlowTests
 
         var paymentSession = await fixture.SeedPaidSessionAsync(amount: 30000m);
         var loyaltyService = fixture.CreateLoyaltyService();
-        var loyaltyAuthService = fixture.CreateLoyaltyAuthService();
+        var zaloAuthService = fixture.CreateZaloAuthService();
 
         var token = await loyaltyService.EnsureClaimTokenForPaymentAsync(paymentSession.Session, paymentSession.Transaction);
-        var login = await fixture.RegisterCustomerAsync(
-            loyaltyAuthService,
+        var login = await fixture.LoginCustomerAsync(
+            zaloAuthService,
             paymentSession.Brand.Id,
-            "customer.reuse@example.com",
+            "zalo-user-reuse",
             "Reuse User");
 
         await loyaltyService.ClaimPointsAsync(login.CustomerId, new LoyaltyClaimRequestDto { ClaimToken = token!.Token });
@@ -115,42 +116,27 @@ public class LoyaltyFlowTests
     }
 
     [Fact]
-    public async Task LoyaltyAuth_ShouldSupportPasswordAndOtpLogin()
+    public async Task ZaloLogin_ShouldUseVerifiedProfileAndUpdateExistingCustomer()
     {
         await using var fixture = await TestFixture.CreateAsync();
         var paymentSession = await fixture.SeedPaidSessionAsync(amount: 10000m);
-        var loyaltyAuthService = fixture.CreateLoyaltyAuthService();
+        var zaloAuthService = fixture.CreateZaloAuthService();
 
-        await fixture.RegisterCustomerAsync(
-            loyaltyAuthService,
+        var firstLogin = await fixture.LoginCustomerAsync(
+            zaloAuthService,
             paymentSession.Brand.Id,
-            "0901234567",
-            "Phone Customer");
+            "zalo-profile-user",
+            "Initial Name");
+        var secondLogin = await fixture.LoginCustomerAsync(
+            zaloAuthService,
+            paymentSession.Brand.Id,
+            "zalo-profile-user",
+            "Updated Name");
 
-        var passwordLogin = await loyaltyAuthService.LoginWithPasswordAsync(new LoyaltyPasswordLoginRequestDto
-        {
-            BrandId = paymentSession.Brand.Id,
-            Identifier = "+84901234567",
-            Password = "Password123!"
-        });
-
-        var otp = await loyaltyAuthService.RequestOtpAsync(new LoyaltyOtpRequestDto
-        {
-            BrandId = paymentSession.Brand.Id,
-            Identifier = "0901234567",
-            Purpose = "Login"
-        });
-
-        var otpLogin = await loyaltyAuthService.LoginWithOtpAsync(new LoyaltyOtpLoginRequestDto
-        {
-            BrandId = paymentSession.Brand.Id,
-            Identifier = "0901234567",
-            OtpCode = otp.DevelopmentOtpCode!
-        });
-
-        Assert.Equal(passwordLogin.CustomerId, otpLogin.CustomerId);
-        Assert.False(string.IsNullOrWhiteSpace(passwordLogin.AccessToken));
-        Assert.False(string.IsNullOrWhiteSpace(otpLogin.AccessToken));
+        var customer = await fixture.Context.LoyaltyCustomers.FirstAsync(c => c.Id == firstLogin.CustomerId);
+        Assert.Equal(firstLogin.CustomerId, secondLogin.CustomerId);
+        Assert.Equal("Updated Name", customer.FullName);
+        Assert.Equal("https://example.com/zalo-profile-user.png", customer.AvatarUrl);
     }
 
     private sealed class TestFixture : IAsyncDisposable
@@ -187,10 +173,7 @@ public class LoyaltyFlowTests
                     ["Jwt:ExpireMinutes"] = "60",
                     ["Loyalty:ClaimTokenTtlMinutes"] = "10",
                     ["Loyalty:PointUnitVnd"] = "10000",
-                    ["Loyalty:PointExpiryMonths"] = "3",
-                    ["LoyaltyAuth:OtpCooldownSeconds"] = "1",
-                    ["LoyaltyAuth:EnableDevelopmentOtpDelivery"] = "true",
-                    ["LoyaltyAuth:ExposeOtpCodeInResponse"] = "true"
+                    ["Loyalty:PointExpiryMonths"] = "3"
                 })
                 .Build();
 
@@ -198,34 +181,49 @@ public class LoyaltyFlowTests
         }
 
         public LoyaltyService CreateLoyaltyService() => new(Context, Configuration);
-        public LoyaltyAuthService CreateLoyaltyAuthService() => new(
+        public ZaloAuthService CreateZaloAuthService() => new(
             Context,
             Configuration,
-            new LoggingLoyaltyOtpDeliveryService(
-                NullLogger<LoggingLoyaltyOtpDeliveryService>.Instance,
-                Configuration));
+            new FakeZaloGraphApiClient());
 
-        public async Task<LoyaltyAuthResponseDto> RegisterCustomerAsync(
-            LoyaltyAuthService loyaltyAuthService,
+        public Task<ZaloLoginResponseDto> LoginCustomerAsync(
+            ZaloAuthService zaloAuthService,
             Guid brandId,
-            string identifier,
+            string zaloUserId,
             string fullName)
         {
-            var otp = await loyaltyAuthService.RequestOtpAsync(new LoyaltyOtpRequestDto
+            FakeZaloGraphApiClient.SetProfile(zaloUserId, fullName);
+            return zaloAuthService.LoginAsync(new ZaloLoginRequestDto
             {
                 BrandId = brandId,
-                Identifier = identifier,
-                Purpose = "Register"
+                AccessToken = zaloUserId
             });
+        }
 
-            return await loyaltyAuthService.RegisterAsync(new LoyaltyRegisterRequestDto
+        private sealed class FakeZaloGraphApiClient : IZaloGraphApiClient
+        {
+            private static readonly Dictionary<string, ZaloProfileDto> Profiles = new();
+
+            public static void SetProfile(string accessToken, string fullName)
             {
-                BrandId = brandId,
-                Identifier = identifier,
-                Password = "Password123!",
-                OtpCode = otp.DevelopmentOtpCode!,
-                FullName = fullName
-            });
+                Profiles[accessToken] = new ZaloProfileDto
+                {
+                    Id = accessToken,
+                    Name = fullName,
+                    Picture = new ZaloPictureDto
+                    {
+                        Data = new ZaloPictureDataDto
+                        {
+                            Url = $"https://example.com/{accessToken}.png"
+                        }
+                    }
+                };
+            }
+
+            public Task<ZaloProfileDto> GetProfileAsync(string accessToken, CancellationToken cancellationToken = default)
+            {
+                return Task.FromResult(Profiles[accessToken]);
+            }
         }
 
         public async Task<(Brand Brand, Store Store, User User, Machine Machine, MachineSession Session, PaymentTransaction Transaction)> SeedPaidSessionAsync(decimal amount)

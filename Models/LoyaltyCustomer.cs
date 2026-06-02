@@ -15,18 +15,9 @@ namespace QLS.Backend.Models
         [ForeignKey(nameof(BrandId))]
         public Brand? Brand { get; set; }
 
-        [MaxLength(150)]
-        public string? Email { get; set; }
-
-        [MaxLength(20)]
-        public string? PhoneNumber { get; set; }
-
         [Required]
-        public string PasswordHash { get; set; } = string.Empty;
-
-        public bool IsEmailVerified { get; set; }
-
-        public bool IsPhoneNumberVerified { get; set; }
+        [MaxLength(100)]
+        public string ZaloUserId { get; set; } = string.Empty;
 
         [MaxLength(150)]
         public string? FullName { get; set; }

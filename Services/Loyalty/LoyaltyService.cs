@@ -194,10 +194,7 @@ namespace QLS.Backend.Services.Loyalty
             {
                 CustomerId = customer.Id,
                 BrandId = customer.BrandId,
-                Email = customer.Email,
-                PhoneNumber = customer.PhoneNumber,
-                IsEmailVerified = customer.IsEmailVerified,
-                IsPhoneNumberVerified = customer.IsPhoneNumberVerified,
+                ZaloUserId = customer.ZaloUserId,
                 FullName = customer.FullName,
                 AvatarUrl = customer.AvatarUrl,
                 CustomerType = customer.CustomerType.ToString(),

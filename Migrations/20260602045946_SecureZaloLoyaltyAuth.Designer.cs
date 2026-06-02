@@ -12,8 +12,8 @@ using QLS.Backend.Data;
 namespace QLS.Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260602043055_ReplaceZaloLoyaltyAuthWithOtp")]
-    partial class ReplaceZaloLoyaltyAuthWithOtp
+    [Migration("20260602045946_SecureZaloLoyaltyAuth")]
+    partial class SecureZaloLoyaltyAuth
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -271,27 +271,9 @@ namespace QLS.Backend.Migrations
                     b.Property<int>("CustomerType")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Email")
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
                     b.Property<string>("FullName")
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
-
-                    b.Property<bool>("IsEmailVerified")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsPhoneNumberVerified")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
 
                     b.Property<int>("StudentVerificationStatus")
                         .HasColumnType("integer");
@@ -302,64 +284,17 @@ namespace QLS.Backend.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("ZaloUserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("BrandId", "Email")
-                        .IsUnique()
-                        .HasFilter("\"Email\" IS NOT NULL");
-
-                    b.HasIndex("BrandId", "PhoneNumber")
-                        .IsUnique()
-                        .HasFilter("\"PhoneNumber\" IS NOT NULL");
+                    b.HasIndex("BrandId", "ZaloUserId")
+                        .IsUnique();
 
                     b.ToTable("LoyaltyCustomers");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.LoyaltyOtpChallenge", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BrandId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Channel")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.Property<string>("CodeHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("ConsumedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("FailedAttempts")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Identifier")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<string>("Purpose")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BrandId", "Identifier", "Purpose", "CreatedAt");
-
-                    b.ToTable("LoyaltyOtpChallenges");
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.LoyaltyPointTransaction", b =>
@@ -1168,17 +1103,6 @@ namespace QLS.Backend.Migrations
                 });
 
             modelBuilder.Entity("QLS.Backend.Models.LoyaltyCustomer", b =>
-                {
-                    b.HasOne("QLS.Backend.Models.Brand", "Brand")
-                        .WithMany()
-                        .HasForeignKey("BrandId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Brand");
-                });
-
-            modelBuilder.Entity("QLS.Backend.Models.LoyaltyOtpChallenge", b =>
                 {
                     b.HasOne("QLS.Backend.Models.Brand", "Brand")
                         .WithMany()

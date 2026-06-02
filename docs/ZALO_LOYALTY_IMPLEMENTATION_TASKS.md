@@ -8,7 +8,7 @@ Implement loyalty points for QLS through Zalo Mini App with the flow:
 2. SePay webhook confirms payment.
 3. Backend triggers machine.
 4. Backend creates claim token + QR link.
-5. Customer opens Mini App and logs in with verified email or phone.
+5. Customer opens Mini App and logs in with a Zalo access token verified by the backend.
 6. Customer claims points by token.
 7. Backend awards points and stores history.
 8. If session later becomes `Error` or `Cancelled`, backend rolls back awarded points.
@@ -16,18 +16,17 @@ Implement loyalty points for QLS through Zalo Mini App with the flow:
 Business decisions confirmed:
 
 - Loyalty is **per Brand**.
-- Loyalty auth uses OTP verification and supports password or OTP login.
+- Backend retrieves Zalo Profile using `access_token` and `appsecret_proof`.
 - Rollback points when a paid session transitions to `Error` / `Cancelled`.
 - `CustomerType` and `StudentVerificationStatus` default values are used until a dedicated verification flow exists.
 - Use backend redirect claim link strategy (`/api/loyalty/claim-link/{token}`).
 
 ## Architecture Decisions
 
-1. Add 4 new entities:
+1. Add 3 new entities:
 - `LoyaltyCustomer`
 - `PointClaimToken`
 - `LoyaltyPointTransaction`
-- `LoyaltyOtpChallenge`
 
 2. Add brand boundary fields:
 - `BrandId` on all loyalty tables.
@@ -61,23 +60,20 @@ Business decisions confirmed:
 - [x] Add EF migration for loyalty schema.
 
 2. API Contracts
-- [x] Add loyalty auth DTOs (`OTP request`, `register`, password login, OTP login).
+- [x] Add Zalo auth DTOs (`accessToken` login request/response and Graph profile).
 - [x] Add loyalty DTOs (`claim`, `me`, `history`, `session loyalty`).
 
 3. Service Layer
-- [x] Add `ILoyaltyAuthService`.
+- [x] Add `IZaloAuthService` and `IZaloGraphApiClient`.
 - [x] Add `ILoyaltyService`.
-- [x] Implement OTP verification, register, password login, OTP login + JWT.
+- [x] Implement Graph API verification, customer upsert and JWT issue.
 - [x] Implement claim validation and award points transaction.
 - [x] Implement rollback logic for failed/cancelled sessions.
 - [x] Implement claim token creation from payment flow.
 - [x] Implement daily points expiry processor.
 
 4. API Layer
-- [x] Add `POST /api/loyalty/auth/otp/request`.
-- [x] Add `POST /api/loyalty/auth/register`.
-- [x] Add `POST /api/loyalty/auth/login/password`.
-- [x] Add `POST /api/loyalty/auth/login/otp`.
+- [x] Add `POST /api/zalo/auth/login`.
 - [x] Add `POST /api/loyalty/claim`.
 - [x] Add `GET /api/loyalty/me`.
 - [x] Add `GET /api/loyalty/points/history`.
@@ -97,8 +93,7 @@ Business decisions confirmed:
 7. Verification
 - [x] Build compile success.
 - [ ] Sanity check core scenarios:
-  - register with OTP
-  - login with password or OTP
+  - login with backend-verified Zalo profile
   - create claim token
   - claim success
   - claim duplicate rejected
@@ -108,9 +103,9 @@ Business decisions confirmed:
 
 ## API Notes
 
-### Loyalty Auth
+### Zalo Auth
 
-See `ZALO_LOYALTY_FLOW_SPEC.md` for OTP request, registration and login contracts.
+See `ZALO_LOYALTY_FLOW_SPEC.md` for access token login and Graph API verification contracts.
 
 Auth response:
 
