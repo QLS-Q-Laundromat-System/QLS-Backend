@@ -36,6 +36,11 @@ services:
       Jwt__ExpireDays: 7
       CorsSettings__AllowedOrigins__0: ${CORS_ORIGIN_0:-http://localhost:5173}
       CorsSettings__AllowedOrigins__1: ${CORS_ORIGIN_1:-https://your-frontend-domain.com}
+      CorsSettings__AllowedOrigins__2: ${CORS_ORIGIN_2:-https://h5.zdn.vn}
+      CorsSettings__AllowedOrigins__3: ${CORS_ORIGIN_3:-https://h5.zadn.vn}
+      Zalo__AppId: ${ZALO_APP_ID:-572235974883145642}
+      Zalo__AppSecretKey: ${ZALO_APP_SECRET_KEY:-}
+      Loyalty__MiniAppClaimUrlTemplate: ${LOYALTY_MINI_APP_CLAIM_URL_TEMPLATE:-https://zalo.me/s/572235974883145642?claimToken={token}}
       Zigbee2Mqtt__Host: ${MQTT_HOST:-localhost}
       Zigbee2Mqtt__Port: ${MQTT_PORT:-1883}
       LgApi__BaseUrl: https://kic-laundry.lgthinq.com/status/
