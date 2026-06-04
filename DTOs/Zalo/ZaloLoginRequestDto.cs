@@ -8,16 +8,6 @@ namespace QLS.Backend.DTOs.Zalo
         public Guid BrandId { get; set; }
 
         [Required]
-        [MaxLength(100)]
-        public string ZaloUserId { get; set; } = string.Empty;
-
-        [MaxLength(100)]
-        public string? ZaloOAUserId { get; set; }
-
-        [MaxLength(150)]
-        public string? FullName { get; set; }
-
-        [MaxLength(500)]
-        public string? AvatarUrl { get; set; }
+        public string AccessToken { get; set; } = string.Empty;
     }
 }

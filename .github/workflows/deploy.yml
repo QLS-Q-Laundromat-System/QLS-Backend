@@ -1,190 +1,205 @@
-name: Deploy QLS Backend (Docker) to Dev/Main Servers
+name: QLS Backend CI/CD
 
 on:
   push:
     branches:
       - dev
-      - develop
       - main
   workflow_dispatch:
-    inputs:
-      target:
-        description: "Deploy target"
-        type: choice
-        required: true
-        default: dev
-        options:
-          - dev
-          - main
-          - both
+
+env:
+  DOTNET_VERSION: 10.0.x
+  SOLUTION_FILE: QLS-Backend.sln
+  DOCKERFILE: ./Dockerfile
+  DOCKER_IMAGE: ${{ vars.DOCKER_IMAGE || 'soramyo/qls-backend' }}
+  DEFAULT_VPS_HOST: 180.93.114.25
 
 jobs:
-  deploy-dev:
-    name: Deploy to DEV
-    if: |
-      (github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/develop')) ||
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.target == 'dev' || github.event.inputs.target == 'both'))
+  test-build-push:
+    name: Test, build, and push image
     runs-on: ubuntu-latest
-    environment: dev
+    outputs:
+      deploy_env: ${{ steps.branch.outputs.deploy_env }}
+      image_tag: ${{ steps.tags.outputs.image_tag }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build Docker image (dev)
+      - name: Resolve branch target
+        id: branch
         run: |
-          docker build -t qls-backend:dev-${{ github.sha }} -t qls-backend:dev-latest .
-          docker save qls-backend:dev-${{ github.sha }} | gzip > qls-backend-dev.tar.gz
-          echo "Image archive size: $(du -sh qls-backend-dev.tar.gz | cut -f1)"
-
-      - name: Copy deploy package to DEV server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.ORACLE_HOST }}
-          username: ${{ secrets.ORACLE_USER }}
-          key: ${{ secrets.ORACLE_SSH_KEY }}
-          source: "qls-backend-dev.tar.gz,docker-compose.yml"
-          target: "/tmp/qls-deploy-dev"
-
-      - name: Deploy on DEV server
-        uses: appleboy/ssh-action@v1.0.3
-        env:
-          APP_DIR: ${{ vars.APP_DIR }}
-          STACK_NAME: ${{ vars.STACK_NAME }}
-          BACKEND_PORT: ${{ vars.BACKEND_PORT }}
-          POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
-          ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
-          DB_NAME: ${{ vars.DB_NAME }}
-        with:
-          host: ${{ secrets.ORACLE_HOST }}
-          username: ${{ secrets.ORACLE_USER }}
-          key: ${{ secrets.ORACLE_SSH_KEY }}
-          envs: APP_DIR,STACK_NAME,BACKEND_PORT,POSTGRES_PORT,PGADMIN_PORT,ASPNETCORE_ENVIRONMENT,DB_NAME
-          script: |
-            set -e
-
-            DEPLOY_TMP="/tmp/qls-deploy-dev"
-            APP_DIR="${APP_DIR:-$HOME/qls-backend-dev}"
-            STACK_NAME="${STACK_NAME:-qls-dev}"
-            BACKEND_PORT="${BACKEND_PORT:-5079}"
-            POSTGRES_PORT="${POSTGRES_PORT:-5433}"
-            ASPNETCORE_ENVIRONMENT="${ASPNETCORE_ENVIRONMENT:-Development}"
-            DB_NAME="${DB_NAME:-QLS_DEV}"
-
-            mkdir -p "$APP_DIR"
-            cp "$DEPLOY_TMP/docker-compose.yml" "$APP_DIR/docker-compose.yml"
-
-            docker load < "$DEPLOY_TMP/qls-backend-dev.tar.gz"
-
-            cd "$APP_DIR"
-            export BACKEND_IMAGE="qls-backend:dev-${{ github.sha }}"
-            export STACK_NAME BACKEND_PORT POSTGRES_PORT PGADMIN_PORT ASPNETCORE_ENVIRONMENT DB_NAME
-            docker compose up -d --remove-orphans
-
-            rm -rf "$DEPLOY_TMP"
-            sleep 10
-
-            if docker ps --filter "name=${STACK_NAME}-backend" --format '{{.Names}}' | grep -q "${STACK_NAME}-backend"; then
-              echo "DEV deploy success"
-              docker ps --filter "name=${STACK_NAME}"
-            else
-              echo "DEV deploy failed"
-              docker logs "${STACK_NAME}-backend" --tail=100 || true
-              exit 1
-            fi
-
-      - name: DEV health check
-        env:
-          BACKEND_PORT: ${{ vars.BACKEND_PORT }}
-        run: |
-          PORT="${BACKEND_PORT:-5079}"
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.ORACLE_HOST }}:${PORT}/health" || echo "000")
-          echo "DEV health check: $HTTP_CODE"
-          if [ "$HTTP_CODE" != "200" ]; then
-            exit 1
+          set -e
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            echo "deploy_env=main" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy_env=dev" >> "$GITHUB_OUTPUT"
           fi
 
-  deploy-main:
-    name: Deploy to MAIN
-    if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.target == 'main' || github.event.inputs.target == 'both'))
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore "${{ env.SOLUTION_FILE }}"
+
+      - name: Build
+        run: dotnet build "${{ env.SOLUTION_FILE }}" --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test "${{ env.SOLUTION_FILE }}" --configuration Release --no-build --verbosity normal
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Prepare Docker tags
+        id: tags
+        run: |
+          set -e
+          BRANCH_TAG="${GITHUB_REF_NAME}-${GITHUB_SHA}"
+          {
+            echo "image_tag=${DOCKER_IMAGE}:${BRANCH_TAG}"
+            echo "tags<<EOF"
+            echo "${DOCKER_IMAGE}:${BRANCH_TAG}"
+            echo "${DOCKER_IMAGE}:${GITHUB_REF_NAME}-latest"
+            if [ "${GITHUB_REF_NAME}" = "main" ]; then
+              echo "${DOCKER_IMAGE}:latest"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ env.DOCKERFILE }}
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+
+  deploy-to-vps:
+    name: Deploy to ${{ needs.test-build-push.outputs.deploy_env }} VPS
+    needs: test-build-push
     runs-on: ubuntu-latest
-    environment: main
+    environment: ${{ needs.test-build-push.outputs.deploy_env }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout deploy files
         uses: actions/checkout@v4
 
-      - name: Build Docker image (main)
-        run: |
-          docker build -t qls-backend:main-${{ github.sha }} -t qls-backend:latest .
-          docker save qls-backend:main-${{ github.sha }} | gzip > qls-backend-main.tar.gz
-          echo "Image archive size: $(du -sh qls-backend-main.tar.gz | cut -f1)"
-
-      - name: Copy deploy package to MAIN server
+      - name: Copy compose file to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.ORACLE_HOST }}
-          username: ${{ secrets.ORACLE_USER }}
-          key: ${{ secrets.ORACLE_SSH_KEY }}
-          source: "qls-backend-main.tar.gz,docker-compose.yml"
-          target: "/tmp/qls-deploy-main"
+          host: ${{ secrets.VPS_HOST || env.DEFAULT_VPS_HOST }}
+          username: ${{ secrets.VPS_USER || 'root' }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          source: docker-compose.yml
+          target: /tmp/qls-deploy-${{ needs.test-build-push.outputs.deploy_env }}
 
-      - name: Deploy on MAIN server
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v1
         env:
           APP_DIR: ${{ vars.APP_DIR }}
           STACK_NAME: ${{ vars.STACK_NAME }}
           BACKEND_PORT: ${{ vars.BACKEND_PORT }}
           POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+          POSTGRES_BIND_IP: ${{ vars.POSTGRES_BIND_IP }}
           ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
           DB_NAME: ${{ vars.DB_NAME }}
+          BACKEND_IMAGE: ${{ needs.test-build-push.outputs.image_tag }}
         with:
-          host: ${{ secrets.ORACLE_HOST }}
-          username: ${{ secrets.ORACLE_USER }}
-          key: ${{ secrets.ORACLE_SSH_KEY }}
-          envs: APP_DIR,STACK_NAME,BACKEND_PORT,POSTGRES_PORT,PGADMIN_PORT,ASPNETCORE_ENVIRONMENT,DB_NAME
+          host: ${{ secrets.VPS_HOST || env.DEFAULT_VPS_HOST }}
+          username: ${{ secrets.VPS_USER || 'root' }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          timeout: 120s
+          command_timeout: 60m
+          envs: APP_DIR,STACK_NAME,BACKEND_PORT,POSTGRES_PORT,POSTGRES_BIND_IP,ASPNETCORE_ENVIRONMENT,DB_NAME,BACKEND_IMAGE
           script: |
             set -e
 
-            DEPLOY_TMP="/tmp/qls-deploy-main"
-            APP_DIR="${APP_DIR:-$HOME/qls-backend}"
-            STACK_NAME="${STACK_NAME:-qls-main}"
-            BACKEND_PORT="${BACKEND_PORT:-5078}"
-            POSTGRES_PORT="${POSTGRES_PORT:-5432}"
-            ASPNETCORE_ENVIRONMENT="${ASPNETCORE_ENVIRONMENT:-Production}"
-            DB_NAME="${DB_NAME:-QLS_PROD}"
+            if [ -z "$APP_DIR" ]; then
+              if [ "${{ needs.test-build-push.outputs.deploy_env }}" = "dev" ]; then
+                APP_DIR="/root/qls-backend-dev"
+              else
+                APP_DIR="/root/qls-backend"
+              fi
+            fi
+            STACK_NAME="${STACK_NAME:-qls-${{ needs.test-build-push.outputs.deploy_env }}}"
+            POSTGRES_BIND_IP="${POSTGRES_BIND_IP:-127.0.0.1}"
+
+            if [ "${{ needs.test-build-push.outputs.deploy_env }}" = "dev" ]; then
+              BACKEND_PORT="${BACKEND_PORT:-5079}"
+              POSTGRES_PORT="${POSTGRES_PORT:-5433}"
+              ASPNETCORE_ENVIRONMENT="${ASPNETCORE_ENVIRONMENT:-Development}"
+              DB_NAME="${DB_NAME:-QLS_DEV}"
+            else
+              BACKEND_PORT="${BACKEND_PORT:-5078}"
+              POSTGRES_PORT="${POSTGRES_PORT:-5432}"
+              ASPNETCORE_ENVIRONMENT="${ASPNETCORE_ENVIRONMENT:-Production}"
+              DB_NAME="${DB_NAME:-QLS_PROD}"
+            fi
 
             mkdir -p "$APP_DIR"
-            cp "$DEPLOY_TMP/docker-compose.yml" "$APP_DIR/docker-compose.yml"
-
-            docker load < "$DEPLOY_TMP/qls-backend-main.tar.gz"
-
+            cp "/tmp/qls-deploy-${{ needs.test-build-push.outputs.deploy_env }}/docker-compose.yml" "$APP_DIR/docker-compose.yml"
             cd "$APP_DIR"
-            export BACKEND_IMAGE="qls-backend:main-${{ github.sha }}"
-            export STACK_NAME BACKEND_PORT POSTGRES_PORT PGADMIN_PORT ASPNETCORE_ENVIRONMENT DB_NAME
-            docker compose up -d --remove-orphans
 
-            rm -rf "$DEPLOY_TMP"
+            if [ ! -f .env ]; then
+              cat > .env <<EOF
+STACK_NAME=${STACK_NAME}
+ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+BACKEND_PORT=${BACKEND_PORT}
+POSTGRES_PORT=${POSTGRES_PORT}
+POSTGRES_BIND_IP=${POSTGRES_BIND_IP}
+DB_NAME=${DB_NAME}
+DB_USER=qls_user
+DB_PASSWORD=change-this-db-password
+JWT_KEY=change-this-long-random-jwt-secret
+CORS_ORIGIN_0=http://localhost:5173
+CORS_ORIGIN_1=https://your-frontend-domain.com
+EOF
+              echo "Created default .env. Update secrets in ${APP_DIR}/.env after first deploy."
+            fi
+
+            export BACKEND_IMAGE STACK_NAME BACKEND_PORT POSTGRES_PORT POSTGRES_BIND_IP ASPNETCORE_ENVIRONMENT DB_NAME
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker image prune -f
+
             sleep 10
 
             if docker ps --filter "name=${STACK_NAME}-backend" --format '{{.Names}}' | grep -q "${STACK_NAME}-backend"; then
-              echo "MAIN deploy success"
+              echo "Deploy success: ${STACK_NAME}"
               docker ps --filter "name=${STACK_NAME}"
             else
-              echo "MAIN deploy failed"
+              echo "Deploy failed: ${STACK_NAME}"
               docker logs "${STACK_NAME}-backend" --tail=100 || true
               exit 1
             fi
 
-      - name: MAIN health check
+      - name: Health check
         env:
           BACKEND_PORT: ${{ vars.BACKEND_PORT }}
+          DEPLOY_ENV: ${{ needs.test-build-push.outputs.deploy_env }}
+          VPS_HOST: ${{ secrets.VPS_HOST || env.DEFAULT_VPS_HOST }}
         run: |
-          PORT="${BACKEND_PORT:-5078}"
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.ORACLE_HOST }}:${PORT}/health" || echo "000")
-          echo "MAIN health check: $HTTP_CODE"
+          if [ -z "$BACKEND_PORT" ]; then
+            if [ "$DEPLOY_ENV" = "dev" ]; then
+              PORT="5079"
+            else
+              PORT="5078"
+            fi
+          else
+            PORT="$BACKEND_PORT"
+          fi
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://${VPS_HOST}:${PORT}/health" || echo "000")
+          echo "Health check: $HTTP_CODE"
           if [ "$HTTP_CODE" != "200" ]; then
             exit 1
           fi

@@ -1,16 +1,5 @@
 #!/usr/bin/env bash
-# QLS Backend - VPS Docker setup
-# OS: Ubuntu 20.04+
-# Usage: bash scripts/setup-server.sh
-
 set -euo pipefail
-
-APP_MAIN_DIR="/root/qls-backend"
-APP_DEV_DIR="/root/qls-backend-dev"
-MAIN_PORT=5078
-DEV_PORT=5079
-
-echo "QLS Backend - VPS Docker setup"
 
 apt-get update
 apt-get install -y ca-certificates curl gnupg lsb-release
@@ -27,35 +16,13 @@ apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 systemctl enable --now docker
 
-mkdir -p "$APP_MAIN_DIR" "$APP_DEV_DIR"
+mkdir -p /root/qls-backend /root/qls-backend-dev
 
 if command -v ufw >/dev/null 2>&1; then
   ufw allow 22/tcp
-  ufw allow "${MAIN_PORT}/tcp"
-  ufw allow "${DEV_PORT}/tcp"
+  ufw allow 5078/tcp
+  ufw allow 5079/tcp
 fi
-
-cat <<EOF
-
-Setup complete.
-
-VPS:
-  IP: 180.93.114.25
-  SSH: ssh root@180.93.114.25
-
-App directories:
-  MAIN: ${APP_MAIN_DIR}
-  DEV:  ${APP_DEV_DIR}
-
-Ports:
-  MAIN: ${MAIN_PORT}
-  DEV:  ${DEV_PORT}
-
-Next:
-  1. Set GitHub secrets DOCKER_USERNAME, DOCKER_PASSWORD.
-  2. Set environment secrets VPS_PASSWORD, optional VPS_HOST=180.93.114.25.
-  3. Push branch dev or main.
-EOF
 
 docker --version
 docker compose version

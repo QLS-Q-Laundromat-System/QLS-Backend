@@ -8,7 +8,7 @@ Implement loyalty points for QLS through Zalo Mini App with the flow:
 2. SePay webhook confirms payment.
 3. Backend triggers machine.
 4. Backend creates claim token + QR link.
-5. Customer opens Mini App and logs in with Zalo payload from FE.
+5. Customer opens Mini App and logs in with a Zalo access token verified by the backend.
 6. Customer claims points by token.
 7. Backend awards points and stores history.
 8. If session later becomes `Error` or `Cancelled`, backend rolls back awarded points.
@@ -16,7 +16,7 @@ Implement loyalty points for QLS through Zalo Mini App with the flow:
 Business decisions confirmed:
 
 - Loyalty is **per Brand**.
-- Zalo login accepts payload from FE (no server-side Zalo verification for now).
+- Backend retrieves Zalo Profile using `access_token` and `appsecret_proof`.
 - Rollback points when a paid session transitions to `Error` / `Cancelled`.
 - `CustomerType` and `StudentVerificationStatus` default values are used until a dedicated verification flow exists.
 - Use backend redirect claim link strategy (`/api/loyalty/claim-link/{token}`).
@@ -60,13 +60,13 @@ Business decisions confirmed:
 - [x] Add EF migration for loyalty schema.
 
 2. API Contracts
-- [x] Add Zalo auth DTOs (`login request/response`).
+- [x] Add Zalo auth DTOs (`accessToken` login request/response and Graph profile).
 - [x] Add loyalty DTOs (`claim`, `me`, `history`, `session loyalty`).
 
 3. Service Layer
-- [x] Add `IZaloAuthService`.
+- [x] Add `IZaloAuthService` and `IZaloGraphApiClient`.
 - [x] Add `ILoyaltyService`.
-- [x] Implement login/upsert customer + issue JWT.
+- [x] Implement Graph API verification, customer upsert and JWT issue.
 - [x] Implement claim validation and award points transaction.
 - [x] Implement rollback logic for failed/cancelled sessions.
 - [x] Implement claim token creation from payment flow.
@@ -93,7 +93,7 @@ Business decisions confirmed:
 7. Verification
 - [x] Build compile success.
 - [ ] Sanity check core scenarios:
-  - login upsert
+  - login with backend-verified Zalo profile
   - create claim token
   - claim success
   - claim duplicate rejected
@@ -103,23 +103,11 @@ Business decisions confirmed:
 
 ## API Notes
 
-### Zalo Login
+### Zalo Auth
 
-`POST /api/zalo/auth/login`
+See `ZALO_LOYALTY_FLOW_SPEC.md` for access token login and Graph API verification contracts.
 
-Request:
-
-```json
-{
-  "brandId": "uuid",
-  "zaloUserId": "123456789",
-  "zaloOAUserId": "oa_user_id",
-  "fullName": "Nguyen Van A",
-  "avatarUrl": "https://..."
-}
-```
-
-Response:
+Auth response:
 
 ```json
 {

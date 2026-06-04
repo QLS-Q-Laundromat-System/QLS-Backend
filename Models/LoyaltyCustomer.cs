@@ -19,9 +19,6 @@ namespace QLS.Backend.Models
         [MaxLength(100)]
         public string ZaloUserId { get; set; } = string.Empty;
 
-        [MaxLength(100)]
-        public string? ZaloOAUserId { get; set; }
-
         [MaxLength(150)]
         public string? FullName { get; set; }
 
