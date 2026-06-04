@@ -17,15 +17,19 @@ VPS hien tai:
 
 Workflow se build image va push cac tag:
 
-- `soramyo/qls-backend:dev-latest`
-- `soramyo/qls-backend:dev-<commit-sha>`
-- `soramyo/qls-backend:main-latest`
-- `soramyo/qls-backend:main-<commit-sha>`
-- `soramyo/qls-backend:latest` chi duoc push tu branch `main`
+- `<DOCKER_IMAGE>:dev-latest`
+- `<DOCKER_IMAGE>:dev-<commit-sha>`
+- `<DOCKER_IMAGE>:main-latest`
+- `<DOCKER_IMAGE>:main-<commit-sha>`
+- `<DOCKER_IMAGE>:latest` chi duoc push tu branch `main`
 
-Neu muon doi Docker Hub repo, them Repository variable:
+Bat buoc them Repository variable:
 
-- `DOCKER_IMAGE=soramyo/ten-image-moi`
+- `DOCKER_IMAGE=<dockerhub-username>/<image-name>`
+
+Vi du:
+
+- `DOCKER_IMAGE=myuser/devpool-backend`
 
 ## 3) GitHub Environments
 
@@ -40,6 +44,10 @@ Them secrets dung chung:
 
 - `DOCKER_USERNAME`
 - `DOCKER_PASSWORD`
+
+Them Repository variable:
+
+- `DOCKER_IMAGE`
 
 ## 5) Environment secrets
 
