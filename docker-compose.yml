@@ -14,14 +14,17 @@ services:
     networks:
       - qls-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-qls_user} -d ${DB_NAME:-QLS_PROD}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER:-qls_user} -d ${DB_NAME:-QLS_PROD}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
 
-
   qls-backend:
-    image: ${BACKEND_IMAGE:-soramyo/qls-backend:latest}
+    image: ${BACKEND_IMAGE:?BACKEND_IMAGE is required}
     container_name: ${STACK_NAME:-qls}-backend
     restart: always
     ports:
@@ -65,4 +68,3 @@ networks:
   qls-network:
     name: ${STACK_NAME:-qls}-network
     driver: bridge
-

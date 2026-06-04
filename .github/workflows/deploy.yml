@@ -11,16 +11,16 @@ env:
   DOTNET_VERSION: 10.0.x
   SOLUTION_FILE: QLS-Backend.sln
   DOCKERFILE: ./Dockerfile
-  DOCKER_IMAGE: ${{ vars.DOCKER_IMAGE || 'soramyo/qls-backend' }}
+  DOCKER_IMAGE: ${{ vars.DOCKER_IMAGE }}
   DEFAULT_VPS_HOST: 180.93.114.25
 
 jobs:
   test-build-push:
     name: Test, build, and push image
     runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'main' || 'dev' }}
     outputs:
       deploy_env: ${{ steps.branch.outputs.deploy_env }}
-      image_tag: ${{ steps.tags.outputs.image_tag }}
 
     steps:
       - name: Checkout code
@@ -50,6 +50,14 @@ jobs:
       - name: Test
         run: dotnet test "${{ env.SOLUTION_FILE }}" --configuration Release --no-build --verbosity normal
 
+      - name: Validate Docker image name
+        run: |
+          set -e
+          if [ -z "$DOCKER_IMAGE" ]; then
+            echo "Missing GitHub variable DOCKER_IMAGE. Example: your-dockerhub-username/your-image-name"
+            exit 1
+          fi
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -62,7 +70,6 @@ jobs:
           set -e
           BRANCH_TAG="${GITHUB_REF_NAME}-${GITHUB_SHA}"
           {
-            echo "image_tag=${DOCKER_IMAGE}:${BRANCH_TAG}"
             echo "tags<<EOF"
             echo "${DOCKER_IMAGE}:${BRANCH_TAG}"
             echo "${DOCKER_IMAGE}:${GITHUB_REF_NAME}-latest"
@@ -111,7 +118,7 @@ jobs:
           POSTGRES_BIND_IP: ${{ vars.POSTGRES_BIND_IP }}
           ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
           DB_NAME: ${{ vars.DB_NAME }}
-          BACKEND_IMAGE: ${{ needs.test-build-push.outputs.image_tag }}
+          DOCKER_IMAGE: ${{ vars.DOCKER_IMAGE }}
         with:
           host: ${{ secrets.VPS_HOST || env.DEFAULT_VPS_HOST }}
           username: ${{ secrets.VPS_USER || 'root' }}
@@ -120,21 +127,31 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           timeout: 120s
           command_timeout: 60m
-          envs: APP_DIR,STACK_NAME,BACKEND_PORT,POSTGRES_PORT,POSTGRES_BIND_IP,ASPNETCORE_ENVIRONMENT,DB_NAME,BACKEND_IMAGE
+          envs: APP_DIR,STACK_NAME,BACKEND_PORT,POSTGRES_PORT,POSTGRES_BIND_IP,ASPNETCORE_ENVIRONMENT,DB_NAME,DOCKER_IMAGE
           script: |
             set -e
 
+            DEPLOY_ENV="${{ needs.test-build-push.outputs.deploy_env }}"
+
+            if [ -z "$DOCKER_IMAGE" ]; then
+              echo "Missing DOCKER_IMAGE variable."
+              exit 1
+            fi
+
+            BACKEND_IMAGE="${DOCKER_IMAGE}:${{ github.ref_name }}-${{ github.sha }}"
+
             if [ -z "$APP_DIR" ]; then
-              if [ "${{ needs.test-build-push.outputs.deploy_env }}" = "dev" ]; then
+              if [ "$DEPLOY_ENV" = "dev" ]; then
                 APP_DIR="/root/qls-backend-dev"
               else
                 APP_DIR="/root/qls-backend"
               fi
             fi
-            STACK_NAME="${STACK_NAME:-qls-${{ needs.test-build-push.outputs.deploy_env }}}"
+
+            STACK_NAME="${STACK_NAME:-qls-${DEPLOY_ENV}}"
             POSTGRES_BIND_IP="${POSTGRES_BIND_IP:-127.0.0.1}"
 
-            if [ "${{ needs.test-build-push.outputs.deploy_env }}" = "dev" ]; then
+            if [ "$DEPLOY_ENV" = "dev" ]; then
               BACKEND_PORT="${BACKEND_PORT:-5079}"
               POSTGRES_PORT="${POSTGRES_PORT:-5433}"
               ASPNETCORE_ENVIRONMENT="${ASPNETCORE_ENVIRONMENT:-Development}"
@@ -147,24 +164,42 @@ jobs:
             fi
 
             mkdir -p "$APP_DIR"
-            cp "/tmp/qls-deploy-${{ needs.test-build-push.outputs.deploy_env }}/docker-compose.yml" "$APP_DIR/docker-compose.yml"
+            cp "/tmp/qls-deploy-${DEPLOY_ENV}/docker-compose.yml" "$APP_DIR/docker-compose.yml"
             cd "$APP_DIR"
 
             if [ ! -f .env ]; then
               cat > .env <<EOF
-STACK_NAME=${STACK_NAME}
-ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
-BACKEND_PORT=${BACKEND_PORT}
-POSTGRES_PORT=${POSTGRES_PORT}
-POSTGRES_BIND_IP=${POSTGRES_BIND_IP}
-DB_NAME=${DB_NAME}
-DB_USER=qls_user
-DB_PASSWORD=change-this-db-password
-JWT_KEY=change-this-long-random-jwt-secret
-CORS_ORIGIN_0=http://localhost:5173
-CORS_ORIGIN_1=https://your-frontend-domain.com
-EOF
+            STACK_NAME=${STACK_NAME}
+            ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+            BACKEND_PORT=${BACKEND_PORT}
+            POSTGRES_PORT=${POSTGRES_PORT}
+            POSTGRES_BIND_IP=${POSTGRES_BIND_IP}
+            DB_NAME=${DB_NAME}
+            DB_USER=qls_user
+            DB_PASSWORD=change-this-db-password
+            JWT_KEY=change-this-long-random-jwt-secret
+            CORS_ORIGIN_0=http://localhost:5173
+            CORS_ORIGIN_1=https://your-frontend-domain.com
+            EOF
               echo "Created default .env. Update secrets in ${APP_DIR}/.env after first deploy."
+            fi
+
+            if ! command -v docker >/dev/null 2>&1; then
+              echo "Docker is not installed. Installing Docker and Compose plugin..."
+              apt-get update
+              apt-get install -y ca-certificates curl gnupg lsb-release
+              install -m 0755 -d /etc/apt/keyrings
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+              chmod a+r /etc/apt/keyrings/docker.gpg
+              echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+              apt-get update
+              apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+              systemctl enable --now docker
+            fi
+
+            if ! docker compose version >/dev/null 2>&1; then
+              echo "Docker Compose plugin is not available."
+              exit 1
             fi
 
             export BACKEND_IMAGE STACK_NAME BACKEND_PORT POSTGRES_PORT POSTGRES_BIND_IP ASPNETCORE_ENVIRONMENT DB_NAME

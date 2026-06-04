@@ -4,7 +4,7 @@ WORKDIR /src
 
 # Copy csproj và restore (tận dụng layer cache)
 COPY *.csproj ./
-RUN dotnet restore
+RUN dotnet restore QLS.Backend.csproj
 
 # Copy toàn bộ source và publish
 COPY . ./
