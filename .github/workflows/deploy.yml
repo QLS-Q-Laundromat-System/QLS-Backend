@@ -21,7 +21,6 @@ jobs:
     environment: ${{ github.ref_name == 'main' && 'main' || 'dev' }}
     outputs:
       deploy_env: ${{ steps.branch.outputs.deploy_env }}
-      image_tag: ${{ steps.tags.outputs.image_tag }}
 
     steps:
       - name: Checkout code
@@ -71,7 +70,6 @@ jobs:
           set -e
           BRANCH_TAG="${GITHUB_REF_NAME}-${GITHUB_SHA}"
           {
-            echo "image_tag=${DOCKER_IMAGE}:${BRANCH_TAG}"
             echo "tags<<EOF"
             echo "${DOCKER_IMAGE}:${BRANCH_TAG}"
             echo "${DOCKER_IMAGE}:${GITHUB_REF_NAME}-latest"
@@ -120,7 +118,7 @@ jobs:
           POSTGRES_BIND_IP: ${{ vars.POSTGRES_BIND_IP }}
           ASPNETCORE_ENVIRONMENT: ${{ vars.ASPNETCORE_ENVIRONMENT }}
           DB_NAME: ${{ vars.DB_NAME }}
-          BACKEND_IMAGE: ${{ needs.test-build-push.outputs.image_tag }}
+          DOCKER_IMAGE: ${{ vars.DOCKER_IMAGE }}
         with:
           host: ${{ secrets.VPS_HOST || env.DEFAULT_VPS_HOST }}
           username: ${{ secrets.VPS_USER || 'root' }}
@@ -129,11 +127,18 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           timeout: 120s
           command_timeout: 60m
-          envs: APP_DIR,STACK_NAME,BACKEND_PORT,POSTGRES_PORT,POSTGRES_BIND_IP,ASPNETCORE_ENVIRONMENT,DB_NAME,BACKEND_IMAGE
+          envs: APP_DIR,STACK_NAME,BACKEND_PORT,POSTGRES_PORT,POSTGRES_BIND_IP,ASPNETCORE_ENVIRONMENT,DB_NAME,DOCKER_IMAGE
           script: |
             set -e
 
             DEPLOY_ENV="${{ needs.test-build-push.outputs.deploy_env }}"
+
+            if [ -z "$DOCKER_IMAGE" ]; then
+              echo "Missing DOCKER_IMAGE variable."
+              exit 1
+            fi
+
+            BACKEND_IMAGE="${DOCKER_IMAGE}:${{ github.ref_name }}-${{ github.sha }}"
 
             if [ -z "$APP_DIR" ]; then
               if [ "$DEPLOY_ENV" = "dev" ]; then
