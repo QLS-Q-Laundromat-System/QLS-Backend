@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-QLS_PROD}
       POSTGRES_USER: ${DB_USER:-qls_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:QLS12345}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change-this-db-password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:

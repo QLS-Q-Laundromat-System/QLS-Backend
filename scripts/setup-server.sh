@@ -53,8 +53,9 @@ Ports:
 
 Next:
   1. Set GitHub secrets DOCKER_USERNAME, DOCKER_PASSWORD.
-  2. Set environment secrets VPS_PASSWORD, optional VPS_HOST=180.93.114.25.
-  3. Push branch dev or main.
+  2. Set GitHub variable DOCKER_IMAGE, for example: your-dockerhub-user/qls-backend.
+  3. Set environment secrets VPS_PASSWORD, optional VPS_HOST=180.93.114.25.
+  4. Push branch dev or main.
 EOF
 
 docker --version

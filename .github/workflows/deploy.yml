@@ -18,6 +18,7 @@ jobs:
   test-build-push:
     name: Test, build, and push image
     runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'main' || 'dev' }}
     outputs:
       deploy_env: ${{ steps.branch.outputs.deploy_env }}
       image_tag: ${{ steps.tags.outputs.image_tag }}
@@ -50,12 +51,6 @@ jobs:
       - name: Test
         run: dotnet test "${{ env.SOLUTION_FILE }}" --configuration Release --no-build --verbosity normal
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Validate Docker image name
         run: |
           set -e
@@ -63,6 +58,12 @@ jobs:
             echo "Missing GitHub variable DOCKER_IMAGE. Example: your-dockerhub-username/your-image-name"
             exit 1
           fi
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Prepare Docker tags
         id: tags
@@ -132,17 +133,20 @@ jobs:
           script: |
             set -e
 
+            DEPLOY_ENV="${{ needs.test-build-push.outputs.deploy_env }}"
+
             if [ -z "$APP_DIR" ]; then
-              if [ "${{ needs.test-build-push.outputs.deploy_env }}" = "dev" ]; then
+              if [ "$DEPLOY_ENV" = "dev" ]; then
                 APP_DIR="/root/qls-backend-dev"
               else
                 APP_DIR="/root/qls-backend"
               fi
             fi
-            STACK_NAME="${STACK_NAME:-qls-${{ needs.test-build-push.outputs.deploy_env }}}"
+
+            STACK_NAME="${STACK_NAME:-qls-${DEPLOY_ENV}}"
             POSTGRES_BIND_IP="${POSTGRES_BIND_IP:-127.0.0.1}"
 
-            if [ "${{ needs.test-build-push.outputs.deploy_env }}" = "dev" ]; then
+            if [ "$DEPLOY_ENV" = "dev" ]; then
               BACKEND_PORT="${BACKEND_PORT:-5079}"
               POSTGRES_PORT="${POSTGRES_PORT:-5433}"
               ASPNETCORE_ENVIRONMENT="${ASPNETCORE_ENVIRONMENT:-Development}"
@@ -155,7 +159,7 @@ jobs:
             fi
 
             mkdir -p "$APP_DIR"
-            cp "/tmp/qls-deploy-${{ needs.test-build-push.outputs.deploy_env }}/docker-compose.yml" "$APP_DIR/docker-compose.yml"
+            cp "/tmp/qls-deploy-${DEPLOY_ENV}/docker-compose.yml" "$APP_DIR/docker-compose.yml"
             cd "$APP_DIR"
 
             if [ ! -f .env ]; then
