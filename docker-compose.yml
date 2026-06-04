@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-QLS_PROD}
       POSTGRES_USER: ${DB_USER:-qls_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-QLS@Oracle2026!}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change-this-db-password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -21,7 +21,7 @@ services:
 
 
   qls-backend:
-    image: ${BACKEND_IMAGE:-qls-backend:latest}
+    image: ${BACKEND_IMAGE:-soramyo/qls-backend:latest}
     container_name: ${STACK_NAME:-qls}-backend
     restart: always
     ports:
@@ -29,8 +29,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:5078
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${DB_NAME:-QLS_PROD};Username=${DB_USER:-qls_user};Password=${DB_PASSWORD:-QLS@Oracle2026!};Minimum Pool Size=1;Maximum Pool Size=20;Connection Idle Lifetime=300"
-      Jwt__Key: ${JWT_KEY:-QLaundromatSystem123456789@@2026!}
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${DB_NAME:-QLS_PROD};Username=${DB_USER:-qls_user};Password=${DB_PASSWORD:-change-this-db-password};Minimum Pool Size=1;Maximum Pool Size=20;Connection Idle Lifetime=300"
+      Jwt__Key: ${JWT_KEY:-change-this-long-random-jwt-secret}
       Jwt__Issuer: QLS_Backend
       Jwt__Audience: QLS_Web
       Jwt__ExpireDays: 7
