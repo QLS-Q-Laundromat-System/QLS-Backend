@@ -137,6 +137,9 @@ using (var scope = app.Services.CreateScope())
 // =====================================================================
 
 // Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
+app.UseCors("AllowReactApp");
+
 app.UseMiddleware<QLS.Backend.Middlewares.GlobalExceptionMiddleware>();
 
 // Swagger luôn bật (Development & Production)
@@ -167,10 +170,6 @@ app.MapGet("/db-status", async (AppDbContext db) =>
         pendingMigrations = pending
     });
 });
-
-// Kích hoạt Middleware CORS - sử dụng policy AllowReactApp để cho phép mọi host.
-app.UseForwardedHeaders();
-app.UseCors("AllowReactApp");
 
 // app.UseHttpsRedirection(); // Đã tắt do chỉ test HTTP nội bộ
 
