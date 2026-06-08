@@ -63,7 +63,12 @@ namespace QLS.Backend.Services.Zalo
                     throw new ApiException("Zalo Graph API trả về dữ liệu không hợp lệ.", 502);
                 }
 
-                if (!response.IsSuccessStatusCode || profile == null || profile.Error != 0 || string.IsNullOrWhiteSpace(profile.Id))
+                if (profile != null && profile.Error != 0)
+                {
+                    throw new ApiException(ZaloErrors.GetFriendlyMessage(profile.Error, profile.Message), 401);
+                }
+
+                if (!response.IsSuccessStatusCode || profile == null || string.IsNullOrWhiteSpace(profile.Id))
                 {
                     throw new ApiException("Access token Zalo không hợp lệ hoặc đã hết hạn.", 401);
                 }
