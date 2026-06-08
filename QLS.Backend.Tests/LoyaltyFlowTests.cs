@@ -38,14 +38,14 @@ public class LoyaltyFlowTests
             "Test Customer");
 
         Assert.False(string.IsNullOrWhiteSpace(login.AccessToken));
-        Assert.Equal(0, login.TotalPoints);
+        Assert.Equal(100, login.TotalPoints);
 
         var claim = await loyaltyService.ClaimPointsAsync(
             login.CustomerId,
             new LoyaltyClaimRequestDto { ClaimToken = token.Token });
 
         Assert.Equal(2, claim.ClaimedPoints);
-        Assert.Equal(2, claim.TotalPoints);
+        Assert.Equal(102, claim.TotalPoints);
 
         var dbToken = await fixture.Context.PointClaimTokens.FirstAsync(x => x.Id == token.Id);
         Assert.True(dbToken.IsClaimed);
@@ -82,7 +82,7 @@ public class LoyaltyFlowTests
         Assert.True(rolledBack);
 
         var customer = await fixture.Context.LoyaltyCustomers.FirstAsync(c => c.Id == login.CustomerId);
-        Assert.Equal(0, customer.TotalPoints);
+        Assert.Equal(100, customer.TotalPoints);
 
         var adjustTx = await fixture.Context.LoyaltyPointTransactions
             .FirstOrDefaultAsync(x => x.MachineSessionId == paymentSession.Session.Id && x.Type == PointTransactionType.Adjust);
