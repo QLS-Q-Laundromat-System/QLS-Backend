@@ -7,5 +7,6 @@ namespace QLS.Backend.DTOs.Zalo
         public string CustomerType { get; set; } = string.Empty;
         public string StudentVerificationStatus { get; set; } = string.Empty;
         public int TotalPoints { get; set; }
+        public bool IsNewUser { get; set; }
     }
 }

@@ -41,8 +41,10 @@ namespace QLS.Backend.Services.Zalo
             var customer = await _context.LoyaltyCustomers
                 .FirstOrDefaultAsync(c => c.BrandId == request.BrandId && c.ZaloUserId == profile.Id);
 
+            var isNewUser = false;
             if (customer == null)
             {
+                isNewUser = true;
                 customer = new LoyaltyCustomer
                 {
                     BrandId = request.BrandId,
@@ -51,11 +53,26 @@ namespace QLS.Backend.Services.Zalo
                     AvatarUrl = profile.AvatarUrl,
                     CustomerType = CustomerType.Member,
                     StudentVerificationStatus = StudentVerificationStatus.None,
-                    TotalPoints = 0,
+                    TotalPoints = 100,
                     CreatedAt = now,
                     UpdatedAt = now
                 };
                 _context.LoyaltyCustomers.Add(customer);
+
+                var pointExpiryMonths = int.TryParse(_configuration["Loyalty:PointExpiryMonths"], out var months) && months > 0 ? months : 3;
+                var welcomeTransaction = new LoyaltyPointTransaction
+                {
+                    BrandId = request.BrandId,
+                    CustomerId = customer.Id,
+                    MachineSessionId = null,
+                    Type = PointTransactionType.Earn,
+                    Points = 100,
+                    RemainingPoints = 100,
+                    ExpiredAt = now.AddMonths(pointExpiryMonths),
+                    Note = "Cộng 100 điểm thưởng thành viên mới",
+                    CreatedAt = now
+                };
+                _context.LoyaltyPointTransactions.Add(welcomeTransaction);
             }
             else
             {
@@ -72,7 +89,8 @@ namespace QLS.Backend.Services.Zalo
                 CustomerId = customer.Id,
                 CustomerType = customer.CustomerType.ToString(),
                 StudentVerificationStatus = customer.StudentVerificationStatus.ToString(),
-                TotalPoints = customer.TotalPoints
+                TotalPoints = customer.TotalPoints,
+                IsNewUser = isNewUser
             };
         }
 
