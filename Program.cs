@@ -6,8 +6,16 @@ using QLS.Backend.Services.LgService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog from appsettings.json
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddConfigSwagger(builder.Environment);
@@ -176,6 +184,9 @@ app.UseCors("AllowReactApp");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Centralized structured request logging (captures Method, Path, StatusCode, Latency, and JWT UserId)
+app.UseMiddleware<QLS.Backend.Middlewares.RequestLoggingMiddleware>();
 
 app.MapControllers();
 
