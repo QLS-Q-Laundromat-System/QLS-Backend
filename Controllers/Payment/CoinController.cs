@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using QLS.Backend.Data;
+using QLS.Backend.Models;
 using QLS.Backend.DTOs.Zigbee;
 using QLS.Backend.Interfaces;
 using QLS.Backend.Services;
@@ -15,11 +18,13 @@ namespace QLS.Backend.Controllers
     {
         private readonly IZigbeeService _zigbeeService;
         private readonly IMachineService _machineService;
+        private readonly AppDbContext _context;
 
-        public CoinController(IZigbeeService zigbeeService, IMachineService machineService)
+        public CoinController(IZigbeeService zigbeeService, IMachineService machineService, AppDbContext context)
         {
             _zigbeeService = zigbeeService;
             _machineService = machineService;
+            _context = context;
         }
 
         /// <summary>
@@ -44,6 +49,30 @@ namespace QLS.Backend.Controllers
         {
             Console.WriteLine($"[DIAGNOSTIC] EXECUTING TRIGGER (BẮN XU): topic={topic}, count={count}");
 
+            string? storeCode = null;
+            if (machineId.HasValue)
+            {
+                var machine = await _context.Machines
+                    .Include(m => m.Store)
+                    .FirstOrDefaultAsync(m => m.Id == machineId.Value);
+                if (machine?.Store != null)
+                {
+                    storeCode = machine.Store.StoreId;
+                    if (string.IsNullOrEmpty(topic) || topic == "QLS.Washer")
+                    {
+                        topic = machine.ZigbeeNetworkId ?? topic;
+                    }
+                }
+            }
+            else if (branchId.HasValue)
+            {
+                var store = await _context.Stores.FirstOrDefaultAsync(s => s.Id == branchId.Value);
+                if (store != null)
+                {
+                    storeCode = store.StoreId;
+                }
+            }
+
             // 1. LƯU DATABASE (Chỉ chạy khi FE truyền đủ thông tin phiên giặt)
             if (branchId.HasValue && machineId.HasValue && userId.HasValue && minutes.HasValue)
             {
@@ -67,7 +96,7 @@ namespace QLS.Backend.Controllers
             }
 
             // 2. KÍCH HOẠT ESP32 NHẢ XU (BẮN XU)
-            await _zigbeeService.TriggerAsync(topic, count);
+            await _zigbeeService.TriggerAsync(topic, count, storeCode);
 
             return Ok(new TriggerWasherResponseDto
             {

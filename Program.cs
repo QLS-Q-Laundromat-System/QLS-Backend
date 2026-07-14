@@ -99,6 +99,19 @@ using (var scope = app.Services.CreateScope())
 
         await QLS.Backend.Data.DbSeeder.SeedAsync(context);
         logger.LogInformation("✅ Seed dữ liệu hoàn tất!");
+
+        // DIAGNOSTIC/UPDATE: Update ZigbeeNetworkId for machines
+        var machines = await context.Machines.ToListAsync();
+        foreach (var m in machines)
+        {
+            logger.LogInformation($"[DIAGNOSTIC] Machine: Id={m.Id}, Name={m.Name}, Type={m.Type}, ZigbeeNetworkId={m.ZigbeeNetworkId}");
+            if (string.IsNullOrEmpty(m.ZigbeeNetworkId))
+            {
+                m.ZigbeeNetworkId = "QLS.Washer";
+                logger.LogInformation($"[DIAGNOSTIC] Updated Machine {m.Id} ({m.Name}) ZigbeeNetworkId to 'QLS.Washer'");
+            }
+        }
+        await context.SaveChangesAsync();
     }
     catch (Exception ex)
     {
