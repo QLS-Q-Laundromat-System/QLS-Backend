@@ -32,6 +32,7 @@ namespace QLS.Backend.Data
         public DbSet<LoyaltyCustomer> LoyaltyCustomers { get; set; }
         public DbSet<PointClaimToken> PointClaimTokens { get; set; }
         public DbSet<LoyaltyPointTransaction> LoyaltyPointTransactions { get; set; }
+        public DbSet<MachineNotification> MachineNotifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -99,6 +100,31 @@ namespace QLS.Backend.Data
             modelBuilder.Entity<MachineSession>()
                 .Property(ms => ms.PricePaid)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<MachineNotification>()
+                .HasOne(n => n.Store)
+                .WithMany()
+                .HasForeignKey(n => n.StoreId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<MachineNotification>()
+                .HasOne(n => n.Machine)
+                .WithMany()
+                .HasForeignKey(n => n.MachineId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<MachineNotification>()
+                .HasOne(n => n.Session)
+                .WithMany()
+                .HasForeignKey(n => n.SessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<MachineNotification>()
+                .HasIndex(n => new { n.SessionId, n.Type })
+                .IsUnique();
+
+            modelBuilder.Entity<MachineNotification>()
+                .HasIndex(n => new { n.StoreId, n.IsRead, n.CreatedAt });
 
             // --- Cấu hình quan hệ 1-1 giữa Brand và BrandLgCredential ---
             modelBuilder.Entity<BrandLgCredential>()

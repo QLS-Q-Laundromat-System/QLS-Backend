@@ -83,8 +83,12 @@ namespace QLS.Backend.Services
 
         public async Task<bool> UpdateSessionStatusAsync(Guid sessionId, MachineSessionStatus status, string? refundNote = null)
         {
-            var session = await _context.MachineSessions.FindAsync(sessionId);
+            var session = await _context.MachineSessions
+                .Include(s => s.Machine)
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
             if (session == null) return false;
+
+            var previousStatus = session.Status;
 
             session.Status    = status;
             session.UpdatedAt = DateTime.UtcNow;
@@ -105,6 +109,33 @@ namespace QLS.Backend.Services
             }
 
             await _context.SaveChangesAsync();
+
+            if (previousStatus != status && status is MachineSessionStatus.Running or MachineSessionStatus.Completed or MachineSessionStatus.Error)
+            {
+                var type = status switch
+                {
+                    MachineSessionStatus.Running => "Started",
+                    MachineSessionStatus.Completed => "Completed",
+                    _ => "Error"
+                };
+                var message = status switch
+                {
+                    MachineSessionStatus.Running => $"{session.Machine?.Name ?? "Thiết bị"} đang hoạt động",
+                    MachineSessionStatus.Completed => $"{session.Machine?.Name ?? "Thiết bị"} đã hoàn tất",
+                    _ => $"{session.Machine?.Name ?? "Thiết bị"} đang gặp lỗi"
+                };
+
+                _context.MachineNotifications.Add(new MachineNotification
+                {
+                    StoreId = session.StoreId,
+                    MachineId = session.MachineId,
+                    SessionId = session.Id,
+                    Type = type,
+                    Message = message,
+                    CreatedAt = DateTime.UtcNow
+                });
+                await _context.SaveChangesAsync();
+            }
 
             if (status == MachineSessionStatus.Error || status == MachineSessionStatus.Cancelled)
             {
