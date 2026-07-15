@@ -53,6 +53,7 @@ public static class ServiceExtensions
             .Concat(new[]
             {
                 "https://admin.qlaundrystation.com",
+                "https://dev.qlaundrystation.com",
                 "https://qls-web.vercel.app"
             })
             .Where(origin => !string.IsNullOrWhiteSpace(origin))
