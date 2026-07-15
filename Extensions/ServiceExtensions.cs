@@ -48,7 +48,16 @@ public static class ServiceExtensions
     public static IServiceCollection AddCustomCors(this IServiceCollection services, IConfiguration configuration)
     {
         // Đọc danh sách Domain được phép từ appsettings.json
-        var allowedOrigins = configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+        var configuredOrigins = configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+        var allowedOrigins = configuredOrigins
+            .Concat(new[]
+            {
+                "https://admin.qlaundrystation.com",
+                "https://qls-web.vercel.app"
+            })
+            .Where(origin => !string.IsNullOrWhiteSpace(origin))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
         services.AddCors(options =>
         {
