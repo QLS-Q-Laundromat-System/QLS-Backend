@@ -30,6 +30,7 @@ public class ZigbeeService : IZigbeeService
     private readonly string? _mqttUser;
     private readonly string? _mqttPass;
     private readonly ILogger<ZigbeeService> _logger;
+    private readonly IConfiguration _configuration;
 
     public ZigbeeService(IConfiguration configuration, ILogger<ZigbeeService> logger)
     {
@@ -38,15 +39,25 @@ public class ZigbeeService : IZigbeeService
         _mqttUser = configuration["Zigbee2Mqtt:Username"];
         _mqttPass = configuration["Zigbee2Mqtt:Password"];
         _logger   = logger;
+        _configuration = configuration;
     }
 
     /// <inheritdoc/>
-    public async Task TriggerAsync(string zigbeeDeviceTopic, int bagCount)
+    public async Task TriggerAsync(string zigbeeDeviceTopic, int bagCount, string? storeCode = null)
     {
         if (bagCount < 1)  bagCount = 1;
         if (bagCount > 20) bagCount = 20;
 
-        var topic = $"zigbee2mqtt/{zigbeeDeviceTopic}/set";
+        string topic;
+        if (!string.IsNullOrEmpty(storeCode))
+        {
+            topic = $"qls/{storeCode}/{zigbeeDeviceTopic}/set";
+        }
+        else
+        {
+            var defaultBaseTopic = _configuration["Zigbee2Mqtt:BaseTopic"] ?? "zigbee2mqtt";
+            topic = $"{defaultBaseTopic}/{zigbeeDeviceTopic}/set";
+        }
 
         // Gộp set số bao (brightness) + bật ON trong một lần publish duy nhất
         var payload = JsonSerializer.Serialize(new
@@ -57,6 +68,58 @@ public class ZigbeeService : IZigbeeService
 
         _logger.LogInformation(
             "[ZigbeeService] TRIGGER → topic={Topic} | payload={Payload}",
+            topic, payload);
+
+        await PublishAsync(topic, payload);
+    }
+
+    public async Task RenameDeviceAsync(string storeCode, string oldFriendlyNameOrIeee, string newFriendlyName)
+    {
+        string topic;
+        if (!string.IsNullOrEmpty(storeCode))
+        {
+            topic = $"qls/{storeCode}/bridge/request/device/rename";
+        }
+        else
+        {
+            var defaultBaseTopic = _configuration["Zigbee2Mqtt:BaseTopic"] ?? "zigbee2mqtt";
+            topic = $"{defaultBaseTopic}/bridge/request/device/rename";
+        }
+
+        var payload = JsonSerializer.Serialize(new
+        {
+            from = oldFriendlyNameOrIeee,
+            to   = newFriendlyName
+        });
+
+        _logger.LogInformation(
+            "[ZigbeeService] RENAME DEVICE → topic={Topic} | payload={Payload}",
+            topic, payload);
+
+        await PublishAsync(topic, payload);
+    }
+
+    public async Task SetPermitJoinAsync(string storeCode, bool permit, int durationSeconds = 120)
+    {
+        string topic;
+        if (!string.IsNullOrEmpty(storeCode))
+        {
+            topic = $"qls/{storeCode}/bridge/request/permit_join";
+        }
+        else
+        {
+            var defaultBaseTopic = _configuration["Zigbee2Mqtt:BaseTopic"] ?? "zigbee2mqtt";
+            topic = $"{defaultBaseTopic}/bridge/request/permit_join";
+        }
+
+        var payload = JsonSerializer.Serialize(new
+        {
+            value = permit,
+            time  = durationSeconds
+        });
+
+        _logger.LogInformation(
+            "[ZigbeeService] SET PERMIT JOIN → topic={Topic} | payload={Payload}",
             topic, payload);
 
         await PublishAsync(topic, payload);

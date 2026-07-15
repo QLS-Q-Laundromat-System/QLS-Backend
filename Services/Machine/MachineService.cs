@@ -136,6 +136,21 @@ namespace QLS.Backend.Services
             return true;
         }
 
+        public async Task<bool> CancelPendingSessionAsync(Guid sessionId)
+        {
+            var session = await _context.MachineSessions.FindAsync(sessionId);
+            if (session == null) return false;
+
+            if (session.Status != MachineSessionStatus.PendingPayment)
+                throw new InvalidOperationException($"Session không thể hủy khi đang ở trạng thái '{session.Status}'");
+
+            session.Status = MachineSessionStatus.Cancelled;
+            session.UpdatedAt = DateTime.UtcNow;
+            session.ActualEndTime = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<InitPaymentResponseDto> InitSessionAsync(InitPaymentRequestDto dto)
         {
             var machine = await _context.Machines

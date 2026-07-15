@@ -240,7 +240,10 @@ namespace QLS.Backend.Controllers
                 await _loyaltyService.EnsureClaimTokenForPaymentAsync(paymentCodeMatch, transaction);
 
                 // 5. Kích hoạt ESP32 qua Zigbee
-                var machine = await _context.Machines.FindAsync(paymentCodeMatch.MachineId);
+                var machine = await _context.Machines
+                    .Include(m => m.Store)
+                    .FirstOrDefaultAsync(m => m.Id == paymentCodeMatch.MachineId);
+
                 if (machine != null && !string.IsNullOrEmpty(machine.ZigbeeNetworkId))
                 {
                     // Tính toán số pulses (mặc định 1 pulse cho test, hoặc tính theo logic của bạn)
@@ -252,8 +255,9 @@ namespace QLS.Backend.Controllers
                         pulses = Math.Max(1, paymentCodeMatch.TotalMinutes / 10);
                     }
 
-                    await _zigbeeService.TriggerAsync(machine.ZigbeeNetworkId, pulses);
-                    _logger.LogInformation("[SePay Webhook] Triggered Zigbee machine: {Topic} with {Pulses} pulses", machine.ZigbeeNetworkId, pulses);
+                    string? storeCode = machine.Store?.StoreId;
+                    await _zigbeeService.TriggerAsync(machine.ZigbeeNetworkId, pulses, storeCode);
+                    _logger.LogInformation("[SePay Webhook] Triggered Zigbee machine: {Topic} with {Pulses} pulses in Store {StoreCode}", machine.ZigbeeNetworkId, pulses, storeCode);
                 }
 
                 await _context.SaveChangesAsync();

@@ -27,10 +27,32 @@ namespace QLS.Backend.Services.Zalo
             _configuration = configuration;
             _zaloGraphApiClient = zaloGraphApiClient;
         }
-
         public async Task<ZaloLoginResponseDto> LoginAsync(ZaloLoginRequestDto request)
         {
-            var brandExists = await _context.Brands.AnyAsync(b => b.Id == request.BrandId && b.IsActive);
+            var brandId = request.BrandId;
+            if (brandId == null || brandId == Guid.Empty)
+            {
+                var configuredBrandId = _configuration["Zalo:BrandId"];
+                if (!string.IsNullOrWhiteSpace(configuredBrandId) && Guid.TryParse(configuredBrandId, out var parsedBrandId))
+                {
+                    brandId = parsedBrandId;
+                }
+                else
+                {
+                    var firstBrand = await _context.Brands.FirstOrDefaultAsync(b => b.IsActive);
+                    if (firstBrand != null)
+                    {
+                        brandId = firstBrand.Id;
+                    }
+                }
+            }
+
+            if (brandId == null || brandId == Guid.Empty)
+            {
+                throw new ApiException("Không tìm thấy cấu hình Brand hợp lệ cho hệ thống Zalo.", 400);
+            }
+
+            var brandExists = await _context.Brands.AnyAsync(b => b.Id == brandId.Value && b.IsActive);
             if (!brandExists)
             {
                 throw new ApiException("Brand không tồn tại hoặc đã bị khóa.", 404);
@@ -39,23 +61,40 @@ namespace QLS.Backend.Services.Zalo
             var profile = await _zaloGraphApiClient.GetProfileAsync(request.AccessToken.Trim());
             var now = DateTime.UtcNow;
             var customer = await _context.LoyaltyCustomers
-                .FirstOrDefaultAsync(c => c.BrandId == request.BrandId && c.ZaloUserId == profile.Id);
+                .FirstOrDefaultAsync(c => c.BrandId == brandId.Value && c.ZaloUserId == profile.Id);
 
+            var isNewUser = false;
             if (customer == null)
             {
+                isNewUser = true;
                 customer = new LoyaltyCustomer
                 {
-                    BrandId = request.BrandId,
+                    BrandId = brandId.Value,
                     ZaloUserId = profile.Id,
                     FullName = profile.Name,
                     AvatarUrl = profile.AvatarUrl,
                     CustomerType = CustomerType.Member,
                     StudentVerificationStatus = StudentVerificationStatus.None,
-                    TotalPoints = 0,
+                    TotalPoints = 100,
                     CreatedAt = now,
                     UpdatedAt = now
                 };
                 _context.LoyaltyCustomers.Add(customer);
+
+                var pointExpiryMonths = int.TryParse(_configuration["Loyalty:PointExpiryMonths"], out var months) && months > 0 ? months : 3;
+                var welcomeTransaction = new LoyaltyPointTransaction
+                {
+                    BrandId = brandId.Value,
+                    CustomerId = customer.Id,
+                    MachineSessionId = null,
+                    Type = PointTransactionType.Earn,
+                    Points = 100,
+                    RemainingPoints = 100,
+                    ExpiredAt = now.AddMonths(pointExpiryMonths),
+                    Note = "Cộng 100 điểm thưởng thành viên mới",
+                    CreatedAt = now
+                };
+                _context.LoyaltyPointTransactions.Add(welcomeTransaction);
             }
             else
             {
@@ -72,7 +111,8 @@ namespace QLS.Backend.Services.Zalo
                 CustomerId = customer.Id,
                 CustomerType = customer.CustomerType.ToString(),
                 StudentVerificationStatus = customer.StudentVerificationStatus.ToString(),
-                TotalPoints = customer.TotalPoints
+                TotalPoints = customer.TotalPoints,
+                IsNewUser = isNewUser
             };
         }
 

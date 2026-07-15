@@ -69,6 +69,28 @@ namespace QLS.Backend.Controllers
         }
 
         /// <summary>
+        /// Hủy session trước khi thanh toán. Session đã thanh toán hoặc đang chạy
+        /// không thể hủy bằng endpoint này.
+        /// [POST] /api/v1/sessions/{id}/cancel
+        /// </summary>
+        [HttpPost("{id}/cancel")]
+        public async Task<IActionResult> CancelSession(Guid id)
+        {
+            try
+            {
+                var result = await _machineService.CancelPendingSessionAsync(id);
+                if (!result)
+                    return NotFound(new { message = "Không tìm thấy session." });
+
+                return Ok(ApiResponse<object>.Success(new { sessionId = id }, "Đã hủy session."));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// BƯỚC 3: Cập nhật trạng thái khi máy hoàn thành hoặc gặp sự cố.
         /// Running → Completed: Máy xong, doanh thu được ghi nhận.
         /// Running → Error: Máy lỗi giữa chừng, hệ thống đánh dấu cần hoàn tiền (RefundStatus=Pending).

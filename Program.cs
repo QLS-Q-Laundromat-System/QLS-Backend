@@ -99,6 +99,19 @@ using (var scope = app.Services.CreateScope())
 
         await QLS.Backend.Data.DbSeeder.SeedAsync(context);
         logger.LogInformation("✅ Seed dữ liệu hoàn tất!");
+
+        // DIAGNOSTIC/UPDATE: Update ZigbeeNetworkId for machines
+        var machines = await context.Machines.ToListAsync();
+        foreach (var m in machines)
+        {
+            logger.LogInformation($"[DIAGNOSTIC] Machine: Id={m.Id}, Name={m.Name}, Type={m.Type}, ZigbeeNetworkId={m.ZigbeeNetworkId}");
+            if (string.IsNullOrEmpty(m.ZigbeeNetworkId))
+            {
+                m.ZigbeeNetworkId = "QLS.Washer";
+                logger.LogInformation($"[DIAGNOSTIC] Updated Machine {m.Id} ({m.Name}) ZigbeeNetworkId to 'QLS.Washer'");
+            }
+        }
+        await context.SaveChangesAsync();
     }
     catch (Exception ex)
     {
@@ -145,6 +158,9 @@ using (var scope = app.Services.CreateScope())
 // =====================================================================
 
 // Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
+app.UseCors("AllowReactApp");
+
 app.UseMiddleware<QLS.Backend.Middlewares.GlobalExceptionMiddleware>();
 
 // Swagger luôn bật (Development & Production)
@@ -175,10 +191,6 @@ app.MapGet("/db-status", async (AppDbContext db) =>
         pendingMigrations = pending
     });
 });
-
-// Kích hoạt Middleware CORS - sử dụng policy AllowReactApp để cho phép mọi host.
-app.UseForwardedHeaders();
-app.UseCors("AllowReactApp");
 
 // app.UseHttpsRedirection(); // Đã tắt do chỉ test HTTP nội bộ
 
