@@ -26,8 +26,13 @@ namespace QLS.Backend.Middlewares
                          ?? context.User?.FindFirst("id")?.Value 
                          ?? "Anonymous";
 
-            // Push the UserId to Serilog's LogContext so all downstream logs include it
+            var userName = context.User?.FindFirst("FullName")?.Value 
+                           ?? context.User?.FindFirst(ClaimTypes.Name)?.Value 
+                           ?? "Anonymous";
+
+            // Push the UserId and UserName to Serilog's LogContext so all downstream logs include it
             using (Serilog.Context.LogContext.PushProperty("UserId", userId))
+            using (Serilog.Context.LogContext.PushProperty("UserName", userName))
             {
                 try
                 {
@@ -38,8 +43,8 @@ namespace QLS.Backend.Middlewares
 
                     // Log details of the successful or typical request
                     _logger.LogInformation(
-                        "User {UserId} called {Method} {Path} - Response: {StatusCode} in {ElapsedMilliseconds}ms",
-                        userId,
+                        "User {UserName} called {Method} {Path} - Response: {StatusCode} in {ElapsedMilliseconds}ms",
+                        userName,
                         context.Request.Method,
                         context.Request.Path,
                         statusCode,
@@ -52,8 +57,8 @@ namespace QLS.Backend.Middlewares
                     // Log exception request details
                     _logger.LogError(
                         ex,
-                        "User {UserId} called {Method} {Path} failed with error after {ElapsedMilliseconds}ms",
-                        userId,
+                        "User {UserName} called {Method} {Path} failed with error after {ElapsedMilliseconds}ms",
+                        userName,
                         context.Request.Method,
                         context.Request.Path,
                         stopwatch.ElapsedMilliseconds);

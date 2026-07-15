@@ -16,6 +16,9 @@ namespace QLS.Backend.Interfaces
         /// <summary>Cập nhật trạng thái session (Running→Completed/Error/Cancelled).</summary>
         Task<bool> UpdateSessionStatusAsync(Guid sessionId, MachineSessionStatus status, string? refundNote = null);
 
+        /// <summary>Hủy session chỉ khi giao dịch vẫn đang chờ thanh toán.</summary>
+        Task<bool> CancelPendingSessionAsync(Guid sessionId);
+
         Task<InitPaymentResponseDto> InitSessionAsync(InitPaymentRequestDto dto);
     }
 }
