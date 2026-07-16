@@ -19,12 +19,18 @@ namespace QLS.Backend.Services.Stores
         private readonly AppDbContext _context;
         private readonly LgApiClient _lgApiClient;
         private readonly IBrandLgService _brandLgService;
+        private readonly ILogger<StoreService> _logger;
 
-        public StoreService(AppDbContext context, LgApiClient lgApiClient, IBrandLgService brandLgService)
+        public StoreService(
+            AppDbContext context,
+            LgApiClient lgApiClient,
+            IBrandLgService brandLgService,
+            ILogger<StoreService> logger)
         {
             _context = context;
             _lgApiClient = lgApiClient;
             _brandLgService = brandLgService;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<Store>> GetStoresAsync()
@@ -273,9 +279,25 @@ namespace QLS.Backend.Services.Stores
                 return machines;
             }
 
-            var rawJson = await _lgApiClient.GetRawStatusAsync(store.StoreId, lgCredential.LgUserNo, lgCredential.AccessToken);
-            var liveStatuses = LgMapper.MapToDto(rawJson)
-                .ToDictionary(status => status.DeviceId, status => status);
+            Dictionary<string, MachineDetailDto> liveStatuses;
+            try
+            {
+                var rawJson = await _lgApiClient.GetRawStatusAsync(
+                    store.StoreId,
+                    lgCredential.LgUserNo,
+                    lgCredential.AccessToken);
+
+                liveStatuses = LgMapper.MapToDto(rawJson)
+                    .ToDictionary(status => status.DeviceId, status => status);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Không lấy được trạng thái LG cho store {StoreId}. Trả danh sách máy ở trạng thái offline.",
+                    store.StoreId);
+                return machines;
+            }
 
             foreach (var machine in machines)
             {
