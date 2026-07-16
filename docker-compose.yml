@@ -28,6 +28,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:5078
+      Diagnostics__IncludeExceptionDetails: ${INCLUDE_EXCEPTION_DETAILS:-false}
       AllowedHosts: ${ALLOWED_HOSTS:-api.qlaundrystation.com;api-dev.qlaundrystation.com;localhost;127.0.0.1}
       ReverseProxy__KnownProxies__0: ${REVERSE_PROXY_IP:-172.17.0.1}
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${DB_NAME:?DB_NAME is required};Username=${DB_USER:?DB_USER is required};Password=${DB_PASSWORD:?DB_PASSWORD is required};Minimum Pool Size=1;Maximum Pool Size=20;Connection Idle Lifetime=300"

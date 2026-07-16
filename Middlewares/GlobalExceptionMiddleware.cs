@@ -16,12 +16,18 @@ namespace QLS.Backend.Middlewares
         private readonly RequestDelegate _next;
         private readonly ILogger<GlobalExceptionMiddleware> _logger;
         private readonly IHostEnvironment _env;
+        private readonly IConfiguration _configuration;
 
-        public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger, IHostEnvironment env)
+        public GlobalExceptionMiddleware(
+            RequestDelegate next,
+            ILogger<GlobalExceptionMiddleware> logger,
+            IHostEnvironment env,
+            IConfiguration configuration)
         {
             _next = next;
             _logger = logger;
             _env = env;
+            _configuration = configuration;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -66,7 +72,7 @@ namespace QLS.Backend.Middlewares
                     message = "Không tìm thấy dữ liệu yêu cầu.";
                     break;
                 default:
-                    if (_env.IsDevelopment())
+                    if (ShouldIncludeExceptionDetails())
                     {
                         message = exception.InnerException?.Message ?? exception.Message;
                     }
@@ -82,7 +88,7 @@ namespace QLS.Backend.Middlewares
             var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
             
             object finalResponse = response;
-            if (_env.IsDevelopment())
+            if (ShouldIncludeExceptionDetails())
             {
                 finalResponse = new
                 {
@@ -95,6 +101,12 @@ namespace QLS.Backend.Middlewares
 
             var result = JsonSerializer.Serialize(finalResponse, jsonOptions);
             await context.Response.WriteAsync(result);
+        }
+
+        private bool ShouldIncludeExceptionDetails()
+        {
+            return _env.IsDevelopment() &&
+                   _configuration.GetValue("Diagnostics:IncludeExceptionDetails", true);
         }
     }
 }
