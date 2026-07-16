@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using QLS.Backend.DTOs;
 using QLS.Backend.DTOs.Lg;
 using QLS.Backend.Interfaces.Brand;
+using QLS.Backend.Models;
 using System;
 using System.Threading.Tasks;
 
@@ -54,6 +55,24 @@ namespace QLS.Backend.Controllers.Brand
             return Ok(ApiResponse<int>.Success(
                 count, 
                 $"Đã đồng bộ xong {count} cửa hàng mới từ LG ThinQ."));
+        }
+
+        /// <summary>
+        /// Lấy thông tin liên kết tài khoản LG của Brand.
+        /// </summary>
+        [HttpGet("status")]
+        public async Task<IActionResult> GetConnectionStatus(Guid brandId)
+        {
+            var credential = await _brandLgService.GetValidCredentialAsync(brandId);
+            if (credential == null)
+            {
+                return Ok(ApiResponse<object>.Success(new { isLinked = false }, "Brand chưa liên kết tài khoản LG."));
+            }
+            return Ok(ApiResponse<object>.Success(new {
+                isLinked = true,
+                email = credential.LgEmail,
+                updatedAt = credential.UpdatedAt
+            }, "Lấy trạng thái liên kết thành công."));
         }
     }
 }
