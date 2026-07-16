@@ -20,17 +20,20 @@ namespace QLS.Backend.Services.Stores
         private readonly LgApiClient _lgApiClient;
         private readonly IBrandLgService _brandLgService;
         private readonly ILogger<StoreService> _logger;
+        private readonly IConfiguration _configuration;
 
         public StoreService(
             AppDbContext context,
             LgApiClient lgApiClient,
             IBrandLgService brandLgService,
-            ILogger<StoreService> logger)
+            ILogger<StoreService> logger,
+            IConfiguration configuration)
         {
             _context = context;
             _lgApiClient = lgApiClient;
             _brandLgService = brandLgService;
             _logger = logger;
+            _configuration = configuration;
         }
 
         public async Task<IEnumerable<Store>> GetStoresAsync()
@@ -267,6 +270,22 @@ namespace QLS.Backend.Services.Stores
                     Process = null
                 })
                 .ToList();
+
+            if (_configuration.GetValue<bool>("Machine:EnableTestStatuses"))
+            {
+                foreach (var machine in machines)
+                {
+                    machine.Online = true;
+                    machine.StatusText = "Sẵn sàng";
+                    machine.CurState = "IDLE";
+                }
+
+                _logger.LogWarning(
+                    "[TEST] Đang giả lập trạng thái Sẵn sàng cho {Count} máy của store {StoreId}.",
+                    machines.Count,
+                    store.Id);
+                return machines;
+            }
 
             if (string.IsNullOrWhiteSpace(store.StoreId))
             {

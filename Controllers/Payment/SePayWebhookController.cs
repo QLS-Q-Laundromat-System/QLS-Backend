@@ -153,11 +153,11 @@ namespace QLS.Backend.Controllers
         [HttpPost("test-pay")]
         public async Task<IActionResult> TestPayment([FromBody] SePayTestRequest request)
         {
-            // Bảo vệ: Chỉ cho phép chạy Sandbox ở môi trường Development (Local)
-            if (!_env.IsDevelopment())
+            // Chỉ bật endpoint này trên server test qua cấu hình.
+            if (!_configuration.GetValue<bool>("SePay:EnableTestEndpoints"))
             {
-                _logger.LogWarning("[Sandbox] Tu choi yeu cau TestPayment vi khong phai moi truong Development.");
-                return Forbid("Tinh nang nay chi danh cho moi truong Local.");
+                _logger.LogWarning("[Sandbox] Từ chối TestPayment vì test endpoint đang bị tắt.");
+                return NotFound();
             }
 
             _logger.LogInformation("[Sandbox] Gia lap thanh toan cho ma: {Code}", request.PaymentCode);
