@@ -41,7 +41,7 @@ services:
       CorsSettings__AllowedOrigins__4: ${CORS_ORIGIN_4:?CORS_ORIGIN_4 is required}
       Zalo__AppId: ${ZALO_APP_ID:?ZALO_APP_ID is required}
       Zalo__AppSecretKey: ${ZALO_APP_SECRET_KEY:?ZALO_APP_SECRET_KEY is required}
-      Loyalty__MiniAppClaimUrlTemplate: ${LOYALTY_MINI_APP_CLAIM_URL_TEMPLATE:?LOYALTY_MINI_APP_CLAIM_URL_TEMPLATE is required}
+      Loyalty__MiniAppClaimUrlTemplate: ${LOYALTY_MINI_APP_CLAIM_URL_TEMPLATE:-https://zalo.me/s/miniapp?claimToken={token}}
       Zigbee2Mqtt__Host: ${MQTT_HOST:-localhost}
       Zigbee2Mqtt__Port: ${MQTT_PORT:-1883}
       Zigbee2Mqtt__Username: ${MQTT_USERNAME:-}

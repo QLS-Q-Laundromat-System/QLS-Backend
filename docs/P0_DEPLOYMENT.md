@@ -7,6 +7,7 @@ Run this checklist from a controlled administrator machine before deploying the 
 The old repository configuration contained production-like credentials. Rotate the database password, JWT signing key, LG API key, Zalo app secret, MQTT password, payment-provider keys, Docker Hub credentials, and VPS SSH credentials before the deployment.
 
 Create the VPS `.env` from `.env.example`. It must contain real values for every required variable. Keep it outside Git and restrict it to the deployment account.
+`LOYALTY_MINI_APP_CLAIM_URL_TEMPLATE` has a safe Compose default, but set it explicitly when the production Zalo Mini App claim URL differs from `https://zalo.me/s/miniapp?claimToken={token}`.
 
 The reverse proxy must terminate TLS and proxy to `127.0.0.1:<BACKEND_PORT>`; the backend and PostgreSQL ports are intentionally no longer public. Set `REVERSE_PROXY_IP` to the source IP the backend sees for that proxy (commonly the Docker bridge gateway when the proxy runs on the host). Do not use a public or untrusted client IP.
 
