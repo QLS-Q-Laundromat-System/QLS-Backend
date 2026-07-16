@@ -28,7 +28,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:5078
-      ReverseProxy__KnownProxies__0: ${REVERSE_PROXY_IP:?REVERSE_PROXY_IP is required}
+      ReverseProxy__KnownProxies__0: ${REVERSE_PROXY_IP:-172.17.0.1}
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${DB_NAME:?DB_NAME is required};Username=${DB_USER:?DB_USER is required};Password=${DB_PASSWORD:?DB_PASSWORD is required};Minimum Pool Size=1;Maximum Pool Size=20;Connection Idle Lifetime=300"
       Jwt__Key: ${JWT_KEY:?JWT_KEY is required}
       Jwt__Issuer: QLS_Backend
@@ -47,7 +47,7 @@ services:
       Zigbee2Mqtt__Username: ${MQTT_USERNAME:-}
       Zigbee2Mqtt__Password: ${MQTT_PASSWORD:-}
       LgApi__BaseUrl: https://kic-laundry.lgthinq.com/status/
-      LgApi__ApiKey: ${LG_API_KEY:?LG_API_KEY is required}
+      LgApi__ApiKey: ${LG_API_KEY:-dev-placeholder}
       LgApi__AppVer: "0.1"
       LgApi__ClientType: USER
       LgApi__CountryCode: VN

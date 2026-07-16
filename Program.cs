@@ -41,6 +41,22 @@ if (!builder.Environment.IsDevelopment())
         throw new InvalidOperationException(
             $"Missing required production configuration: {string.Join(", ", missingConfiguration)}");
     }
+
+    var placeholderConfiguration = new[]
+    {
+        ("LgApi:ApiKey", "dev-placeholder")
+    };
+
+    var placeholderKeys = placeholderConfiguration
+        .Where(item => string.Equals(builder.Configuration[item.Item1], item.Item2, StringComparison.OrdinalIgnoreCase))
+        .Select(item => item.Item1)
+        .ToArray();
+
+    if (placeholderKeys.Length > 0)
+    {
+        throw new InvalidOperationException(
+            $"Production configuration cannot use development placeholders: {string.Join(", ", placeholderKeys)}");
+    }
 }
 // Add services to the container.
 builder.Services.AddControllers();
