@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Data;
@@ -6,6 +7,7 @@ using QLS.Backend.Services;
 using QLS.Backend.DTOs;
 using QLS.Backend.DTOs.Machine;
 using QLS.Backend.Services.LgService;
+using QLS.Backend.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -14,6 +16,7 @@ namespace QLS.Backend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class MachineController : ControllerBase
 {
     private readonly IMachineDetailService _machineDetailService;
@@ -32,17 +35,28 @@ public class MachineController : ControllerBase
 
     // API lấy trạng thái trực tiếp từ LG
     [HttpGet("status/{storeId}")]
+    [Authorize(Roles = "SystemAdmin,BrandAdmin,Manager,Staff")]
     public async Task<IActionResult> GetLgStatus(string storeId)
     {
+        var store = await _context.Stores
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.StoreId == storeId);
+        if (store == null)
+        {
+            return NotFound(ApiResponse<object>.Error(404, "Không tìm thấy cửa hàng."));
+        }
+
+        await User.EnsureStoreAccessAsync(_context, store.Id);
         var result = await _machineDetailService.GetLgMachineStatusAsync(storeId);
         return Ok(ApiResponse<IEnumerable<MachineDetailDto>>.Success(result, "Lấy trạng thái máy thành công"));
     }
 
     // API Cập nhật công suất (số kg) của máy
     [HttpPatch("{id}/capacity")]
-    // [Authorize(Roles = "SystemAdmin,BrandAdmin,StoreAdmin")]
+    [Authorize(Roles = "SystemAdmin,BrandAdmin,Manager")]
     public async Task<IActionResult> UpdateCapacity(Guid id, [FromBody] UpdateMachineCapacityDto dto)
     {
+        await User.EnsureMachineAccessAsync(_context, id);
         var result = await _machineDetailService.UpdateMachineCapacityAsync(id, dto.Capacity);
         if (!result) return NotFound(new { message = "Không tìm thấy máy" });
         
@@ -51,8 +65,10 @@ public class MachineController : ControllerBase
 
     // API lấy chi tiết máy với cấu hình + bảng giá
     [HttpGet("{id}/detail")]
+    [Authorize(Roles = "SystemAdmin,BrandAdmin,Manager,Staff")]
     public async Task<IActionResult> GetMachineDetail(Guid id)
     {
+        await User.EnsureMachineAccessAsync(_context, id);
         var result = await _machineDetailService.GetMachineDetailWithConfigAsync(id);
         if (result == null) return NotFound(new { message = "Không tìm thấy máy" });
 
@@ -61,8 +77,10 @@ public class MachineController : ControllerBase
 
     // API Thiết lập địa chỉ Zigbee và gửi lệnh đổi tên qua MQTT
     [HttpPost("setup-zigbee")]
+    [Authorize(Roles = "SystemAdmin,BrandAdmin")]
     public async Task<IActionResult> SetupZigbee([FromBody] SetupZigbeeRequestDto dto)
     {
+        await User.EnsureMachineAccessAsync(_context, dto.MachineId);
         var machine = await _context.Machines
             .Include(m => m.Store)
             .FirstOrDefaultAsync(m => m.Id == dto.MachineId);
@@ -102,8 +120,10 @@ public class MachineController : ControllerBase
     }
 
     [HttpGet("discovered-devices/{machineId}")]
+    [Authorize(Roles = "SystemAdmin,BrandAdmin")]
     public async Task<IActionResult> GetDiscoveredDevices(Guid machineId)
     {
+        await User.EnsureMachineAccessAsync(_context, machineId);
         var machine = await _context.Machines
             .Include(m => m.Store)
             .FirstOrDefaultAsync(m => m.Id == machineId);
@@ -139,8 +159,10 @@ public class MachineController : ControllerBase
     }
 
     [HttpPost("permit-join")]
+    [Authorize(Roles = "SystemAdmin,BrandAdmin")]
     public async Task<IActionResult> SetPermitJoin([FromBody] PermitJoinRequestDto dto)
     {
+        await User.EnsureStoreAccessAsync(_context, dto.StoreId);
         var store = await _context.Stores.FirstOrDefaultAsync(s => s.Id == dto.StoreId);
         if (store == null)
         {

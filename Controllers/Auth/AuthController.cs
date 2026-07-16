@@ -20,6 +20,7 @@ namespace QLS.Backend.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var response = await _authService.LoginAsync(request);
@@ -33,6 +34,7 @@ namespace QLS.Backend.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             var result = await _authService.RegisterAsync(request);
@@ -69,4 +71,4 @@ namespace QLS.Backend.Controllers
             return Ok(ApiResponse<object?>.Success(null, $"Tạo tài khoản {request.Role} thành công"));
         }
     }
-}
+}

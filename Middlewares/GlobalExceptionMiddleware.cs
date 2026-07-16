@@ -66,8 +66,10 @@ namespace QLS.Backend.Middlewares
                     message = "Không tìm thấy dữ liệu yêu cầu.";
                     break;
                 default:
-                    // Tạm thời bật hiển thị thông báo lỗi chi tiết ở mọi môi trường để tìm ra nguyên nhân trên server
-                    message = exception.InnerException?.Message ?? exception.Message;
+                    if (_env.IsDevelopment())
+                    {
+                        message = exception.InnerException?.Message ?? exception.Message;
+                    }
                     break;
             }
 

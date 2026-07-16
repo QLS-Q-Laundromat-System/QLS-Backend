@@ -4,9 +4,9 @@ services:
     container_name: ${STACK_NAME:-qls}-postgres
     restart: always
     environment:
-      POSTGRES_DB: ${DB_NAME:-QLS_PROD}
-      POSTGRES_USER: ${DB_USER:-qls_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-change-this-db-password}
+      POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
+      POSTGRES_USER: ${DB_USER:?DB_USER is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -14,11 +14,7 @@ services:
     networks:
       - qls-network
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${DB_USER:-qls_user} -d ${DB_NAME:-QLS_PROD}",
-        ]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:?DB_USER is required} -d ${DB_NAME:?DB_NAME is required}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,28 +24,30 @@ services:
     container_name: ${STACK_NAME:-qls}-backend
     restart: always
     ports:
-      - "${BACKEND_PORT:-5078}:5078"
+      - "${BACKEND_BIND_IP:-127.0.0.1}:${BACKEND_PORT:-5078}:5078"
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:5078
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${DB_NAME:-QLS_PROD};Username=${DB_USER:-qls_user};Password=${DB_PASSWORD:-change-this-db-password};Minimum Pool Size=1;Maximum Pool Size=20;Connection Idle Lifetime=300"
-      Jwt__Key: ${JWT_KEY:-change-this-long-random-jwt-secret}
+      ReverseProxy__KnownProxies__0: ${REVERSE_PROXY_IP:?REVERSE_PROXY_IP is required}
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${DB_NAME:?DB_NAME is required};Username=${DB_USER:?DB_USER is required};Password=${DB_PASSWORD:?DB_PASSWORD is required};Minimum Pool Size=1;Maximum Pool Size=20;Connection Idle Lifetime=300"
+      Jwt__Key: ${JWT_KEY:?JWT_KEY is required}
       Jwt__Issuer: QLS_Backend
       Jwt__Audience: QLS_Web
       Jwt__ExpireDays: 7
-      CorsSettings__AllowedOrigins__0: ${CORS_ORIGIN_0:-http://localhost:5173}
-      CorsSettings__AllowedOrigins__1: ${CORS_ORIGIN_1:-https://admin.qlaundrystation.com}
-      CorsSettings__AllowedOrigins__2: ${CORS_ORIGIN_2:-https://dev.qlaundrystation.com}
-      CorsSettings__AllowedOrigins__3: ${CORS_ORIGIN_3:-https://qls-web.vercel.app}
-      CorsSettings__AllowedOrigins__4: ${CORS_ORIGIN_4:-https://h5.zdn.vn}
-      CorsSettings__AllowedOrigins__5: ${CORS_ORIGIN_5:-https://h5.zadn.vn}
-      Zalo__AppId: ${ZALO_APP_ID:-572235974883145642}
-      Zalo__AppSecretKey: ${ZALO_APP_SECRET_KEY:-}
-      Loyalty__MiniAppClaimUrlTemplate: ${LOYALTY_MINI_APP_CLAIM_URL_TEMPLATE:-https://zalo.me/s/572235974883145642?claimToken={token}}
+      CorsSettings__AllowedOrigins__0: ${CORS_ORIGIN_0:?CORS_ORIGIN_0 is required}
+      CorsSettings__AllowedOrigins__1: ${CORS_ORIGIN_1:?CORS_ORIGIN_1 is required}
+      CorsSettings__AllowedOrigins__2: ${CORS_ORIGIN_2:?CORS_ORIGIN_2 is required}
+      CorsSettings__AllowedOrigins__3: ${CORS_ORIGIN_3:?CORS_ORIGIN_3 is required}
+      CorsSettings__AllowedOrigins__4: ${CORS_ORIGIN_4:?CORS_ORIGIN_4 is required}
+      Zalo__AppId: ${ZALO_APP_ID:?ZALO_APP_ID is required}
+      Zalo__AppSecretKey: ${ZALO_APP_SECRET_KEY:?ZALO_APP_SECRET_KEY is required}
+      Loyalty__MiniAppClaimUrlTemplate: ${LOYALTY_MINI_APP_CLAIM_URL_TEMPLATE:?LOYALTY_MINI_APP_CLAIM_URL_TEMPLATE is required}
       Zigbee2Mqtt__Host: ${MQTT_HOST:-localhost}
       Zigbee2Mqtt__Port: ${MQTT_PORT:-1883}
+      Zigbee2Mqtt__Username: ${MQTT_USERNAME:-}
+      Zigbee2Mqtt__Password: ${MQTT_PASSWORD:-}
       LgApi__BaseUrl: https://kic-laundry.lgthinq.com/status/
-      LgApi__ApiKey: vV6bStCpqr5Hqxbcr8Kmp9XkFh4VdlVp568YxBp5
+      LgApi__ApiKey: ${LG_API_KEY:?LG_API_KEY is required}
       LgApi__AppVer: "0.1"
       LgApi__ClientType: USER
       LgApi__CountryCode: VN

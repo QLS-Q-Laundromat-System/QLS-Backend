@@ -71,6 +71,10 @@ namespace QLS.Backend.Data
                 .HasForeignKey(a => a.StoreId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Account>()
+                .HasIndex(a => a.Username)
+                .IsUnique();
+
             // --- Cấu hình quan hệ cho Machine ---
             modelBuilder.Entity<Machine>()
                 .HasOne(m => m.Store)
@@ -100,6 +104,16 @@ namespace QLS.Backend.Data
             modelBuilder.Entity<MachineSession>()
                 .Property(ms => ms.PricePaid)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<MachineSession>()
+                .HasIndex(ms => ms.PaymentCode)
+                .IsUnique()
+                .HasFilter("\"PaymentCode\" IS NOT NULL");
+
+            modelBuilder.Entity<PaymentTransaction>()
+                .HasIndex(pt => pt.GatewayTransactionId)
+                .IsUnique()
+                .HasFilter("\"GatewayTransactionId\" IS NOT NULL");
 
             modelBuilder.Entity<MachineNotification>()
                 .HasOne(n => n.Store)

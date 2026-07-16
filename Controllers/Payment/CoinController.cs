@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Data;
@@ -14,6 +15,7 @@ namespace QLS.Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "SystemAdmin")]
     public class CoinController : ControllerBase
     {
         private readonly IZigbeeService _zigbeeService;

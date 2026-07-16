@@ -228,8 +228,6 @@ namespace QLS.Backend.Services.Payment
                 BankCode = entity.BankCode,
                 AccountNumber = entity.AccountNumber,
                 AccountName = entity.AccountName,
-                ApiKey = entity.ApiKey,
-                SecretKey = entity.SecretKey,
                 IsActive = entity.IsActive,
                 UpdatedAt = entity.UpdatedAt
             };

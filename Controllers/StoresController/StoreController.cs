@@ -5,6 +5,8 @@ using QLS.Backend.DTOs;
 using QLS.Backend.Interfaces.Stores;
 using System.Security.Claims;
 using QLS.Backend.Models;
+using QLS.Backend.Data;
+using QLS.Backend.Extensions;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
@@ -13,16 +15,20 @@ namespace QLS.Backend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class StoreController : ControllerBase
 {
     private readonly IStoreService _storeService;
+    private readonly AppDbContext _context;
 
-    public StoreController(IStoreService storeService)
+    public StoreController(IStoreService storeService, AppDbContext context)
     {
         _storeService = storeService;
+        _context = context;
     }
 
     [HttpGet]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<ActionResult<IEnumerable<Store>>> GetStores()
     {
         var stores = await _storeService.GetStoresAsync();
@@ -30,6 +36,7 @@ public class StoreController : ControllerBase
     }
 
     [HttpGet("count")]
+    [Authorize(Roles = "SystemAdmin")]
     public async Task<ActionResult<int>> GetStoreCount()
     {
         var count = await _storeService.GetStoreCountAsync();
@@ -40,13 +47,16 @@ public class StoreController : ControllerBase
     [Authorize(Roles = "SystemAdmin,BrandAdmin")]
     public async Task<IActionResult> CreateStore([FromBody] CreateStoreDto dto)
     {
+        await User.EnsureBrandAccessAsync(dto.BrandId);
         var response = await _storeService.CreateStoreAsync(dto);
         return Ok(ApiResponse<StoreResponseDto>.Success(response, "Tạo cửa hàng thành công"));
     }
 
     [HttpGet("{id}")]
+    [Authorize(Roles = "SystemAdmin,BrandAdmin,Manager,Staff")]
     public async Task<ActionResult<StoreResponseDto>> GetStoreById(Guid id)
     {
+        await User.EnsureStoreAccessAsync(_context, id);
         var store = await _storeService.GetStoreByIdAsync(id);
         return Ok(ApiResponse<StoreResponseDto>.Success(store, "Lấy dữ liệu thành công"));
     }
@@ -55,6 +65,7 @@ public class StoreController : ControllerBase
     [Authorize(Roles = "SystemAdmin,BrandAdmin")]
     public async Task<IActionResult> UpdateStore(Guid id, [FromBody] UpdateStoreDto dto)
     {
+        await User.EnsureStoreAccessAsync(_context, id);
         var response = await _storeService.UpdateStoreAsync(id, dto);
         return Ok(ApiResponse<StoreResponseDto>.Success(response, "Cập nhật cửa hàng thành công"));
     }
@@ -63,14 +74,16 @@ public class StoreController : ControllerBase
     [Authorize(Roles = "SystemAdmin,BrandAdmin,Manager")]
     public async Task<IActionResult> GetAccountsByStore(Guid id)
     {
+        await User.EnsureStoreAccessAsync(_context, id);
         var accounts = await _storeService.GetAccountsByStoreIdAsync(id);
         return Ok(ApiResponse<IEnumerable<StoreAccountDto>>.Success(accounts, "Lấy danh sách tài khoản thành công"));
     }
 
     [HttpGet("{id}/machines")]
-    //[Authorize(Roles = "SystemAdmin,BrandAdmin,Manager,Staff")]
+    [Authorize(Roles = "SystemAdmin,BrandAdmin,Manager,Staff")]
     public async Task<IActionResult> GetMachinesByStore(Guid id)
     {
+        await User.EnsureStoreAccessAsync(_context, id);
         var machines = await _storeService.GetMachinesByStoreIdAsync(id);
         return Ok(ApiResponse<IEnumerable<Machine>>.Success(machines, "Lấy danh sách máy thành công"));
     }
@@ -93,6 +106,7 @@ public class StoreController : ControllerBase
     [Authorize(Roles = "SystemAdmin,BrandAdmin")]
     public async Task<IActionResult> AssignStoreType(Guid id, [FromBody] UpdateStoreTypeDto dto)
     {
+        await User.EnsureStoreAccessAsync(_context, id);
         var result = await _storeService.AssignStoreTypeAsync(id, dto.StoreTypeId);
         if (!result) return NotFound(ApiResponse<object>.Error(404, "Không tìm thấy cửa hàng"));
         return Ok(ApiResponse<object>.Success(new { }, "Gán hạng cửa hàng thành công"));

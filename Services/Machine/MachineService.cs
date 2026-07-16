@@ -41,17 +41,10 @@ namespace QLS.Backend.Services
         {
             var now = DateTime.UtcNow;
             
-            // Đảm bảo UserId tồn tại để tránh lỗi Foreign Key
             var userExists = await _context.Users.AnyAsync(u => u.Id == dto.UserId);
-            var finalUserId = dto.UserId;
-            
             if (!userExists)
             {
-                var firstUser = await _context.Users.FirstOrDefaultAsync();
-                if (firstUser != null)
-                {
-                    finalUserId = firstUser.Id;
-                }
+                throw new InvalidOperationException("Không tìm thấy người dùng tạo session.");
             }
 
             var session = new MachineSession
@@ -59,7 +52,7 @@ namespace QLS.Backend.Services
                 Id           = Guid.NewGuid(),
                 MachineId    = dto.MachineId,
                 StoreId      = dto.BranchId,
-                UserId       = finalUserId,
+                UserId       = dto.UserId,
                 PricePaid    = dto.PricePaid,
                 TaxAmount    = 0, 
                 TotalMinutes = dto.TotalMinutes,
@@ -152,6 +145,9 @@ namespace QLS.Backend.Services
             var session = await _context.MachineSessions.FindAsync(sessionId);
             if (session == null) return false;
 
+            if (session.Status is MachineSessionStatus.PaidWaitingForStart or MachineSessionStatus.Running)
+                return true;
+
             if (session.Status != MachineSessionStatus.PendingPayment)
                 throw new InvalidOperationException($"Session không thể xác nhận: trạng thái hiện tại là '{session.Status}'");
 
@@ -190,6 +186,9 @@ namespace QLS.Backend.Services
                         .ThenInclude(b => b!.PaymentConfigs)
                 .FirstOrDefaultAsync(m => m.Id == dto.MachineId);
             if (machine == null) throw new Exception("Không tìm thấy máy");
+
+            if (machine.StoreId != dto.StoreId)
+                throw new InvalidOperationException("Máy không thuộc cửa hàng của phiên đăng nhập.");
 
             var capacityRaw = machine.Capacity ?? "0";
             var capacityClean = new string(capacityRaw.Where(c => char.IsDigit(c) || c == '.').ToArray());

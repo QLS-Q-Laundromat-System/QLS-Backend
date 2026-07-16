@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Data;
@@ -9,6 +10,7 @@ using QLS.Backend.Services;
 using System.Text.Json;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Hosting;
 using QLS.Backend.Services.Machine;
 using QLS.Backend.Interfaces.Loyalty;
@@ -50,6 +52,7 @@ namespace QLS.Backend.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> Receive()
         {
             // Đọc raw body để verify signature và dùng cho deserialization
@@ -71,76 +74,50 @@ namespace QLS.Backend.Controllers
 
             if (dto == null) return BadRequest();
 
-            _logger.LogInformation("[SePay Webhook] Received: {Id} | Content: {Content} | Amount: {Amount}", dto.Id, dto.Content, dto.TransferAmount);
+            _logger.LogInformation("[SePay Webhook] Received transaction {Id} for amount {Amount}", dto.Id, dto.TransferAmount);
 
-            // Lấy cấu hình Secret/Token từ DB dựa trên AccountNumber
-            string? webhookSecret = _configuration["SePay:WebhookSecret"];
-            string? secretToken = _configuration["SePay:WebhookToken"];
+            var paymentConfig = await _context.PaymentConfigs
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p =>
+                    p.AccountNumber == dto.AccountNumber &&
+                    p.IsActive &&
+                    p.Provider == "SEPAY");
 
-            if (!string.IsNullOrEmpty(dto.AccountNumber))
-            {
-                var paymentConfig = await _context.PaymentConfigs
-                    .FirstOrDefaultAsync(p => p.AccountNumber == dto.AccountNumber && p.IsActive && p.Provider == "SEPAY");
-                
-                if (paymentConfig != null)
-                {
-                    if (!string.IsNullOrEmpty(paymentConfig.SecretKey)) webhookSecret = paymentConfig.SecretKey;
-                    if (!string.IsNullOrEmpty(paymentConfig.ApiKey)) secretToken = paymentConfig.ApiKey;
-                }
-            }
-
-            // 1. Xác thực HMAC-SHA256 (Khuyến nghị từ SePay)
+            var webhookSecret = paymentConfig?.SecretKey;
             var signatureHeader = Request.Headers["X-SePay-Signature"].ToString();
             var timestampHeader = Request.Headers["X-SePay-Timestamp"].ToString();
 
-            if (!string.IsNullOrEmpty(webhookSecret) && !string.IsNullOrEmpty(signatureHeader))
+            if (string.IsNullOrWhiteSpace(webhookSecret) ||
+                string.IsNullOrWhiteSpace(signatureHeader) ||
+                !TryParseFreshTimestamp(timestampHeader, out _))
             {
-                try 
-                {
-                    var dataToSign = $"{timestampHeader}.{rawBody}";
-                    var keyBytes = Encoding.UTF8.GetBytes(webhookSecret);
-                    var dataBytes = Encoding.UTF8.GetBytes(dataToSign);
-
-                    using var hmac = new HMACSHA256(keyBytes);
-                    var hashBytes = hmac.ComputeHash(dataBytes);
-                    var computedHash = Convert.ToHexString(hashBytes).ToLower();
-
-                    var expectedSignature = $"sha256={computedHash}";
-                    if (!string.Equals(signatureHeader, expectedSignature, StringComparison.OrdinalIgnoreCase))
-                    {
-                        _logger.LogWarning("[SePay Webhook] INVALID HMAC SIGNATURE! Header: {Header}, Expected: {Expected}", signatureHeader, expectedSignature);
-                        return Unauthorized(new { message = "Invalid HMAC Signature" });
-                    }
-                    _logger.LogInformation("[SePay Webhook] HMAC Signature verified successfully.");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "[SePay Webhook] Error verifying HMAC signature.");
-                    return Unauthorized(new { message = "Signature verification error" });
-                }
-            }
-            else
-            {
-                // Fallback: Kiểm tra API Key Token nếu không dùng HMAC
-                var authHeader = Request.Headers["Authorization"].ToString();
-
-                if (string.IsNullOrEmpty(authHeader) || (!string.IsNullOrEmpty(secretToken) && !authHeader.Contains(secretToken)))
-                {
-                    _logger.LogWarning("[SePay Webhook] UNAUTHORIZED access attempt (API Key)! Header: {Header}", authHeader);
-                    return Unauthorized(new { message = "Invalid API Token" });
-                }
+                _logger.LogWarning("[SePay Webhook] Rejected transaction {Id}: missing or invalid authentication metadata.", dto.Id);
+                return Unauthorized(new { message = "Invalid webhook authentication." });
             }
 
-            // 0.1 Tìm mã thanh toán trong nội dung chuyển khoản
-            var content = dto.Content ?? "";
-            var paymentCodeMatch = _context.MachineSessions
-                .Where(s => s.Status == MachineSessionStatus.PendingPayment || s.Status == MachineSessionStatus.PaidWaitingForStart || s.Status == MachineSessionStatus.Running)
-                .AsEnumerable() 
-                .FirstOrDefault(s => !string.IsNullOrEmpty(s.PaymentCode) && content.ToUpper().Contains(s.PaymentCode.ToUpper()));
+            var dataToSign = $"{timestampHeader}.{rawBody}";
+            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(webhookSecret));
+            var expectedSignature = $"sha256={Convert.ToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(dataToSign))).ToLowerInvariant()}";
+            if (!CryptographicOperations.FixedTimeEquals(
+                    Encoding.UTF8.GetBytes(signatureHeader.Trim()),
+                    Encoding.UTF8.GetBytes(expectedSignature)))
+            {
+                _logger.LogWarning("[SePay Webhook] Rejected transaction {Id}: invalid signature.", dto.Id);
+                return Unauthorized(new { message = "Invalid webhook authentication." });
+            }
+
+            var paymentCode = ExtractPaymentCode(dto.Code) ?? ExtractPaymentCode(dto.Content);
+            var paymentCodeMatch = paymentCode == null
+                ? null
+                : await _context.MachineSessions.FirstOrDefaultAsync(s =>
+                    s.PaymentCode == paymentCode &&
+                    (s.Status == MachineSessionStatus.PendingPayment ||
+                     s.Status == MachineSessionStatus.PaidWaitingForStart ||
+                     s.Status == MachineSessionStatus.Running));
 
             if (paymentCodeMatch == null)
             {
-                _logger.LogWarning("[SePay Webhook] No matching session found for content: {Content}", content);
+                _logger.LogWarning("[SePay Webhook] No matching session found for transaction {Id}.", dto.Id);
                 return Ok(new { success = true }); 
             }
 
@@ -151,10 +128,10 @@ namespace QLS.Backend.Controllers
         /// API Sandbox để test local: POST /api/webhooks/sepay/test-pay
         /// </summary>
         [HttpPost("test-pay")]
+        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> TestPayment([FromBody] SePayTestRequest request)
         {
-            // Chỉ bật endpoint này trên server test qua cấu hình.
-            if (!_configuration.GetValue<bool>("SePay:EnableTestEndpoints"))
+            if (!_env.IsDevelopment() || !_configuration.GetValue<bool>("SePay:EnableTestEndpoints"))
             {
                 _logger.LogWarning("[Sandbox] Từ chối TestPayment vì test endpoint đang bị tắt.");
                 return NotFound();
@@ -183,13 +160,19 @@ namespace QLS.Backend.Controllers
         {
             // 0. Kiểm tra chống trùng lặp (Idempotency)
             // Nếu webhook được gọi lại với cùng 1 ID giao dịch, ta bỏ qua và trả về thành công
-            bool isDuplicate = await _context.PaymentTransactions
-                .AnyAsync(t => t.GatewayTransactionId == dto.Id.ToString());
+            var existingTransaction = await _context.PaymentTransactions
+                .FirstOrDefaultAsync(t => t.GatewayTransactionId == dto.Id.ToString());
 
-            if (isDuplicate)
+            if (existingTransaction != null)
             {
-                _logger.LogInformation("[SePay Webhook] Transaction {Id} already processed. Ignoring.", dto.Id);
-                return Ok(new { success = true });
+                if (existingTransaction.Status == "Success")
+                {
+                    _logger.LogInformation("[SePay Webhook] Transaction {Id} already completed.", dto.Id);
+                    return Ok(new { success = true });
+                }
+
+                _logger.LogError("[SePay Webhook] Transaction {Id} is in state {Status} and requires recovery.", dto.Id, existingTransaction.Status);
+                return StatusCode(500, new { message = "Payment transaction requires recovery." });
             }
 
             // 1. Tạo bản ghi giao dịch (Audit Log)
@@ -201,11 +184,19 @@ namespace QLS.Backend.Controllers
                 GatewayTransactionId = dto.Id.ToString(),
                 TransactionContent = dto.Content,
                 RawData = JsonSerializer.Serialize(dto),
-                Status = "Pending"
+                Status = "Processing"
             };
 
             _context.PaymentTransactions.Add(transaction);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogWarning(ex, "[SePay Webhook] Duplicate transaction race for {Id}.", dto.Id);
+                return StatusCode(500, new { message = "Payment transaction is being processed." });
+            }
 
             try
             {
@@ -271,6 +262,29 @@ namespace QLS.Backend.Controllers
                 // Trả về 500 để SePay có thể retry nếu là lỗi tạm thời (như MQTT timeout)
                 return StatusCode(500);
             }
+        }
+
+        private static string? ExtractPaymentCode(string? content)
+        {
+            var match = Regex.Match(content ?? string.Empty, @"\bQLS[A-F0-9]{5}\b", RegexOptions.IgnoreCase);
+            return match.Success ? match.Value.ToUpperInvariant() : null;
+        }
+
+        private static bool TryParseFreshTimestamp(string value, out DateTimeOffset timestamp)
+        {
+            timestamp = default;
+            if (long.TryParse(value, out var unixTimestamp))
+            {
+                timestamp = unixTimestamp > 9_999_999_999
+                    ? DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp)
+                    : DateTimeOffset.FromUnixTimeSeconds(unixTimestamp);
+            }
+            else if (!DateTimeOffset.TryParse(value, out timestamp))
+            {
+                return false;
+            }
+
+            return Math.Abs((DateTimeOffset.UtcNow - timestamp.ToUniversalTime()).TotalMinutes) <= 5;
         }
     }
 }

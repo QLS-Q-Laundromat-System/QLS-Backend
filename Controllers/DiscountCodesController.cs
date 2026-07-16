@@ -121,7 +121,7 @@ namespace QLS.Backend.Controllers
             return Ok(result);
         }
 
-        [AllowAnonymous]
+        [Authorize(Roles = "SystemAdmin")]
         [HttpGet("debug-all")]
         public IActionResult DebugAll([FromServices] QLS.Backend.Data.AppDbContext context)
         {

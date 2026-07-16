@@ -33,8 +33,6 @@ namespace QLS.Backend.DTOs.Brand
         public string? BankCode { get; set; }
         public string? AccountNumber { get; set; }
         public string? AccountName { get; set; }
-        public string? ApiKey { get; set; }
-        public string? SecretKey { get; set; }
         public bool IsActive { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

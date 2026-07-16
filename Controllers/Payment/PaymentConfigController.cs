@@ -1,5 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using QLS.Backend.Data;
 using QLS.Backend.DTOs.Brand;
+using QLS.Backend.Extensions;
 using QLS.Backend.Interfaces.Payment;
 using System;
 using System.Threading.Tasks;
@@ -8,13 +12,16 @@ namespace QLS.Backend.Controllers
 {
     [ApiController]
     [Route("api/v1/payment-configs")]
+    [Authorize(Roles = "SystemAdmin,BrandAdmin")]
     public class PaymentConfigController : ControllerBase
     {
         private readonly IPaymentConfigService _service;
+        private readonly AppDbContext _context;
 
-        public PaymentConfigController(IPaymentConfigService service)
+        public PaymentConfigController(IPaymentConfigService service, AppDbContext context)
         {
             _service = service;
+            _context = context;
         }
 
         [HttpGet("instructions/{provider}")]
@@ -30,6 +37,7 @@ namespace QLS.Backend.Controllers
         {
             try
             {
+                await User.EnsureBrandAccessAsync(brandId);
                 dto.BrandId = brandId;
                 var result = await _service.CreateConfigAsync(dto);
                 return Ok(new { success = true, data = result });
@@ -43,6 +51,7 @@ namespace QLS.Backend.Controllers
         [HttpGet("brand/{brandId}")]
         public async Task<IActionResult> GetByBrand(Guid brandId)
         {
+            await User.EnsureBrandAccessAsync(brandId);
             var result = await _service.GetConfigsByBrandAsync(brandId);
             return Ok(new { success = true, data = result });
         }
@@ -52,6 +61,7 @@ namespace QLS.Backend.Controllers
         {
             try
             {
+                await EnsureConfigAccessAsync(id);
                 var result = await _service.GetConfigByIdAsync(id);
                 return Ok(new { success = true, data = result });
             }
@@ -66,6 +76,7 @@ namespace QLS.Backend.Controllers
         {
             try
             {
+                await EnsureConfigAccessAsync(id);
                 var result = await _service.UpdateConfigAsync(id, dto);
                 return Ok(new { success = true, data = result });
             }
@@ -78,6 +89,7 @@ namespace QLS.Backend.Controllers
         [HttpPatch("{id}/activate")]
         public async Task<IActionResult> Activate(Guid id)
         {
+            await EnsureConfigAccessAsync(id);
             var result = await _service.ActivateConfigAsync(id);
             if (!result) return NotFound(new { success = false, message = "Không tìm thấy cấu hình." });
             return Ok(new { success = true, message = "Đã kích hoạt cấu hình thành công." });
@@ -86,6 +98,7 @@ namespace QLS.Backend.Controllers
         [HttpPost("{id}/verify")]
         public async Task<IActionResult> Verify(Guid id)
         {
+            await EnsureConfigAccessAsync(id);
             var result = await _service.VerifyConfigAsync(id);
             if (!result) return BadRequest(new { success = false, message = "Xác thực cấu hình thất bại. Vui lòng kiểm tra lại API Key hoặc cấu hình." });
             return Ok(new { success = true, message = "Xác thực cấu hình thành công." });
@@ -94,9 +107,24 @@ namespace QLS.Backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
+            await EnsureConfigAccessAsync(id);
             var result = await _service.DeleteConfigAsync(id);
             if (!result) return NotFound(new { success = false, message = "Không tìm thấy cấu hình." });
             return Ok(new { success = true, message = "Đã xóa cấu hình thành công." });
+        }
+
+        private async Task EnsureConfigAccessAsync(Guid id)
+        {
+            var brandId = await _context.PaymentConfigs
+                .AsNoTracking()
+                .Where(config => config.Id == id)
+                .Select(config => (Guid?)config.BrandId)
+                .FirstOrDefaultAsync();
+
+            if (brandId.HasValue)
+            {
+                await User.EnsureBrandAccessAsync(brandId.Value);
+            }
         }
     }
 }

@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using QLS.Backend.Interfaces;
 using QLS.Backend.DTOs.Machine;
@@ -5,6 +7,9 @@ using QLS.Backend.DTOs;
 using System;
 using System.Threading.Tasks;
 using QLS.Backend.Interfaces.Loyalty;
+using QLS.Backend.Data;
+using QLS.Backend.Extensions;
+using QLS.Backend.Exceptions;
 
 namespace QLS.Backend.Controllers
 {
@@ -14,11 +19,16 @@ namespace QLS.Backend.Controllers
     {
         private readonly IMachineService _machineService;
         private readonly QLS.Backend.Services.Machine.IHardwareTrackerService _hardwareTracker;
+        private readonly AppDbContext _context;
 
-        public MachineSessionsController(IMachineService machineService, QLS.Backend.Services.Machine.IHardwareTrackerService hardwareTracker)
+        public MachineSessionsController(
+            IMachineService machineService,
+            QLS.Backend.Services.Machine.IHardwareTrackerService hardwareTracker,
+            AppDbContext context)
         {
             _machineService = machineService;
             _hardwareTracker = hardwareTracker;
+            _context = context;
         }
 
         /// <summary>
@@ -28,10 +38,13 @@ namespace QLS.Backend.Controllers
         /// [POST] /api/v1/sessions/init
         /// </summary>
         [HttpPost("init")]
+        [Authorize(Roles = "Manager,Staff")]
         public async Task<IActionResult> InitSession([FromBody] InitPaymentRequestDto dto)
         {
             try
             {
+                dto.StoreId = User.GetRequiredStoreId();
+                dto.UserId = User.GetRequiredUserId();
                 var result = await _machineService.InitSessionAsync(dto);
                 return Ok(ApiResponse<InitPaymentResponseDto>.Success(result));
             }
@@ -48,6 +61,7 @@ namespace QLS.Backend.Controllers
         /// [POST] /api/v1/sessions/{id}/confirm-payment
         /// </summary>
         [HttpPost("{id}/confirm-payment")]
+        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> ConfirmPayment(Guid id, [FromBody] ConfirmPaymentRequestDto dto)
         {
             try
@@ -74,10 +88,12 @@ namespace QLS.Backend.Controllers
         /// [POST] /api/v1/sessions/{id}/cancel
         /// </summary>
         [HttpPost("{id}/cancel")]
+        [Authorize(Roles = "Manager,Staff")]
         public async Task<IActionResult> CancelSession(Guid id)
         {
             try
             {
+                await EnsureSessionAccessAsync(id);
                 var result = await _machineService.CancelPendingSessionAsync(id);
                 if (!result)
                     return NotFound(new { message = "Không tìm thấy session." });
@@ -97,6 +113,7 @@ namespace QLS.Backend.Controllers
         /// [PATCH] /api/v1/sessions/{id}/status
         /// </summary>
         [HttpPatch("{id}/status")]
+        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateSessionStatusDto dto)
         {
             var result = await _machineService.UpdateSessionStatusAsync(id, dto.Status, dto.RefundNote);
@@ -111,12 +128,13 @@ namespace QLS.Backend.Controllers
         /// [GET] /api/v1/sessions/{id}
         /// </summary>
         [HttpGet("{id}")]
+        [Authorize(Roles = "Manager,Staff")]
         public async Task<IActionResult> GetSessionStatus(
             Guid id,
-            [FromServices] QLS.Backend.Data.AppDbContext context,
             [FromServices] ILoyaltyService loyaltyService)
         {
-            var session = await context.MachineSessions.FindAsync(id);
+            await EnsureSessionAccessAsync(id);
+            var session = await _context.MachineSessions.FindAsync(id);
             if (session == null)
             {
                 return NotFound(new { message = "Không tìm thấy session." });
@@ -133,6 +151,22 @@ namespace QLS.Backend.Controllers
                 hardwareStatus = _hardwareTracker.GetStatus(session.Id) ?? "Đang chờ thiết bị...",
                 loyalty
             }));
+        }
+
+        private async Task EnsureSessionAccessAsync(Guid sessionId)
+        {
+            var storeId = await _context.MachineSessions
+                .AsNoTracking()
+                .Where(session => session.Id == sessionId)
+                .Select(session => (Guid?)session.StoreId)
+                .FirstOrDefaultAsync();
+
+            if (!storeId.HasValue)
+            {
+                throw new ApiException("Không tìm thấy session.", 404);
+            }
+
+            await User.EnsureStoreAccessAsync(_context, storeId.Value);
         }
     }
 }

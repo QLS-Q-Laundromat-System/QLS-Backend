@@ -45,17 +45,18 @@ public static class ServiceExtensions
     }
 
     // 2. Thêm hàm cấu hình CORS ngay bên dưới
-    public static IServiceCollection AddCustomCors(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddCustomCors(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IWebHostEnvironment environment)
     {
-        // Đọc danh sách Domain được phép từ appsettings.json
         var configuredOrigins = configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+        var developmentOrigins = environment.IsDevelopment()
+            ? new[] { "http://localhost:5173", "http://localhost:3000" }
+            : Array.Empty<string>();
+
         var allowedOrigins = configuredOrigins
-            .Concat(new[]
-            {
-                "https://admin.qlaundrystation.com",
-                "https://dev.qlaundrystation.com",
-                "https://qls-web.vercel.app"
-            })
+            .Concat(developmentOrigins)
             .Where(origin => !string.IsNullOrWhiteSpace(origin))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
@@ -65,7 +66,6 @@ public static class ServiceExtensions
             options.AddPolicy("AllowReactApp", policy =>
             {
                 policy.WithOrigins(allowedOrigins)
-                      .SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost" || allowedOrigins.Contains(origin))
                       .AllowAnyHeader()
                       .AllowAnyMethod()
                       .AllowCredentials();

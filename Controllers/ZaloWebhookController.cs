@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using System.Text.Json;
 
 namespace QLS.Backend.Controllers
@@ -15,13 +16,12 @@ namespace QLS.Backend.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public IActionResult Receive([FromBody] JsonElement payload)
         {
             try
             {
-                // Ghi log toàn bộ payload sự kiện từ Zalo phục vụ kiểm thử và giám sát
-                var rawJson = payload.GetRawText();
-                _logger.LogInformation("[Zalo Webhook] Nhận sự kiện: {Payload}", rawJson);
+                _logger.LogInformation("[Zalo Webhook] Received event with {PropertyCount} top-level properties.", payload.EnumerateObject().Count());
 
                 // Điểm này có thể mở rộng xử lý bất đồng bộ các sự kiện như follow/unfollow/chat...
                 // để luôn đảm bảo thời gian phản hồi dưới 2 giây theo yêu cầu của Zalo.
@@ -32,7 +32,7 @@ namespace QLS.Backend.Controllers
             {
                 _logger.LogError(ex, "[Zalo Webhook] Lỗi khi xử lý sự kiện webhook từ Zalo.");
                 // Trả về 200 OK kèm mã lỗi nội bộ để tránh Zalo tạm khóa Webhook khi gửi lỗi HTTP 500.
-                return Ok(new { success = false, error = ex.Message });
+                return Ok(new { success = false });
             }
         }
     }
