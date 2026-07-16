@@ -67,3 +67,6 @@ appsettings.Production.json
 
 # Local analysis docs
 PROJECT_SUMMARY_DETAILED.md
+
+# CodeGraph local index/cache
+.codegraph/
