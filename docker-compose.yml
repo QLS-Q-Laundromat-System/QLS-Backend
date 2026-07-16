@@ -34,11 +34,11 @@ services:
       Jwt__Issuer: QLS_Backend
       Jwt__Audience: QLS_Web
       Jwt__ExpireDays: 7
-      CorsSettings__AllowedOrigins__0: ${CORS_ORIGIN_0:?CORS_ORIGIN_0 is required}
-      CorsSettings__AllowedOrigins__1: ${CORS_ORIGIN_1:?CORS_ORIGIN_1 is required}
-      CorsSettings__AllowedOrigins__2: ${CORS_ORIGIN_2:?CORS_ORIGIN_2 is required}
-      CorsSettings__AllowedOrigins__3: ${CORS_ORIGIN_3:?CORS_ORIGIN_3 is required}
-      CorsSettings__AllowedOrigins__4: ${CORS_ORIGIN_4:?CORS_ORIGIN_4 is required}
+      CorsSettings__AllowedOrigins__0: ${CORS_ORIGIN_0:-https://admin.qlaundrystation.com}
+      CorsSettings__AllowedOrigins__1: ${CORS_ORIGIN_1:-https://dev.qlaundrystation.com}
+      CorsSettings__AllowedOrigins__2: ${CORS_ORIGIN_2:-https://qls-web.vercel.app}
+      CorsSettings__AllowedOrigins__3: ${CORS_ORIGIN_3:-https://h5.zdn.vn}
+      CorsSettings__AllowedOrigins__4: ${CORS_ORIGIN_4:-https://h5.zadn.vn}
       Zalo__AppId: ${ZALO_APP_ID:?ZALO_APP_ID is required}
       Zalo__AppSecretKey: ${ZALO_APP_SECRET_KEY:?ZALO_APP_SECRET_KEY is required}
       Loyalty__MiniAppClaimUrlTemplate: ${LOYALTY_MINI_APP_CLAIM_URL_TEMPLATE:-https://zalo.me/s/miniapp?claimToken={token}}
