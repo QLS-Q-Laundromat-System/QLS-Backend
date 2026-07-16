@@ -10,6 +10,15 @@ namespace QLS.Backend.Extensions;
 
 public static class ServiceExtensions
 {
+    private static readonly string[] DefaultAllowedOrigins =
+    {
+        "https://admin.qlaundrystation.com",
+        "https://dev.qlaundrystation.com",
+        "https://qls-web.vercel.app",
+        "https://h5.zdn.vn",
+        "https://h5.zadn.vn"
+    };
+
     // 1. Hàm hiện tại của bạn: Tự động quét và Inject các Services
     public static void AddApplicationServices(this IServiceCollection services)
     {
@@ -55,9 +64,11 @@ public static class ServiceExtensions
             ? new[] { "http://localhost:5173", "http://localhost:3000" }
             : Array.Empty<string>();
 
-        var allowedOrigins = configuredOrigins
+        var allowedOrigins = DefaultAllowedOrigins
+            .Concat(configuredOrigins)
             .Concat(developmentOrigins)
             .Where(origin => !string.IsNullOrWhiteSpace(origin))
+            .Select(origin => origin.Trim().TrimEnd('/'))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
