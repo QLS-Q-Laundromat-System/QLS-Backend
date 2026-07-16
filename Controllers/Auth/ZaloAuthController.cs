@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using QLS.Backend.DTOs;
 using QLS.Backend.DTOs.Zalo;
 using QLS.Backend.Interfaces.Zalo;
@@ -19,6 +20,7 @@ namespace QLS.Backend.Controllers.Auth
 
         [HttpPost("login")]
         [AllowAnonymous]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> Login([FromBody] ZaloLoginRequestDto request)
         {
             var result = await _zaloAuthService.LoginAsync(request);

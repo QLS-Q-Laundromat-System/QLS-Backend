@@ -26,13 +26,11 @@ namespace QLS.Backend.Middlewares
                          ?? context.User?.FindFirst("id")?.Value 
                          ?? "Anonymous";
 
-            var userName = context.User?.FindFirst("FullName")?.Value 
-                           ?? context.User?.FindFirst(ClaimTypes.Name)?.Value 
-                           ?? "Anonymous";
+            var userRole = context.User?.FindFirst(ClaimTypes.Role)?.Value ?? "Anonymous";
 
             // Push the UserId and UserName to Serilog's LogContext so all downstream logs include it
             using (Serilog.Context.LogContext.PushProperty("UserId", userId))
-            using (Serilog.Context.LogContext.PushProperty("UserName", userName))
+            using (Serilog.Context.LogContext.PushProperty("UserRole", userRole))
             {
                 try
                 {
@@ -43,8 +41,9 @@ namespace QLS.Backend.Middlewares
 
                     // Log details of the successful or typical request
                     _logger.LogInformation(
-                        "User {UserName} called {Method} {Path} - Response: {StatusCode} in {ElapsedMilliseconds}ms",
-                        userName,
+                        "User {UserId} with role {UserRole} called {Method} {Path} - Response: {StatusCode} in {ElapsedMilliseconds}ms",
+                        userId,
+                        userRole,
                         context.Request.Method,
                         context.Request.Path,
                         statusCode,
@@ -57,8 +56,9 @@ namespace QLS.Backend.Middlewares
                     // Log exception request details
                     _logger.LogError(
                         ex,
-                        "User {UserName} called {Method} {Path} failed with error after {ElapsedMilliseconds}ms",
-                        userName,
+                        "User {UserId} with role {UserRole} called {Method} {Path} failed with error after {ElapsedMilliseconds}ms",
+                        userId,
+                        userRole,
                         context.Request.Method,
                         context.Request.Path,
                         stopwatch.ElapsedMilliseconds);

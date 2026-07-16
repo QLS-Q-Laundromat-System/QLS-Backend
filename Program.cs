@@ -5,8 +5,10 @@ using QLS.Backend.Services;
 using QLS.Backend.Services.LgService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using System.Net;
+using System.Threading.RateLimiting;
 using System.Text;
 using Serilog;
 
@@ -42,6 +44,37 @@ if (!builder.Environment.IsDevelopment())
 }
 // Add services to the container.
 builder.Services.AddControllers();
+var authRateLimit = builder.Configuration.GetValue("RateLimiting:Auth:PermitLimit", 10);
+var authRateWindowMinutes = builder.Configuration.GetValue("RateLimiting:Auth:WindowMinutes", 1);
+var webhookRateLimit = builder.Configuration.GetValue("RateLimiting:Webhook:PermitLimit", 120);
+var webhookRateWindowMinutes = builder.Configuration.GetValue("RateLimiting:Webhook:WindowMinutes", 1);
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("auth", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetClientPartition(httpContext),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = authRateLimit,
+                Window = TimeSpan.FromMinutes(authRateWindowMinutes),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+
+    options.AddPolicy("webhook", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetClientPartition(httpContext),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = webhookRateLimit,
+                Window = TimeSpan.FromMinutes(webhookRateWindowMinutes),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+});
 builder.Services.AddConfigSwagger(builder.Environment);
 builder.Services.AddHostedService<QLS.Backend.Services.Machine.MachineStatusMonitoringService>();
 builder.Services.AddHostedService<QLS.Backend.Services.Ziggbee.MqttListenerService>();
@@ -182,9 +215,10 @@ using (var scope = app.Services.CreateScope())
 
 // Configure the HTTP request pipeline.
 app.UseForwardedHeaders();
-app.UseCors("AllowReactApp");
-
 app.UseMiddleware<QLS.Backend.Middlewares.GlobalExceptionMiddleware>();
+app.UseRouting();
+app.UseCors("AllowReactApp");
+app.UseRateLimiter();
 
 // Swagger luôn bật (Development & Production)
 if (app.Environment.IsDevelopment())
@@ -235,3 +269,8 @@ app.UseMiddleware<QLS.Backend.Middlewares.RequestLoggingMiddleware>();
 app.MapControllers();
 
 app.Run();
+
+static string GetClientPartition(HttpContext httpContext)
+{
+    return httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown-client";
+}

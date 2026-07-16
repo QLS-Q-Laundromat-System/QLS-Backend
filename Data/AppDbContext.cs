@@ -33,6 +33,7 @@ namespace QLS.Backend.Data
         public DbSet<PointClaimToken> PointClaimTokens { get; set; }
         public DbSet<LoyaltyPointTransaction> LoyaltyPointTransactions { get; set; }
         public DbSet<MachineNotification> MachineNotifications { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -114,6 +115,12 @@ namespace QLS.Backend.Data
                 .HasIndex(pt => pt.GatewayTransactionId)
                 .IsUnique()
                 .HasFilter("\"GatewayTransactionId\" IS NOT NULL");
+
+            modelBuilder.Entity<AuditLog>()
+                .HasIndex(log => new { log.CreatedAt, log.Action });
+
+            modelBuilder.Entity<AuditLog>()
+                .HasIndex(log => new { log.ActorUserId, log.CreatedAt });
 
             modelBuilder.Entity<MachineNotification>()
                 .HasOne(n => n.Store)

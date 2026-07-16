@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Data;
@@ -53,6 +54,7 @@ namespace QLS.Backend.Controllers
 
         [HttpPost]
         [AllowAnonymous]
+        [EnableRateLimiting("webhook")]
         public async Task<IActionResult> Receive()
         {
             // Đọc raw body để verify signature và dùng cho deserialization
