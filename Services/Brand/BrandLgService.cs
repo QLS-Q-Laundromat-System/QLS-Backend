@@ -96,8 +96,8 @@ namespace QLS.Backend.Services.Brand
 
         public async Task<int> SyncBrandStoresAsync(Guid brandId)
         {
-            // 1. Lấy thông tin xác thực từ DB
-            var credential = await _context.BrandLgCredentials.FindAsync(brandId);
+            // 1. Lấy thông tin xác thực từ DB, tự refresh nếu token hết hạn/sắp hết hạn
+            var credential = await GetValidCredentialAsync(brandId);
             if (credential == null || string.IsNullOrEmpty(credential.AccessToken) || string.IsNullOrEmpty(credential.LgUserNo))
                 throw new ApiException("Brand này chưa được liên kết hoặc chưa có token.", 400);
 
