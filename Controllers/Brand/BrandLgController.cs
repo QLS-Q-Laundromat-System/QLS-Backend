@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QLS.Backend.DTOs;
 using QLS.Backend.DTOs.Lg;
+using QLS.Backend.Extensions;
 using QLS.Backend.Interfaces.Brand;
 using QLS.Backend.Models;
 using System;
@@ -11,7 +12,7 @@ namespace QLS.Backend.Controllers.Brand
 {
     [Route("api/brands/{brandId}/lg-auth")]
     [ApiController]
-    [Authorize(Roles = "SystemAdmin")] // Chỉ SystemAdmin mới được cấu hình tài khoản LG cho Brand
+    [Authorize]
     public class BrandLgController : ControllerBase
     {
         private readonly IBrandLgService _brandLgService;
@@ -24,6 +25,7 @@ namespace QLS.Backend.Controllers.Brand
         /// <summary>
         /// Liên kết tài khoản LG cho một Brand và lưu Access Token vào DB.
         /// </summary>
+        [Authorize(Roles = "SystemAdmin")]
         [HttpPost("link")]
         public async Task<IActionResult> LinkAccount(Guid brandId, [FromBody] LgLoginRequest request)
         {
@@ -36,6 +38,7 @@ namespace QLS.Backend.Controllers.Brand
         /// <summary>
         /// Cập nhật (Refresh) token cho Brand từ thông tin đã lưu.
         /// </summary>
+        [Authorize(Roles = "SystemAdmin")]
         [HttpPost("refresh")]
         public async Task<IActionResult> RefreshToken(Guid brandId)
         {
@@ -48,9 +51,13 @@ namespace QLS.Backend.Controllers.Brand
         /// <summary>
         /// Đồng bộ danh sách Store từ LG ThinQ về database địa phương.
         /// </summary>
+        [Authorize(Roles = "SystemAdmin,Manager")]
         [HttpPost("sync-stores")]
         public async Task<IActionResult> SyncStores(Guid brandId)
         {
+            if (User.IsInRole("Manager") && User.GetRequiredBrandId() != brandId)
+                return Forbid();
+
             var count = await _brandLgService.SyncBrandStoresAsync(brandId);
             return Ok(ApiResponse<int>.Success(
                 count, 
@@ -60,6 +67,7 @@ namespace QLS.Backend.Controllers.Brand
         /// <summary>
         /// Lấy thông tin liên kết tài khoản LG của Brand.
         /// </summary>
+        [Authorize(Roles = "SystemAdmin")]
         [HttpGet("status")]
         public async Task<IActionResult> GetConnectionStatus(Guid brandId)
         {
