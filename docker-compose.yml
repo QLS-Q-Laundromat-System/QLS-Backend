@@ -48,6 +48,8 @@ services:
       Zigbee2Mqtt__Port: ${MQTT_PORT:-1883}
       Zigbee2Mqtt__Username: ${MQTT_USERNAME:-}
       Zigbee2Mqtt__Password: ${MQTT_PASSWORD:-}
+      Machine__EnableStatusMonitoring: ${MACHINE_ENABLE_STATUS_MONITORING:-true}
+      Payment__PendingTimeoutMinutes: ${PAYMENT_PENDING_TIMEOUT_MINUTES:-10}
       LgApi__BaseUrl: https://kic-laundry.lgthinq.com/status/
       LgApi__ApiKey: ${LG_API_KEY:-dev-placeholder}
       LgApi__AppVer: "0.1"

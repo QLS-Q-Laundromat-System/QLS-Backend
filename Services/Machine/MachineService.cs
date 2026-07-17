@@ -260,6 +260,8 @@ namespace QLS.Backend.Services
                 PaymentMethod          = dto.PaymentMethod,
                 PaymentCode            = paymentCode,
                 QrUrl                  = qrUrl,
+                PaymentExpiresAt       = DateTime.UtcNow.AddMinutes(
+                    _configuration.GetValue("Payment:PendingTimeoutMinutes", 10)),
                 IsSandbox              = _env.IsDevelopment(),
                 Message                = _env.IsDevelopment() 
                                          ? "CHẾ ĐỘ THỬ NGHIỆM: Bạn có thể nhấn 'Gia lập thanh toán' để kích hoạt máy." 

@@ -92,8 +92,16 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 builder.Services.AddConfigSwagger(builder.Environment);
-builder.Services.AddHostedService<QLS.Backend.Services.Machine.MachineStatusMonitoringService>();
+if (builder.Configuration.GetValue<bool>("Machine:EnableStatusMonitoring", true))
+{
+    builder.Services.AddHostedService<QLS.Backend.Services.Machine.MachineStatusMonitoringService>();
+}
+else
+{
+    Console.WriteLine("⚠️ Machine Status Monitoring Service đang bị tắt theo cấu hình.");
+}
 builder.Services.AddHostedService<QLS.Backend.Services.Ziggbee.MqttListenerService>();
+builder.Services.AddHostedService<QLS.Backend.Services.Machine.PaymentTimeoutService>();
 builder.Services.AddHostedService<QLS.Backend.Services.Loyalty.LoyaltyPointExpiryService>();
 builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>(options =>
 {

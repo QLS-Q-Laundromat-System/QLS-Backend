@@ -20,15 +20,21 @@ namespace QLS.Backend.Controllers
         private readonly IMachineService _machineService;
         private readonly QLS.Backend.Services.Machine.IHardwareTrackerService _hardwareTracker;
         private readonly AppDbContext _context;
+        private readonly ILogger<MachineSessionsController> _logger;
+        private readonly IConfiguration _configuration;
 
         public MachineSessionsController(
             IMachineService machineService,
             QLS.Backend.Services.Machine.IHardwareTrackerService hardwareTracker,
-            AppDbContext context)
+            AppDbContext context,
+            ILogger<MachineSessionsController> logger,
+            IConfiguration configuration)
         {
             _machineService = machineService;
             _hardwareTracker = hardwareTracker;
             _context = context;
+            _logger = logger;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -45,7 +51,19 @@ namespace QLS.Backend.Controllers
             {
                 dto.StoreId = User.GetRequiredStoreId();
                 dto.UserId = User.GetRequiredUserId();
+                _logger.LogInformation(
+                    "💳 [PAYMENT] Khởi tạo session | UserId={UserId} | StoreId={StoreId} | MachineId={MachineId} | PaymentMethod={PaymentMethod}",
+                    dto.UserId,
+                    dto.StoreId,
+                    dto.MachineId,
+                    dto.PaymentMethod);
                 var result = await _machineService.InitSessionAsync(dto);
+                _logger.LogInformation(
+                    "💳 [PAYMENT] Đã tạo QR thanh toán | SessionId={SessionId} | PaymentCode={PaymentCode} | Amount={Amount} | Minutes={Minutes}",
+                    result.SessionId,
+                    result.PaymentCode,
+                    result.ServerCalculatedAmount,
+                    result.TotalMinutes);
                 return Ok(ApiResponse<InitPaymentResponseDto>.Success(result));
             }
             catch (Exception ex)
@@ -149,6 +167,9 @@ namespace QLS.Backend.Controllers
                 status = session.Status,
                 machineId = session.MachineId,
                 hardwareStatus = _hardwareTracker.GetStatus(session.Id) ?? "Đang chờ thiết bị...",
+                paymentExpiresAt = session.Status == QLS.Backend.Models.Enums.MachineSessionStatus.PendingPayment
+                    ? session.CreatedAt.AddMinutes(_configuration.GetValue("Payment:PendingTimeoutMinutes", 10))
+                    : (DateTime?)null,
                 loyalty
             }));
         }

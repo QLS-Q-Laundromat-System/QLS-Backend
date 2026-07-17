@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using QLS.Backend.Data;
 using QLS.Backend.DTOs.Pricing;
+using QLS.Backend.Exceptions;
 using QLS.Backend.Interfaces.Pricing;
 using QLS.Backend.Models;
 using QLS.Backend.Models.Enums;
@@ -28,7 +29,8 @@ public class PricingCalculatorService : IPricingCalculatorService
             .Include(s => s.StoreType)
             .FirstOrDefaultAsync(s => s.Id == dto.StoreId);
 
-        if (store == null || store.StoreTypeId == null) return null;
+        if (store == null || store.StoreTypeId == null)
+            throw new ApiException("Không tìm thấy cửa hàng hoặc loại cửa hàng để áp dụng bảng giá.", 400);
 
         // 2 & 3. Tìm Bảng giá (PriceList) đang có hiệu lực theo thứ tự ưu tiên
         // Thêm điều kiện lọc theo BrandId của cửa hàng và kiểm tra IsDeleted
@@ -47,6 +49,11 @@ public class PricingCalculatorService : IPricingCalculatorService
             .ThenByDescending(x => x.PriceList.CreatedAt)
             .Select(x => x.PriceList)
             .ToListAsync();
+
+        if (applicablePriceLists.Count == 0)
+            throw new ApiException("Hiện chưa có bảng giá đang hiệu lực cho cửa hàng này.", 400);
+
+        var hasPriceModeOutsideTimeSlot = false;
 
         foreach (var priceList in applicablePriceLists)
         {
@@ -103,6 +110,9 @@ public class PricingCalculatorService : IPricingCalculatorService
 
             var modeSessions = await querySession.ToListAsync();
 
+            if (modeSessions.Count > 0)
+                hasPriceModeOutsideTimeSlot = true;
+
             // Lọc theo khung giờ (TimeSlot)
             var matchedMode = modeSessions
                 .Where(m => 
@@ -141,7 +151,10 @@ public class PricingCalculatorService : IPricingCalculatorService
             }
         }
 
-        return null;
+        if (hasPriceModeOutsideTimeSlot)
+            throw new ApiException("Hiện không có mức giá áp dụng cho máy này vì đang ngoài khung giờ hoặc ngày hoạt động được cấu hình.", 400);
+
+        throw new ApiException("Bảng giá đang hiệu lực nhưng chưa cấu hình mức giá phù hợp cho loại máy hoặc dung tích này.", 400);
     }
 
     private bool IsDayMatch(DayOfWeek day, DayOfWeekMask mask)

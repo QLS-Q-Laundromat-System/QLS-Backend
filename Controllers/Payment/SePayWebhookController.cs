@@ -76,8 +76,6 @@ namespace QLS.Backend.Controllers
 
             if (dto == null) return BadRequest();
 
-            _logger.LogInformation("[SePay Webhook] Received transaction {Id} for amount {Amount}", dto.Id, dto.TransferAmount);
-
             var paymentConfig = await _context.PaymentConfigs
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p =>
@@ -109,6 +107,13 @@ namespace QLS.Backend.Controllers
             }
 
             var paymentCode = ExtractPaymentCode(dto.Code) ?? ExtractPaymentCode(dto.Content);
+            _logger.LogInformation(
+                "💳 [PAYMENT] Webhook nhận | TransactionId={TransactionId} | Amount={Amount} | Type={TransferType} | PaymentCode={PaymentCode}",
+                dto.Id,
+                dto.TransferAmount,
+                dto.TransferType,
+                paymentCode ?? "<none>");
+
             var paymentCodeMatch = paymentCode == null
                 ? null
                 : await _context.MachineSessions.FirstOrDefaultAsync(s =>
@@ -119,7 +124,10 @@ namespace QLS.Backend.Controllers
 
             if (paymentCodeMatch == null)
             {
-                _logger.LogWarning("[SePay Webhook] No matching session found for transaction {Id}.", dto.Id);
+                _logger.LogWarning(
+                    "💳 [PAYMENT] Bỏ qua | Không tìm thấy session | TransactionId={TransactionId} | PaymentCode={PaymentCode}",
+                    dto.Id,
+                    paymentCode ?? "<none>");
                 return Ok(new { success = true }); 
             }
 
@@ -169,11 +177,17 @@ namespace QLS.Backend.Controllers
             {
                 if (existingTransaction.Status == "Success")
                 {
-                    _logger.LogInformation("[SePay Webhook] Transaction {Id} already completed.", dto.Id);
+                    _logger.LogInformation(
+                        "💳 [PAYMENT] Đã xử lý trước đó | TransactionId={TransactionId} | Status={Status}",
+                        dto.Id,
+                        existingTransaction.Status);
                     return Ok(new { success = true });
                 }
 
-                _logger.LogError("[SePay Webhook] Transaction {Id} is in state {Status} and requires recovery.", dto.Id, existingTransaction.Status);
+                _logger.LogError(
+                    "💳 [PAYMENT] Cần recovery | TransactionId={TransactionId} | Status={Status}",
+                    dto.Id,
+                    existingTransaction.Status);
                 return StatusCode(500, new { message = "Payment transaction requires recovery." });
             }
 
@@ -196,7 +210,7 @@ namespace QLS.Backend.Controllers
             }
             catch (DbUpdateException ex)
             {
-                _logger.LogWarning(ex, "[SePay Webhook] Duplicate transaction race for {Id}.", dto.Id);
+                _logger.LogWarning(ex, "💳 [PAYMENT] Trùng giao dịch khi ghi DB | TransactionId={TransactionId}", dto.Id);
                 return StatusCode(500, new { message = "Payment transaction is being processed." });
             }
 
@@ -205,19 +219,32 @@ namespace QLS.Backend.Controllers
                 // Chỉ xử lý giao dịch tiền vào
                 if (dto.TransferType != "in")
                 {
-                    _logger.LogInformation("[SePay Webhook] Ignoring transaction {Id} because type is {Type}", dto.Id, dto.TransferType);
+                    _logger.LogInformation(
+                        "💳 [PAYMENT] Bỏ qua giao dịch không phải tiền vào | TransactionId={TransactionId} | Type={TransferType}",
+                        dto.Id,
+                        dto.TransferType);
                     transaction.Status = "Ignored (Not Inbound)";
                     await _context.SaveChangesAsync();
                     return Ok(new { success = true });
                 }
 
-                _logger.LogInformation("[Process] Found session {SessionId} for machine {MachineId}", paymentCodeMatch.Id, paymentCodeMatch.MachineId);
+                _logger.LogInformation(
+                    "💳 [PAYMENT] Đã ghép session | TransactionId={TransactionId} | SessionId={SessionId} | MachineId={MachineId} | Expected={Expected} | Received={Received}",
+                    dto.Id,
+                    paymentCodeMatch.Id,
+                    paymentCodeMatch.MachineId,
+                    paymentCodeMatch.PricePaid,
+                    dto.TransferAmount);
 
                 // 3. Kiểm tra số tiền (Cho phép sai số nhỏ nếu cần, hoặc khớp chính xác)
                 if (dto.TransferAmount < paymentCodeMatch.PricePaid)
                 {
-                    _logger.LogWarning("[SePay Webhook] Amount mismatch for session {SessionId}. Expected: {Expected}, Received: {Received}", 
-                        paymentCodeMatch.Id, paymentCodeMatch.PricePaid, dto.TransferAmount);
+                    _logger.LogWarning(
+                        "💳 [PAYMENT] Sai số tiền | TransactionId={TransactionId} | SessionId={SessionId} | Expected={Expected} | Received={Received}",
+                        dto.Id,
+                        paymentCodeMatch.Id,
+                        paymentCodeMatch.PricePaid,
+                        dto.TransferAmount);
                     transaction.Status = "MismatchAmount";
                     transaction.MachineSessionId = paymentCodeMatch.Id;
                     await _context.SaveChangesAsync();
@@ -250,15 +277,30 @@ namespace QLS.Backend.Controllers
 
                     string? storeCode = machine.Store?.StoreId;
                     await _zigbeeService.TriggerAsync(machine.ZigbeeNetworkId, pulses, storeCode);
-                    _logger.LogInformation("[SePay Webhook] Triggered Zigbee machine: {Topic} with {Pulses} pulses in Store {StoreCode}", machine.ZigbeeNetworkId, pulses, storeCode);
+                    _logger.LogInformation(
+                        "⚡ [PAYMENT] Đã kích Zigbee | TransactionId={TransactionId} | SessionId={SessionId} | Topic={Topic} | Pulses={Pulses} | StoreCode={StoreCode}",
+                        dto.Id,
+                        paymentCodeMatch.Id,
+                        machine.ZigbeeNetworkId,
+                        pulses,
+                        storeCode ?? "<none>");
                 }
 
                 await _context.SaveChangesAsync();
+                _logger.LogInformation(
+                    "✅ [PAYMENT] Hoàn tất | TransactionId={TransactionId} | SessionId={SessionId} | Status={Status}",
+                    dto.Id,
+                    paymentCodeMatch.Id,
+                    MachineSessionStatus.PaidWaitingForStart);
                 return Ok(new { success = true });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[SePay Webhook] Error processing webhook for transaction {Id}", dto.Id);
+                _logger.LogError(
+                    ex,
+                    "❌ [PAYMENT] Lỗi xử lý | TransactionId={TransactionId} | SessionId={SessionId}",
+                    dto.Id,
+                    paymentCodeMatch.Id);
                 transaction.Status = "Error";
                 await _context.SaveChangesAsync();
                 // Trả về 500 để SePay có thể retry nếu là lỗi tạm thời (như MQTT timeout)
