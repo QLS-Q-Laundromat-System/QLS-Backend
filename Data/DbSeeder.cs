@@ -30,20 +30,6 @@ namespace QLS.Backend.Data
                 };
                 context.Brands.Add(defaultBrand);
 
-                // -- TẠO BRAND QLS1 --
-                var qls1Brand = new Brand
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "QLS1",
-                    Email = "ntson68199@gmail.com",
-                    ContactPhone = "0862789277",
-                    Address = "QLS1 Address",
-                    Logo = "https://via.placeholder.com/150", 
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                };
-                context.Brands.Add(qls1Brand);
-
                 // -- TẠO STORE TYPE --
                 var premiumType = new StoreType
                 {
@@ -61,31 +47,45 @@ namespace QLS.Backend.Data
                 };
                 context.StoreTypes.AddRange(premiumType, standardType);
 
-                // -- TẠO STORE MẪU --
-                var defaultStore = new Store
+                // -- TẠO CÁC STORE THẬT TỪ LG --
+                var qLaundromatStore = new Store
                 {
                     Id = Guid.NewGuid(),
-                    Name = "QLS Store - District 1",
-                    Address = "123 Le Loi, District 1, HCMC",
-                    Phone = "0901234567",
-                    Email = "contact@qlslaundry.com",
-                    StoreId = "LG_STORE_001",
+                    Name = "Q Laundromat",
+                    Address = "Vinhomes Grand Park, Nguyen Xien, s202, Thu duc, Ho Chi Minh",
+                    Phone = "035-926-1605",
+                    Email = "nguyenquocan1010@gmail.com",
+                    StoreId = "c7863f0d53ac48bfb04d4b1367e664b7",
                     BrandId = defaultBrand.Id,
                     StoreTypeId = premiumType.Id, // Gán hạng Premium
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 };
-                context.Stores.Add(defaultStore);
-
-                // -- TẠO MÁY MẪU (MACHINES) --
-                var machines = new List<Machine>
+                var qls1Store = new Store
                 {
-                    new Machine { Id = Guid.NewGuid(), StoreId = defaultStore.Id, Name = "Máy Giặt 1", Type = MachineType.Washer, Capacity = "10kg" },
-                    new Machine { Id = Guid.NewGuid(), StoreId = defaultStore.Id, Name = "Máy Giặt 2", Type = MachineType.Washer, Capacity = "10kg" },
-                    new Machine { Id = Guid.NewGuid(), StoreId = defaultStore.Id, Name = "Máy Sấy 1",  Type = MachineType.Dryer,  Capacity = "15kg" },
-                    new Machine { Id = Guid.NewGuid(), StoreId = defaultStore.Id, Name = "Máy Sấy 2",  Type = MachineType.Dryer,  Capacity = "15kg" }
+                    Id = Guid.NewGuid(),
+                    Name = "QLS-1",
+                    Address = "vinhome1, Quan 9, Ho Chi Minh",
+                    Phone = "0862789211",
+                    Email = "store1@gmail.com",
+                    StoreId = "d989472b67ad421ba2e6dbbf43dfcebd",
+                    BrandId = defaultBrand.Id,
+                    StoreTypeId = premiumType.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
                 };
-                context.Machines.AddRange(machines);
+                context.Stores.AddRange(qLaundromatStore, qls1Store);
+
+                // -- TẠO MÁY LG ĐÃ BIẾT --
+                context.Machines.Add(new Machine
+                {
+                    Id = Guid.NewGuid(),
+                    StoreId = qLaundromatStore.Id,
+                    LgDeviceId = "fe94d7ca-e9c7-1d0c-a818-f414bff7003b",
+                    Name = "Dryer_new",
+                    Type = MachineType.Dryer,
+                    Capacity = "LG_COMMERCIAL"
+                });
 
                 // -- TẠO USER PROFILE MẪU --
                 var testUser = new User
@@ -121,20 +121,6 @@ namespace QLS.Backend.Data
                     Email = "owner@qls.com",
                     Role = UserRole.BrandAdmin,
                     BrandId = defaultBrand.Id,
-                    IsActive = true
-                });
-
-                // Brand Admin QLS1
-                var qls1BrandAdminId = Guid.NewGuid();
-                context.Accounts.Add(new Account
-                {
-                    Id = qls1BrandAdminId,
-                    Username = "sonadmin",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
-                    FullName = "Admin QLS1",
-                    Email = "ntson68199@gmail.com",
-                    Role = UserRole.BrandAdmin,
-                    BrandId = qls1Brand.Id,
                     IsActive = true
                 });
 
