@@ -179,7 +179,9 @@ namespace QLS.Backend.Services.LgServices.authToken
             var userAuth     = HashPassword(password);
 
             _logger.LogWarning(
-                "[LG DEBUG] PasswordHashLength={Length}, PasswordHashSuffix={Suffix}",
+                "[LG DEBUG] PasswordLength={PasswordLength}, Utf8Bytes={Utf8Bytes}, HashLength={HashLength}, HashSuffix={Suffix}",
+                password.Length,
+                Encoding.UTF8.GetByteCount(password),
                 userAuth.Length,
                 userAuth[^8..]);
 
