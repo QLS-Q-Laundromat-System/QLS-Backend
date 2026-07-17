@@ -62,6 +62,9 @@ public class LgApiClient
         var requestMethod = method ?? HttpMethod.Get;
         var request = new HttpRequestMessage(requestMethod, url);
 
+        request.Headers.Accept.Add(
+            new MediaTypeWithQualityHeaderValue("application/json"));
+
         if (body != null)
         {
             request.Content = new StringContent(body, Encoding.UTF8, "application/json");
@@ -83,7 +86,9 @@ public class LgApiClient
         if (!string.IsNullOrEmpty(accessToken))
             request.Headers.Add("x-emp-token", accessToken);
 
-        request.Headers.Add("x-message-id", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());
+        request.Headers.Add(
+            "x-message-id",
+            Random.Shared.NextInt64(1_000_000_000L, 9_999_999_999L).ToString());
         request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36");
 
         var response = await _httpClient.SendAsync(request);
