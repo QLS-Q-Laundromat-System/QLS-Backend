@@ -178,6 +178,11 @@ namespace QLS.Backend.Services.LgServices.authToken
             var url          = $"{EmpB2BBaseUrl}/empb2b/v1.0/account/session/{encodedEmail}";
             var userAuth     = HashPassword(password);
 
+            _logger.LogWarning(
+                "[LG DEBUG] PasswordHashLength={Length}, PasswordHashSuffix={Suffix}",
+                userAuth.Length,
+                userAuth[^8..]);
+
             var form = new Dictionary<string, string>
             {
                 ["otp_use_yn"] = "N",

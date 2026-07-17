@@ -833,8 +833,10 @@ Khi kiosk đăng nhập bằng `Manager` hoặc `Staff`, JWT phải chứa `Stor
 
 Những file dưới đây vẫn hữu ích vì chúng là tài liệu chuyên biệt, không chỉ là summary tổng quát:
 
+- `docs/P0_DEPLOYMENT.md`
+- `docs/P1_BACKEND_SUMMARY.md`
 - `docs/pgadmin-connect.md`
 - `docs/logging.md`
-- `docs/DEPLOY_TWO_SERVERS.md`
+- `docs/nginx/qls-api-reverse-proxy.example.conf`
 
 README này thay thế các tài liệu tổng hợp cấp repo, nhưng không thay thế các runbook vận hành chuyên sâu.
