@@ -67,7 +67,7 @@ services:
       LgApi__BaseUrl: https://kic-laundry.lgthinq.com/status/
       LgApi__ApiKey: vV6bStCpqr5Hqxbcr8Kmp9XkFh4VdlVp568YxBp5
       LgApi__AppVer: "0.1"
-      LgApi__ClientType: USER
+      LgApi__ClientType: WEB
       LgApi__CountryCode: VN
       LgApi__ClientId: "12345"
       LgApi__ServiceCode: CHN000035
